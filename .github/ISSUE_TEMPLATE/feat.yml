@@ -1,0 +1,60 @@
+name: ✨ Feature Request
+description: 기능 개발 이슈
+title: "[FEAT] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: 🎯 기능 설명
+      description: 구현해야할 기능
+      placeholder: 예) 회원가입(USER-001)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: 📂 기능 분류
+      options:
+        - API 개발
+        - DB 스키마 변경
+        - 인증/인가
+        - 파일 처리
+        - 외부 API 연동
+        - 성능 개선
+        - 기타
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: requirements
+    attributes:
+      label: 📋 상세 요구사항
+      description: 필요한 기능 요구사항을 선택하거나 추가해주세요.
+      options:
+        - label: API 엔드포인트 추가
+        - label: DB 테이블/컬럼 추가
+        - label: DTO 생성
+        - label: 비즈니스 로직 구현
+        - label: 테스트 코드 작성
+        - label: API 문서 작성
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 🚀 우선순위
+      options:
+        - P0 (중요)
+        - P1 (보통)
+        - P2 (낮음)
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 📝 참고 자료
+      description: 기타 관련 정보나 참고 자료가 있다면 추가해주세요.
+    validations:
+      required: false

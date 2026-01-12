@@ -1,0 +1,76 @@
+name: 🐛 Bug Report
+description: 버그 수정 이슈
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 🐛 버그 설명
+      description: 버그에 대한 명확하고 간결한 설명을 작성해주세요.
+      placeholder: 예) 회원가입(USER-001) API 호출 시 500 에러 발생
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: ⚠️ 심각도
+      description: 버그의 심각도를 선택해주세요.
+      options:
+        - Critical (서비스 중단)
+        - High (주요 기능 불가)
+        - Medium (일부 기능 이상)
+        - Low (사소한 문제)
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 🔄 재현 방법
+      description: 버그를 재현하는 단계를 작성해주세요.
+      placeholder: |
+        1. API 호출
+        2. 특정 파라미터 전달
+        3. 에러 발생 확인
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 💡 예상 동작
+      description: 어떻게 동작해야 하는지 설명해주세요.
+      placeholder: 정상적으로 회원가입이 완료되어야 합니다.
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: ❌ 실제 동작
+      description: 실제로 어떻게 동작하는지 설명해주세요.
+      placeholder: 500 Internal Server Error가 발생합니다.
+    validations:
+      required: false
+
+  - type: textarea
+    id: error-log
+    attributes:
+      label: 📋 에러 로그
+      description: 에러 로그나 스택 트레이스를 붙여넣어주세요.
+      placeholder: |
+        java.lang.NullPointerException: ...
+        at com.thock.backend.api...
+      render: bash
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 📝 추가 정보
+      description: 기타 버그와 관련된 추가 정보가 있다면 작성해주세요.
+    validations:
+      required: false

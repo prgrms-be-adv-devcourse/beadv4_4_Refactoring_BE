@@ -1,0 +1,87 @@
+name: 📌 Task
+description: 개발 작업, 리팩토링, 문서화 등의 일반 작업 이슈
+title: "[TASK] "
+labels: ["task"]
+body:
+  - type: dropdown
+    id: task-type
+    attributes:
+      label: 🏷️ 작업 분류
+      description: 작업의 분류를 선택해주세요.
+      options:
+        - 리팩토링
+        - 테스트 코드 작성
+        - 문서화
+        - 설정/환경 구성
+        - 의존성 업데이트
+        - 코드 컨벤션 정리
+        - 성능 최적화
+        - 로깅 개선
+        - 기타
+    validations:
+      required: true
+
+  - type: textarea
+    id: task-description
+    attributes:
+      label: 📌 작업 설명
+      description: 수행할 작업에 대해 간단히 설명해주세요.
+      placeholder: 예) UserService 리팩토링 - 중복 코드 제거
+    validations:
+      required: true
+
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 🎯 작업 목적
+      description: 이 작업이 왜 필요한가요?
+      placeholder: |
+        현재 UserService에 중복 코드가 많아서
+        유지보수가 어렵습니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: related-issues
+    attributes:
+      label: 🔗 관련 이슈
+      description: 관련된 이슈가 있다면 번호를 입력해주세요.
+      placeholder: |
+        - Related to #10
+        - Depends on #15
+    validations:
+      required: false
+
+  - type: dropdown
+    id: estimated-time
+    attributes:
+      label: ⏰ 예상 소요 시간
+      description: 예상 작업 시간을 선택해주세요.
+      options:
+        - 1시간 이내
+        - 2-4시간
+        - 반나절 (4-8시간)
+        - 1일
+        - 2-3일
+        - 1주일 이상
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 🚀 우선순위
+      options:
+        - P0 (중요)
+        - P1 (보통)
+        - P2 (낮음)
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 📝 추가 사항
+      description: 기타 관련 정보나 참고 자료가 있다면 추가해주세요.
+    validations:
+      required: false

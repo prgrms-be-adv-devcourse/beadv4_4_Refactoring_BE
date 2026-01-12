@@ -1,0 +1,71 @@
+name: PR Lint
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $TITLE"
+          
+          # scope는 선택 사항 [TYPE] subject 또는 [TYPE/scope] subject 형식
+          # 예) [FEAT] 회원가입 기능 구현 또는 [FEAT/user] 회원가입 기능 구현
+          REGEX='^\[(FEAT|FIX|DOCS|STYLE|REFACTOR|TEST|CHORE|HOTFIX)(\/[a-zA-Z0-9_-]+)?\] .+'
+          
+          if [[ ! "$TITLE" =~ $REGEX ]]; then
+            echo "::error::❌ PR 제목이 규칙을 만족하지 않습니다."
+            echo ""
+            echo "📌 올바른 형식:"
+            echo "  [TYPE/scope] 작업 내용  (scope는 선택사항, 대소문자 가능)"
+            echo ""
+            echo "📝 예시:"
+            echo "  [FEAT] 회원가입 API 구현"
+            echo "  [FEAT/user] 회원가입 API 구현"
+            echo "  [FEAT/USER-001] 회원가입 API 구현"
+            echo "  [REFACTOR/service] UserService 리팩토링"
+            echo ""
+            echo "🏷️ 사용 가능한 TYPE:"
+            echo "  FEAT     : 새로운 기능 추가"
+            echo "  FIX      : 버그 수정"
+            echo "  DOCS     : 문서 수정"
+            echo "  STYLE    : 코드 포맷팅, 세미콜론 누락 등"
+            echo "  REFACTOR : 코드 리팩토링"
+            echo "  TEST     : 테스트 코드 추가/수정"
+            echo "  CHORE    : 빌드 업무, 패키지 관리 등"
+            echo "  HOTFIX   : 긴급 수정"
+            exit 1
+          fi
+          
+          echo "✅ PR 제목이 규칙을 만족합니다!"
+
+      - name: Validate branch name
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          echo "Branch: $BRANCH"
+          
+          # type/scope/#이슈번호 형식
+          # 예) feat/user/#1
+          REGEX='^(feat|fix|docs|style|refactor|test|chore|hotfix)\/[a-zA-Z0-9_-]+\/#[0-9]+$'
+          
+          if [[ ! "$BRANCH" =~ $REGEX ]]; then
+            echo "::error::❌ 브랜치명이 규칙을 만족하지 않습니다."
+            echo ""
+            echo "📌 올바른 형식:"
+            echo "  type/scope/#이슈번호"
+            echo ""
+            echo "📝 예시:"
+            echo "  feat/user/#1"
+            echo "  feat/USER-001/#1"
+            echo "  refactor/service/#10"
+            echo ""
+            echo "🏷️ 사용 가능한 type:"
+            echo "  feat, fix, docs, style, refactor, test, chore, hotfix"
+            exit 1
+          fi
+          
+          echo "✅ 브랜치명이 규칙을 만족합니다!"
