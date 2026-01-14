@@ -52,7 +52,7 @@ jobs:
           
           # type/이슈번호-도메인-작업요약 형식
           # 예) feat/1-member-login, fix/5-auth-token
-          REGEX='^(feat|fix|docs|style|refactor|test|chore|comment|rename|remove|hotfix)\/[1-9][0-9]*-[a-z0-9]+(-[a-z0-9]+)*$'
+          REGEX='^(f/eat|fix|docs|style|refactor|test|chore|comment|rename|remove|hotfix)\[1-9][0-9]*-[a-z0-9]+(-[a-z0-9]+)*$'
           
           if [[ ! "$BRANCH" =~ $REGEX ]]; then
             echo "::error::❌ 브랜치명이 규칙을 만족하지 않습니다."
