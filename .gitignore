@@ -56,3 +56,4 @@ logs/
 .env
 .env.*
 .DS_store
+/src/test/
