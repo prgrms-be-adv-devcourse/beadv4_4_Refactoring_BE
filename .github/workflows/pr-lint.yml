@@ -13,21 +13,20 @@ jobs:
           TITLE="${{ github.event.pull_request.title }}"
           echo "PR Title: $TITLE"
           
-          # scope는 선택 사항 [TYPE] subject 또는 [TYPE/scope] subject 형식
-          # 예) [FEAT] 회원가입 기능 구현 또는 [FEAT/user] 회원가입 기능 구현
-          REGEX='^\[(FEAT|FIX|DOCS|STYLE|REFACTOR|TEST|CHORE|HOTFIX)(\/[a-zA-Z0-9_-]+)?\] .+'
+          # 예) [FEAT] #1 회원가입 기능 구현 
+          REGEX='^\[(FEAT|FIX|DOCS|STYLE|REFACTOR|TEST|CHORE|COMMENT|RENAME|REMOVE|HOTFIX)\]'
           
           if [[ ! "$TITLE" =~ $REGEX ]]; then
             echo "::error::❌ PR 제목이 규칙을 만족하지 않습니다."
             echo ""
             echo "📌 올바른 형식:"
-            echo "  [TYPE/scope] 작업 내용  (scope는 선택사항, 대소문자 가능)"
+            echo "  [TYPE] #이슈번호 작업요약"
             echo ""
             echo "📝 예시:"
-            echo "  [FEAT] 회원가입 API 구현"
-            echo "  [FEAT/user] 회원가입 API 구현"
-            echo "  [FEAT/USER-001] 회원가입 API 구현"
-            echo "  [REFACTOR/service] UserService 리팩토링"
+            echo "  [FEAT] #1 회원가입 API 구현"
+            echo "  [FIX] #5 JWT 토큰 만료 처리 버그 수정"
+            echo "  [REFACTOR] #10 UserService 리팩토링"
+            echo "  [DOCS] #3 API 문서 작성"
             echo ""
             echo "🏷️ 사용 가능한 TYPE:"
             echo "  FEAT     : 새로운 기능 추가"
@@ -37,6 +36,9 @@ jobs:
             echo "  REFACTOR : 코드 리팩토링"
             echo "  TEST     : 테스트 코드 추가/수정"
             echo "  CHORE    : 빌드 업무, 패키지 관리 등"
+            echo "  COMMENT  : 필요한 주석 추가 및 변경"
+            echo "  RENAME   : 파일 또는 폴더 명을 수정하거나 옮기는 작업만 수행한 경우"
+            echo "  REMOVE   : 파일을 삭제하는 작업만 수행한 경우"
             echo "  HOTFIX   : 긴급 수정"
             exit 1
           fi
@@ -48,23 +50,33 @@ jobs:
           BRANCH="${{ github.head_ref }}"
           echo "Branch: $BRANCH"
           
-          # type/scope/#이슈번호 형식
-          # 예) feat/user/#1
-          REGEX='^(feat|fix|docs|style|refactor|test|chore|hotfix)\/[a-zA-Z0-9_-]+\/#[0-9]+$'
+          # type/이슈번호-도메인-작업요약 형식
+          # 예) feat/1-member-login, fix/5-auth-token
+          REGEX='^(feat|fix|docs|style|refactor|test|chore|comment|rename|remove|hotfix)\/[1-9][0-9]*-[a-z0-9]+(-[a-z0-9]+)*$'
           
           if [[ ! "$BRANCH" =~ $REGEX ]]; then
             echo "::error::❌ 브랜치명이 규칙을 만족하지 않습니다."
             echo ""
             echo "📌 올바른 형식:"
-            echo "  type/scope/#이슈번호"
+            echo "  type/이슈번호-도메인-작업요약"
             echo ""
             echo "📝 예시:"
-            echo "  feat/user/#1"
-            echo "  feat/USER-001/#1"
-            echo "  refactor/service/#10"
+            echo "  feat/1-member-social-login"
+            echo "  feat/1-member"
+            echo "  fix/5-auth-token-expire"
+            echo "  refactor/10-user-service"
+            echo "  docs/3-api-docs"
             echo ""
-            echo "🏷️ 사용 가능한 type:"
-            echo "  feat, fix, docs, style, refactor, test, chore, hotfix"
+            echo "🏷️ 사용 가능한 type (소문자):"
+            echo "  feat, fix, docs, style, refactor, test, chore,"
+            echo "  comment, rename, remove, hotfix"
+            echo ""
+            echo "🏷️ 브랜치명 규칙:"
+            echo "  - 전부 소문자"
+            echo "  - # 없이 숫자만"
+            echo "  - 하이픈(-)으로 구분"
+            echo "  - 최소 형식: type/숫자-도메인"
+            echo "  - 확장 형식: type/숫자-도메인-작업요약-추가설명"
             exit 1
           fi
           

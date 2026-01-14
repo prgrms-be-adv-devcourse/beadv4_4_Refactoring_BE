@@ -1,0 +1,82 @@
+name: Commit Lint
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 모든 커밋 히스토리 가져오기
+
+      - name: Get commit messages
+        id: get-commits
+        run: |
+          # PR의 모든 커밋 메시지 가져오기
+          git log --format=%s ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} > commits.txt
+          cat commits.txt
+
+      - name: Validate commit messages
+        run: |
+          echo "📝 커밋 메시지 검증 시작..."
+          echo ""
+          
+          # 커밋 메시지 규칙
+          # 예) feat: 회원가입 기능 추가
+          # 세미콜론 필수, 띄어쓰기 필수, 설명 1글자 이상 필수
+          REGEX='^(feat|fix|docs|style|refactor|test|chore|comment|rename|remove|hotfix): .{1,}'
+          
+          FAIL=0
+          LINE_NUM=0
+          
+          while IFS= read -r commit_msg; do
+            LINE_NUM=$((LINE_NUM + 1))
+            echo "[$LINE_NUM] $commit_msg"
+          
+            if [[ ! "$commit_msg" =~ $REGEX ]]; then
+              echo "  ❌ 규칙 위반!"
+              FAIL=1
+            else
+              echo "  ✅ 통과"
+            fi
+            echo ""
+          done < commits.txt
+          
+          if [ $FAIL -eq 1 ]; then
+            echo "::error::❌ 커밋 메시지가 규칙을 만족하지 않습니다."
+            echo ""
+            echo "📌 올바른 형식:"
+            echo "  type: subject"
+            echo ""
+            echo "📝 예시:"
+            echo "  feat: 회원가입 기능 추가"
+            echo "  fix: JWT 토큰 만료 처리 버그 수정"
+            echo "  docs: README 업데이트"
+            echo "  refactor: UserService 리팩토링"
+            echo ""
+            echo "🏷️ 사용 가능한 type (소문자):"
+            echo "  feat     : 새로운 기능 추가"
+            echo "  fix      : 버그 수정"
+            echo "  docs     : 문서 수정"
+            echo "  style    : 코드 포맷팅, 세미콜론 누락 등"
+            echo "  refactor : 코드 리팩토링"
+            echo "  test     : 테스트 코드 추가/수정"
+            echo "  chore    : 빌드, 패키지 관리, 기타 수정"
+            echo "  comment  : 주석 추가 및 변경"
+            echo "  rename   : 파일/폴더명 수정"
+            echo "  remove   : 파일 삭제"
+            echo "  remove   : 파일 삭제"
+            echo "  hotfix   : 긴급 버그 수정"
+            echo ""
+            echo "📋 규칙:"
+            echo "  - type: 소문자"
+            echo "  - 콜론(:) 뒤에 공백 필수"
+            echo "  - subject 1글자 이상 작성 필수"
+            exit 1
+          fi
+          
+          echo "✅ 모든 커밋 메시지가 규칙을 만족합니다!"

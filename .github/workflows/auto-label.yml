@@ -1,0 +1,60 @@
+name: Auto Label
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Auto label PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = context.payload.pull_request.title;
+            const labels = [];
+            
+            // PR 제목에서 TYPE 추출
+            // [TYPE] #이슈번호 작업요약
+            const match = title.match(/^\[(FEAT|FIX|DOCS|STYLE|REFACTOR|TEST|CHORE|COMMENT|RENAME|REMOVE|HOTFIX)\]/);
+            
+            if (match) {
+              const type = match[1].toLowerCase();
+            
+              // TYPE에 따른 라벨 매핑
+              const labelMap = {
+                'feat': 'enhancement',
+                'fix': 'bug',
+                'docs': 'documentation',
+                'style': 'style',
+                'refactor': 'refactoring',
+                'test': 'test',
+                'chore': 'chore',
+                'comment': 'documentation',
+                'rename': 'refactoring',
+                'remove': 'refactoring',
+                'hotfix': 'hotfix'
+              };
+            
+              if (labelMap[type]) {
+                labels.push(labelMap[type]);
+              }
+            }
+            
+            // 라벨 추가
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                labels: labels
+              });
+            
+              console.log(`✅ 라벨 추가 완료: ${labels.join(', ')}`);
+            } else {
+              console.log('⚠️ PR 제목에서 TYPE을 찾을 수 없습니다.');
+              console.log('올바른 형식: [TYPE] #이슈번호 작업요약');
+            }
