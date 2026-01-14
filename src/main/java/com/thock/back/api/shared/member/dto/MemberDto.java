@@ -14,6 +14,6 @@ public class MemberDto {
     private final LocalDateTime modifyDate;
     private final String email;
     private final String name;
-//    private final Role role;
-//    private final State state;
+    private final Role role;
+    private final State state;
 }
