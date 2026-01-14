@@ -1,5 +1,6 @@
 package com.thock.back.api.global.jpa.entity;
 
+import com.thock.back.api.global.global.GlobalConfig;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
