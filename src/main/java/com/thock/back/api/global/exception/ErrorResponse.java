@@ -19,7 +19,7 @@ public class ErrorResponse {
     private static final DateTimeFormatter TIMESTAMP_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final String code;           // 에러 코드 (예: "404-2")
+    private final String code;           // 에러 코드
     private final String message;        // 에러 메시지
     private final String path;           // 경로 - 디버깅, 로깅, 모니터링에 유용
     private final String timestamp;      // 발생 시간
