@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public abstract class ReplicaMember extends BaseMember {
     @Id
-    private long id;
+    private Long id;
     private LocalDateTime createDate;
     private LocalDateTime modifyDate;
 

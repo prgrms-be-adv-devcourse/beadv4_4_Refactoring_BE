@@ -1,5 +1,6 @@
 package com.thock.back.api.global.jpa.entity;
 
+import com.thock.back.api.global.global.GlobalConfig;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
@@ -14,7 +15,7 @@ public abstract class BaseEntity {
     protected void publishEvent(Object event) {
         GlobalConfig.getEventPublisher().publish(event);
     }
-    public abstract int getId();
+    public abstract Long getId();
     public abstract LocalDateTime getCreateDate();
     public abstract LocalDateTime getModifyDate();
 }
