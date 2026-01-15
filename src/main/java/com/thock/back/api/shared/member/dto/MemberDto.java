@@ -1,7 +1,7 @@
 package com.thock.back.api.shared.member.dto;
 
-import com.thock.back.api.boundedContext.member.domain.MemberRole;
-import com.thock.back.api.boundedContext.member.domain.MemberState;
+import com.thock.back.api.shared.member.domain.MemberRole;
+import com.thock.back.api.shared.member.domain.MemberState;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

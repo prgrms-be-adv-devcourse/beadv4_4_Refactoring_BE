@@ -1,4 +1,4 @@
-package com.thock.back.api.boundedContext.member.domain;
+package com.thock.back.api.shared.member.domain;
 
 public enum MemberState {
     ACTIVE,        // 정상

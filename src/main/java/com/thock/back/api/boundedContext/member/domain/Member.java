@@ -1,5 +1,7 @@
 package com.thock.back.api.boundedContext.member.domain;
 
+import com.thock.back.api.shared.member.domain.MemberRole;
+import com.thock.back.api.shared.member.domain.MemberState;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;

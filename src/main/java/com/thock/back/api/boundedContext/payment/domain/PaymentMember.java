@@ -1,7 +1,7 @@
 package com.thock.back.api.boundedContext.payment.domain;
 
-import com.thock.back.api.boundedContext.member.domain.MemberRole;
-import com.thock.back.api.boundedContext.member.domain.MemberState;
+import com.thock.back.api.shared.member.domain.MemberRole;
+import com.thock.back.api.shared.member.domain.MemberState;
 import com.thock.back.api.shared.member.domain.ReplicaMember;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
