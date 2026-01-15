@@ -1,6 +1,8 @@
 package com.thock.back.api.shared.member.domain;
 
 
+import com.thock.back.api.boundedContext.member.domain.MemberRole;
+import com.thock.back.api.boundedContext.member.domain.MemberState;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
@@ -19,7 +21,7 @@ public abstract class ReplicaMember extends BaseMember {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public ReplicaMember(String email, String name, Role role, State state,long id, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ReplicaMember(String email, String name, MemberRole role, MemberState state, long id, LocalDateTime createdAt, LocalDateTime updatedAt) {
         super(email, name, role, state); //TODO: 변경
         this.id = id;
         this.createdAt = createdAt;

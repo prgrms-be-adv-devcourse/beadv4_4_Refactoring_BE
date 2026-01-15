@@ -1,5 +1,7 @@
 package com.thock.back.api.shared.member.domain;
 
+import com.thock.back.api.boundedContext.member.domain.MemberRole;
+import com.thock.back.api.boundedContext.member.domain.MemberState;
 import com.thock.back.api.global.jpa.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
@@ -18,11 +20,11 @@ public abstract class BaseMember extends BaseEntity {
 
     private String name;
 
-    private Role role;
+    private MemberRole role;
 
-    private State state;
+    private MemberState state;
 
-    public BaseMember(String email, String name, Role role, State state) {
+    public BaseMember(String email, String name, MemberRole role, MemberState state) {
         this.email = email;
         this.name = name;
         this.role = role;

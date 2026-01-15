@@ -1,7 +1,7 @@
 package com.thock.back.api.shared.member.dto;
 
-import com.thock.back.api.shared.member.domain.Role;
-import com.thock.back.api.shared.member.domain.State;
+import com.thock.back.api.boundedContext.member.domain.MemberRole;
+import com.thock.back.api.boundedContext.member.domain.MemberState;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -15,6 +15,6 @@ public class MemberDto {
     private final LocalDateTime updatedAt;
     private final String email;
     private final String name;
-    private final Role role;
-    private final State state;
+    private final MemberRole role;
+    private final MemberState state;
 }
