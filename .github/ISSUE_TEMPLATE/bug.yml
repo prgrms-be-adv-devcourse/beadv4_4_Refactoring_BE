@@ -1,6 +1,6 @@
 name: 🐛 Bug Report
 description: 버그 수정 이슈
-title: "[BUG] "
+title: "[FIX] "
 labels: ["bug"]
 body:
   - type: textarea

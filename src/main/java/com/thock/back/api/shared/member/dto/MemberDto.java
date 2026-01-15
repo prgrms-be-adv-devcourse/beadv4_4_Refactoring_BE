@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 public class MemberDto {
-    private final long id;
+    private final Long id;
     private final LocalDateTime createDate;
     private final LocalDateTime modifyDate;
     private final String email;
