@@ -16,6 +16,6 @@ public abstract class BaseEntity {
         GlobalConfig.getEventPublisher().publish(event);
     }
     public abstract Long getId();
-    public abstract LocalDateTime getCreateDate();
-    public abstract LocalDateTime getModifyDate();
+    public abstract LocalDateTime getCreatedAt();
+    public abstract LocalDateTime getUpdatedAt();
 }
