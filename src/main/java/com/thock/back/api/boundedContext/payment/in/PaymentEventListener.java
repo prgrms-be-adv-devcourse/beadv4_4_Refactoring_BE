@@ -2,6 +2,7 @@ package com.thock.back.api.boundedContext.payment.in;
 
 import com.thock.back.api.boundedContext.payment.app.PaymentFacade;
 import com.thock.back.api.shared.member.event.MemberJoinedEvent;
+import com.thock.back.api.shared.member.event.MemberModifiedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,4 +22,9 @@ public class PaymentEventListener {
         paymentFacade.syncMember(event.getMember());
     }
 
+    @TransactionalEventListener(phase = AFTER_COMMIT)
+    @Transactional(propagation = REQUIRES_NEW)
+    public void handle(MemberModifiedEvent event) {
+        paymentFacade.syncMember(event.getMember());
+    }
 }

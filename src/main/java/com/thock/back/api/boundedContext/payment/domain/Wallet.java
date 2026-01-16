@@ -1,6 +1,7 @@
 package com.thock.back.api.boundedContext.payment.domain;
 
 import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
+import com.thock.back.api.shared.payment.dto.WalletDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,4 +28,22 @@ public class Wallet extends BaseIdAndTime {
 
     @OneToMany(mappedBy = "wallet", cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
     private List<RevenueLog> revenueLogs = new ArrayList<>();;
+
+    public Wallet(PaymentMember member) {
+        this.member = member;
+        this.balance = 0L;
+        this.revenue = 0L;
+    }
+
+    public WalletDto toDto(){
+        return new WalletDto(
+                getId(),
+                getMember().getId(),
+                getMember().getName(),
+                getBalance(),
+                getRevenue(),
+                getCreatedAt(),
+                getUpdatedAt()
+        );
+    }
 }
