@@ -1,7 +1,10 @@
-package com.thock.back.api.boundedContext.member.domain;
+package com.thock.back.api.boundedContext.member.in;
 
+import com.thock.back.api.boundedContext.member.app.MemberSignUpService;
+import com.thock.back.api.boundedContext.member.domain.SignUpCommand;
+import com.thock.back.api.boundedContext.member.domain.SignUpRequest;
+import com.thock.back.api.boundedContext.member.domain.SignUpResponse;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
