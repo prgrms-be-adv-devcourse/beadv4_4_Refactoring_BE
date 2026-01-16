@@ -1,10 +1,7 @@
 package com.thock.back.api.boundedContext.payment.domain;
 
 import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,5 +21,6 @@ public class PaymentLog extends BaseIdAndTime {
     @ManyToOne(fetch = LAZY)
     private PaymentRefund refund;
 
+    @Enumerated(EnumType.STRING)
     private EventType eventType;
 }
