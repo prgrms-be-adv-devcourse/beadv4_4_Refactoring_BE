@@ -2,6 +2,8 @@ package com.thock.back.api.shared.member.domain;
 
 import com.thock.back.api.global.jpa.entity.BaseEntity;
 import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,13 +15,17 @@ import lombok.Setter;
 @NoArgsConstructor
 public abstract class BaseMember extends BaseEntity {
     // 모든 상속받는 멤버가 다 가지고있어야하는 필드
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private MemberRole role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private MemberState state;
 
     public BaseMember(String email, String name, MemberRole role, MemberState state) {
