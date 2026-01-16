@@ -1,7 +1,9 @@
 package com.thock.back.api.boundedContext.payment.app;
 
 import com.thock.back.api.boundedContext.payment.domain.PaymentMember;
+import com.thock.back.api.boundedContext.payment.domain.Wallet;
 import com.thock.back.api.boundedContext.payment.out.PaymentMemberRepository;
+import com.thock.back.api.boundedContext.payment.out.WalletRepository;
 import com.thock.back.api.global.eventPublisher.EventPublisher;
 import com.thock.back.api.shared.member.dto.MemberDto;
 import lombok.AllArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class PaymentSyncMemberUseCase {
     private final PaymentMemberRepository paymentMemberRepository;
+    private final WalletRepository walletRepository;
     private final EventPublisher eventPublisher;
 
     /**
@@ -32,7 +35,8 @@ public class PaymentSyncMemberUseCase {
         );
 
         if(isNew){
-            // TODO: Wallet 만드는 기능
+            Wallet wallet = new Wallet(paymentMember);
+            walletRepository.save(wallet);
         }
         return paymentMember;
     }
