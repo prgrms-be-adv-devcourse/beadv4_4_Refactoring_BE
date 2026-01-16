@@ -27,7 +27,7 @@ public class PaymentSupport {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Wallet> findWalletByHolderId(int holderId) {
+    public Optional<Wallet> findWalletByHolderId(Long holderId) {
         return walletRepository.findByHolderId(holderId);
     }
 
