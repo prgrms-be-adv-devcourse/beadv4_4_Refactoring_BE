@@ -1,4 +1,4 @@
-package com.thock.back.api.global.global;
+package com.thock.back.api.global.config;
 
 import com.thock.back.api.global.eventPublisher.EventPublisher;
 import lombok.Getter;
