@@ -1,9 +1,7 @@
 package com.thock.back.api.boundedContext.payment.domain;
 
 import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -15,19 +13,20 @@ import static jakarta.persistence.FetchType.LAZY;
 @Table(name = "payment_wallet_logs")
 public class WalletLog extends BaseIdAndTime {
     @ManyToOne(fetch = LAZY)
-    private PaymentMember member;
+    private PaymentMember holder;
 
     @ManyToOne(fetch = LAZY)
     private Wallet wallet;
 
+    @Enumerated(EnumType.STRING)
     private EventType eventType;
 
     private Long amount;
 
     private Long balance;
 
-    public WalletLog(PaymentMember member, Wallet wallet, EventType eventType, Long amount, Long balance) {
-        this.member = member;
+    public WalletLog(PaymentMember holder, Wallet wallet, EventType eventType, Long amount, Long balance) {
+        this.holder = holder;
         this.wallet = wallet;
         this.eventType = eventType;
         this.amount = amount;

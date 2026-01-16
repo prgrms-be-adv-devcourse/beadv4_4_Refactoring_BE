@@ -75,8 +75,8 @@ public class PaymentEvetListenerTest {
         // 지갑 생성 테스트
         var wallet = walletRepository.findById(member.get().getId());
         assertThat(wallet).isPresent();
-        assertThat(wallet.get().getMember().getId()).isEqualTo(member.get().getId());
-        System.out.println("wallet member id = " + wallet.get().getMember().getId());
+        assertThat(wallet.get().getHolder().getId()).isEqualTo(member.get().getId());
+        System.out.println("wallet member id = " + wallet.get().getHolder().getId());
         System.out.println("wallet wallet id = " + wallet.get().getId());
         System.out.println("wallet balance = " + wallet.get().getBalance());
         System.out.println("wallet revenue = " + wallet.get().getRevenue());
@@ -125,8 +125,8 @@ public class PaymentEvetListenerTest {
         // 지갑 생성 테스트
         var wallet = walletRepository.findById(member.get().getId());
         assertThat(wallet).isPresent();
-        assertThat(wallet.get().getMember().getId()).isEqualTo(member.get().getId());
-        System.out.println("wallet member id = " + wallet.get().getMember().getId());
+        assertThat(wallet.get().getHolder().getId()).isEqualTo(member.get().getId());
+        System.out.println("wallet member id = " + wallet.get().getHolder().getId());
         System.out.println("wallet wallet id = " + wallet.get().getId());
         System.out.println("wallet balance = " + wallet.get().getBalance());
         System.out.println("wallet revenue = " + wallet.get().getRevenue());
@@ -135,5 +135,4 @@ public class PaymentEvetListenerTest {
         System.out.println("-----------------------------------------------------");
         System.out.println("-----------------------------------------------------");
     }
-
 }
