@@ -18,11 +18,11 @@ public abstract class BaseMember extends BaseEntity {
 
     private String name;
 
-    private Role role;
+    private MemberRole role;
 
-    private State state;
+    private MemberState state;
 
-    public BaseMember(String email, String name, Role role, State state) {
+    public BaseMember(String email, String name, MemberRole role, MemberState state) {
         this.email = email;
         this.name = name;
         this.role = role;
