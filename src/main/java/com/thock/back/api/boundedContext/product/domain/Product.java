@@ -1,5 +1,7 @@
 package com.thock.back.api.boundedContext.product.domain;
 
+import com.thock.back.api.global.exception.CustomException;
+import com.thock.back.api.global.exception.ErrorCode;
 import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -51,16 +53,16 @@ public class Product extends BaseIdAndTime {
                    Long price, Long salePrice, Integer stock, String imageUrl, Map<String, Object> detail) {
 
         if (sellerId == null) {
-            throw new IllegalArgumentException("판매자 ID는 필수입니다.");
+            throw new CustomException(ErrorCode.SELLER_REQUIRED);
         }
         if (category == null){
-            throw new IllegalArgumentException("카테고리 설정은 필수입니다.");
+            throw new CustomException(ErrorCode.PRODUCT_CATEGORY_REQUIRED);
         }
         if (name == null) {
-            throw new IllegalArgumentException("상품명은 필수입니다.");
+            throw new CustomException(ErrorCode.PRODUCT_NAME_REQIRED);
         }
         if (price == null) {
-            throw new IllegalArgumentException("가격입력은 필수입니다.");
+            throw new CustomException(ErrorCode.PRODUCT_PRICE_INVALID);
         }
 
         this.sellerId = sellerId;
