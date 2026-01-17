@@ -27,4 +27,10 @@ public class Wallet extends BaseIdAndTime {
 
     @OneToMany(mappedBy = "wallet", cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
     private List<RevenueLog> revenueLogs = new ArrayList<>();;
+
+    public Wallet(PaymentMember member) {
+        this.member = member;
+        this.balance = 0L;
+        this.revenue = 0L;
+    }
 }

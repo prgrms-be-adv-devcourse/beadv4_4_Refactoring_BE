@@ -25,4 +25,12 @@ public class WalletLog extends BaseIdAndTime {
     private Long amount;
 
     private Long balance;
+
+    public WalletLog(PaymentMember member, Wallet wallet, EventType eventType, Long amount, Long balance) {
+        this.member = member;
+        this.wallet = wallet;
+        this.eventType = eventType;
+        this.amount = amount;
+        this.balance = balance;
+    }
 }

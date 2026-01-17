@@ -30,14 +30,20 @@ jobs:
           # 세미콜론 필수, 띄어쓰기 필수, 설명 1글자 이상 필수
           REGEX='^(feat|fix|docs|style|refactor|test|chore|comment|rename|remove|hotfix): .{1,}'
           
+          # Merge 커밋 패턴 (검증 제외, Git이 자동 생성한 Merge 커밋만 제외)
+          MERGE_REGEX='^Merge (pull request|branch|remote-tracking branch)'
+          
           FAIL=0
           LINE_NUM=0
           
           while IFS= read -r commit_msg; do
             LINE_NUM=$((LINE_NUM + 1))
             echo "[$LINE_NUM] $commit_msg"
-          
-            if [[ ! "$commit_msg" =~ $REGEX ]]; then
+            
+            # Merge 커밋인지 확인
+            if [[ "$commit_msg" =~ $MERGE_REGEX ]]; then
+              echo "  ⏭️  Merge 커밋 (검증 제외)"
+            elif [[ ! "$commit_msg" =~ $REGEX ]]; then
               echo "  ❌ 규칙 위반!"
               FAIL=1
             else
@@ -69,13 +75,14 @@ jobs:
             echo "  comment  : 주석 추가 및 변경"
             echo "  rename   : 파일/폴더명 수정"
             echo "  remove   : 파일 삭제"
-            echo "  remove   : 파일 삭제"
             echo "  hotfix   : 긴급 버그 수정"
             echo ""
             echo "📋 규칙:"
             echo "  - type: 소문자"
             echo "  - 콜론(:) 뒤에 공백 필수"
             echo "  - subject 1글자 이상 작성 필수"
+            echo ""
+            echo "💡 참고: Merge 커밋은 자동으로 검증에서 제외됩니다."
             exit 1
           fi
           

@@ -26,3 +26,4 @@ public abstract class ReplicaMember extends BaseMember {
         this.updatedAt = updatedAt;
     }
 }
+
