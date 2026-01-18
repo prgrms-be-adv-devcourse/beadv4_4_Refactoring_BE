@@ -3,6 +3,7 @@ package com.thock.back.api.boundedContext.member.domain;
 import com.thock.back.api.shared.member.domain.MemberRole;
 import com.thock.back.api.shared.member.domain.MemberState;
 import com.thock.back.api.shared.member.domain.SourceMember;
+import com.thock.back.api.shared.member.dto.MemberDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -36,6 +37,18 @@ public class Member extends SourceMember {
     public void withdraw() {
         this.setState(MemberState.WITHDRAWN);
         this.withdrawnAt = LocalDateTime.now();
+    }
+
+    public MemberDto toDto(){
+        return new MemberDto(
+                getId(),
+                getCreatedAt(),
+                getUpdatedAt(),
+                getEmail(),
+                getName(),
+                getRole(),
+                getState()
+        );
     }
 }
 
