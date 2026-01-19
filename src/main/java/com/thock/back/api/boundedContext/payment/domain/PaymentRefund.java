@@ -1,9 +1,7 @@
 package com.thock.back.api.boundedContext.payment.domain;
 
 import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,5 +15,6 @@ public class PaymentRefund extends BaseIdAndTime {
 
     private Long amount;
 
+    @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 }
