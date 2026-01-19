@@ -1,16 +1,22 @@
 package com.thock.back.api.global.security;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -19,22 +25,29 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frame -> frame.disable())) // H2 console iframe
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/swagger-ui/**", // Swagger UI
-                                "/v3/api-docs/**", // Swagger(OpenAPI) 스펙 JSON을 내려주는 엔드포인트
-                                "/h2-console/**", // H2 콘솔
-                                "/api/v1/auth/**" // 인증 API
-                        ).permitAll()
-                        .anyRequest().permitAll() // 개발 편의: 일단 전부 허용
+                // 세션 사용 안 함 (JWT 기반)
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                // 기본 폼 로그인/베이직 인증 끄기 (로그인 화면 안 뜸)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/h2-console/**",
+                                "/api/v1/auth/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()   // ← 여기 중요 (JWT 없으면 접근 불가)
+                )
+
+                // 기본 폼 로그인/베이직 인증 끄기
                 .formLogin(form -> form.disable())
-                .httpBasic(basic -> basic.disable());
+                .httpBasic(basic -> basic.disable())
+
+                // JWT 필터 연결
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
 }
 
