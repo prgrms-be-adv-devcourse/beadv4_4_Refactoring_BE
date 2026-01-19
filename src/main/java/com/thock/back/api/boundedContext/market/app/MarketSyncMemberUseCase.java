@@ -1,7 +1,7 @@
 package com.thock.back.api.boundedContext.market.app;
 
 import com.thock.back.api.boundedContext.market.domain.MarketMember;
-import com.thock.back.api.boundedContext.market.out.MarketMemberRepository;
+import com.thock.back.api.boundedContext.market.out.repository.MarketMemberRepository;
 import com.thock.back.api.global.eventPublisher.EventPublisher;
 import com.thock.back.api.shared.market.event.MarketMemberCreatedEvent;
 import com.thock.back.api.shared.member.dto.MemberDto;

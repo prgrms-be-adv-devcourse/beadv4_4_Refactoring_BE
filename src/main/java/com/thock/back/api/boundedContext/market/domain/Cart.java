@@ -25,7 +25,7 @@ public class Cart extends BaseManualIdAndTime {
     @OneToMany(mappedBy = "cart", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
 
-    private int itemsCount;
+    private Integer itemsCount;
 
     public Cart(MarketMember buyer){
         super(buyer.getId());
@@ -37,13 +37,13 @@ public class Cart extends BaseManualIdAndTime {
     }
 
     // 장바구니에 상품 등록
-    public void addItem(Long productId, int quantity) {
+    public void addItem(Long productId, Integer quantity) {
         CartItem cartItem = new CartItem(this, productId, quantity);
         this.items.add(cartItem);
         this.itemsCount++;
     }
 
-    public void updateItemQuantity(Long productId, int quantity) {
+    public void updateItemQuantity(Long productId, Integer quantity) {
         CartItem cartItem = findItemByProductId(productId);
         cartItem.updateQuantity(quantity); // CartItem 메서드 호출
     }
