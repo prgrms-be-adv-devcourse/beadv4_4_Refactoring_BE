@@ -5,10 +5,13 @@ import com.thock.back.api.global.exception.ErrorCode;
 import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
 import com.thock.back.api.shared.member.domain.MemberState;
 import com.thock.back.api.shared.payment.dto.WalletDto;
+import com.thock.back.api.shared.payment.event.PaymentAddBalanceLogEvent;
+import com.thock.back.api.shared.payment.event.PaymentAddRevenueLogEvent;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,10 +30,10 @@ public class Wallet extends BaseIdAndTime {
 
     private Long revenue;
 
-    @OneToMany(mappedBy = "wallet", cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
+    @OneToMany(mappedBy = "wallet")
     private List<WalletLog> walletLogs = new ArrayList<>();;
 
-    @OneToMany(mappedBy = "wallet", cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
+    @OneToMany(mappedBy = "wallet")
     private List<RevenueLog> revenueLogs = new ArrayList<>();;
 
     public Wallet(PaymentMember holder) {
@@ -48,7 +51,13 @@ public class Wallet extends BaseIdAndTime {
             throw new CustomException(ErrorCode.WALLET_IS_LOCKED);
         }
         this.balance += amount;
-        addWalletLog(amount, eventType);
+        publishEvent(
+                new PaymentAddBalanceLogEvent(
+                        toDto(),
+                        eventType,
+                        amount
+                )
+        );
     }
 
     public void depositRevenue(Long amount, EventType eventType){
@@ -57,7 +66,13 @@ public class Wallet extends BaseIdAndTime {
         }
 
         this.revenue += amount;
-        addRevenueLog(amount, eventType);
+        publishEvent(
+                new PaymentAddRevenueLogEvent(
+                        toDto(),
+                        eventType,
+                        amount
+                )
+        );
     }
 
     /**
@@ -78,7 +93,13 @@ public class Wallet extends BaseIdAndTime {
         }
 
         this.balance -= amount;
-        addWalletLog(amount, eventType);
+        publishEvent(
+                new PaymentAddBalanceLogEvent(
+                        toDto(),
+                        eventType,
+                        amount
+                )
+        );
     }
 
     public void withdrawRevenue(Long amount, EventType eventType){
@@ -95,33 +116,13 @@ public class Wallet extends BaseIdAndTime {
         }
 
         this.revenue -= amount;
-        addRevenueLog(amount, eventType);
-    }
-
-    /**
-     * 캐시 로그 메서드
-     **/
-
-    private void addWalletLog(Long amount, EventType eventType) {
-        WalletLog walletLog = new WalletLog(
-                this.holder,
-                this,
-                eventType,
-                amount,
-                this.balance
+        publishEvent(
+                new PaymentAddRevenueLogEvent(
+                        toDto(),
+                        eventType,
+                        amount
+                )
         );
-        walletLogs.add(walletLog);
-    }
-
-    private void addRevenueLog(Long amount, EventType eventType) {
-        RevenueLog revenueLog = new RevenueLog(
-                this.holder,
-                this,
-                eventType,
-                amount,
-                this.revenue
-        );
-        revenueLogs.add(revenueLog);
     }
 
     /**
