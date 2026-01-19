@@ -127,4 +127,14 @@ public class ProductService {
                 .eventType(ProductEventType.DELETE)
                 .build());
     }
+
+    // 키워드 검색
+    public List<ProductListResponse> searchByKeyword(String keyword){
+        if(keyword == null || keyword.isBlank()){
+            return List.of();
+        }
+        return productRepository.findByNameContaining(keyword).stream()
+                .map(ProductListResponse::new)
+                .toList();
+    }
 }
