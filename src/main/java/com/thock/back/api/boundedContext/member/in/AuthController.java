@@ -1,10 +1,8 @@
 package com.thock.back.api.boundedContext.member.in;
 
 import com.thock.back.api.boundedContext.member.app.AuthApplicationService;
-import com.thock.back.api.boundedContext.member.domain.LoginCommand;
-import com.thock.back.api.boundedContext.member.domain.LoginRequest;
-import com.thock.back.api.boundedContext.member.domain.LoginResponse;
-import com.thock.back.api.boundedContext.member.domain.LoginResult;
+import com.thock.back.api.boundedContext.member.domain.*;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,4 +25,11 @@ public class AuthController {
 
         return ResponseEntity.ok(new LoginResponse(result.accessToken(), result.refreshToken()));
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenRefreshResponse> refresh(@RequestBody TokenRefreshRequest request) throws Exception {
+        String accessToken = authApplicationService.refreshAccessToken(request.refreshToken());
+        return ResponseEntity.ok(new TokenRefreshResponse(accessToken));
+    }
 }
+

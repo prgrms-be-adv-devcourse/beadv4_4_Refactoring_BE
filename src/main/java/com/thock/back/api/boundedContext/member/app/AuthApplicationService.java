@@ -54,6 +54,7 @@ public class AuthApplicationService {
         // 기존 RefreshToken 폐기
         List<RefreshToken> oldTokens = refreshTokenRepository.findAllByMemberIdAndRevokedAtIsNull(member.getId());
         oldTokens.forEach(RefreshToken::revoke);
+        refreshTokenRepository.saveAll(oldTokens);
 
         // 새 RefreshToken 발급 & 저장
         String refreshTokenValue = jwtTokenProvider.createRefreshToken(member.getId());
@@ -62,10 +63,27 @@ public class AuthApplicationService {
                 refreshTokenValue,
                 LocalDateTime.now()
         );
+        refreshTokenRepository.save(refreshToken);
 
         // 로그인 이력 저장
         loginHistoryRepository.save(LoginHistory.success(member.getId()));
 
         return new LoginResult(accessToken, refreshTokenValue);
+    }
+
+    public String refreshAccessToken(String refreshTokenValue) throws Exception {
+        RefreshToken token = refreshTokenRepository.findByTokenValue(refreshTokenValue)
+                .orElseThrow(() -> new Exception()); // TODO: 401
+
+        if (token.getRevokedAt() != null) {
+            throw new Exception(); // TODO: 401
+        }
+
+        Long memberId = jwtTokenProvider.extractMemberId(refreshTokenValue);
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new Exception());
+
+        return jwtTokenProvider.createAccessToken(memberId, member.getRole(), member.getState());
     }
 }

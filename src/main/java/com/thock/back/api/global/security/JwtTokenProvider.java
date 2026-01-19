@@ -66,6 +66,16 @@ public class JwtTokenProvider {
                 .getPayload();
     }
 
+    public Long extractMemberId(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return Long.parseLong(claims.getSubject());
+    }
+
     public Long getMemberId(String token) {
         Claims claims = parseClaims(token);
         return Long.valueOf(claims.getSubject());
