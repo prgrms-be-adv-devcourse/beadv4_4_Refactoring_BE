@@ -1,5 +1,7 @@
 package com.thock.back.api.global.security;
 
+import com.thock.back.api.shared.member.domain.MemberRole;
+import com.thock.back.api.shared.member.domain.MemberState;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -24,7 +26,7 @@ public class JwtTokenProvider {
     }
 
     /** AccessToken 생성 (짧게) */
-    public String createAccessToken(Long memberId, String role, String state) {
+    public String createAccessToken(Long memberId, MemberRole role, MemberState state) {
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(props.accessTokenExpSeconds());
 

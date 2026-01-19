@@ -39,6 +39,10 @@ public class Member extends SourceMember {
         this.withdrawnAt = LocalDateTime.now();
     }
 
+    public boolean isWithdrawn() {
+        return this.getState() == MemberState.WITHDRAWN;
+    }
+
     public MemberDto toDto(){
         return new MemberDto(
                 getId(),
