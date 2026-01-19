@@ -1,3 +1,5 @@
+server:
+  port: 8080
 spring:
   application:
     name:Thock Backend API Server
@@ -25,7 +27,7 @@ jwt:
   access-token-exp-seconds: 900
   refresh-token-exp-seconds: 1209600 # 14일
   issuer: "thock"
-
+  
 logging:
   level:
     org.hibernate.SQL: debug

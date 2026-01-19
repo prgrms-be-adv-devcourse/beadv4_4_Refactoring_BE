@@ -1,7 +1,7 @@
 package com.thock.back.api.boundedContext.market.app;
 
 import com.thock.back.api.boundedContext.market.domain.MarketMember;
-import com.thock.back.api.boundedContext.market.out.MarketMemberRepository;
+import com.thock.back.api.boundedContext.market.out.repository.MarketMemberRepository;
 import com.thock.back.api.global.eventPublisher.EventPublisher;
 import com.thock.back.api.shared.market.event.MarketMemberCreatedEvent;
 import com.thock.back.api.shared.member.dto.MemberDto;
@@ -11,10 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class MarketSyncMemberUseCase {
     private final MarketMemberRepository marketMemberRepository;
     private final EventPublisher eventPublisher;
+
+    @Transactional
     public MarketMember syncMember(MemberDto member) {
         // 기존 회원인지 판단
         boolean isNew = !marketMemberRepository.existsById(member.getId());
