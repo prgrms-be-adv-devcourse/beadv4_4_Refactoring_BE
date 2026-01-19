@@ -5,8 +5,10 @@ import com.thock.back.api.boundedContext.member.domain.Member;
 import com.thock.back.api.boundedContext.member.domain.SignUpCommand;
 import com.thock.back.api.boundedContext.member.out.CredentialRepository;
 import com.thock.back.api.boundedContext.member.out.MemberRepository;
+import com.thock.back.api.global.eventPublisher.EventPublisher;
 import com.thock.back.api.global.exception.CustomException;
 import com.thock.back.api.global.exception.ErrorCode;
+import com.thock.back.api.shared.member.event.MemberJoinedEvent;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +22,7 @@ public class MemberSignUpService {
     private final MemberRepository memberRepository;
     private final CredentialRepository credentialRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EventPublisher eventPublisher;
 
     public Long signUp(SignUpCommand command) {
 
@@ -35,6 +38,9 @@ public class MemberSignUpService {
         String hashedPassword = passwordEncoder.encode(command.password());
         Credential credential = Credential.create(member, hashedPassword);
         credentialRepository.save(credential);
+
+
+        eventPublisher.publish(new MemberJoinedEvent(member.toDto()));
 
         return member.getId();
     }
