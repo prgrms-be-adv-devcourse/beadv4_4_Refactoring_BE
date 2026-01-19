@@ -59,7 +59,7 @@ public class Product extends BaseIdAndTime {
             throw new CustomException(ErrorCode.PRODUCT_CATEGORY_REQUIRED);
         }
         if (name == null) {
-            throw new CustomException(ErrorCode.PRODUCT_NAME_REQIRED);
+            throw new CustomException(ErrorCode.PRODUCT_NAME_REQUIRED);
         }
         if (price == null) {
             throw new CustomException(ErrorCode.PRODUCT_PRICE_INVALID);
