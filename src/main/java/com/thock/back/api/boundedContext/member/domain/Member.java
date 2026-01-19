@@ -1,5 +1,6 @@
 package com.thock.back.api.boundedContext.member.domain;
 
+import com.thock.back.api.boundedContext.member.event.MemberSignedUpEvent;
 import com.thock.back.api.shared.member.domain.MemberRole;
 import com.thock.back.api.shared.member.domain.MemberState;
 import com.thock.back.api.shared.member.domain.SourceMember;
@@ -27,7 +28,20 @@ public class Member extends SourceMember {
     }
 
     public static Member signUp(String email, String name) {
-        return new Member(email, name);
+        Member member = new Member(email, name);
+        member.publishEvent(
+                new MemberSignedUpEvent(
+                new MemberDto(
+                        member.getId(),
+                        member.getCreatedAt(),
+                        member.getUpdatedAt(),
+                        member.getEmail(),
+                        member.getName(),
+                        member.getRole(),
+                        member.getState()
+                )));
+
+        return member;
     }
 
     public void recordLogin() {
