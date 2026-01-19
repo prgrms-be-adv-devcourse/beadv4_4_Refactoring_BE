@@ -1,6 +1,10 @@
 package com.thock.back.api.boundedContext.payment.domain;
 
+import com.thock.back.api.global.exception.CustomException;
+import com.thock.back.api.global.exception.ErrorCode;
 import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
+import com.thock.back.api.shared.member.domain.MemberState;
+import com.thock.back.api.shared.payment.dto.WalletDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,8 +19,9 @@ import static jakarta.persistence.FetchType.LAZY;
 @NoArgsConstructor
 @Table(name = "payment_wallets")
 public class Wallet extends BaseIdAndTime {
+    //TODO: 멤버 유효성 검증 해야함
     @OneToOne(fetch = LAZY)
-    private PaymentMember member;
+    private PaymentMember holder;
 
     private Long balance;
 
@@ -28,9 +33,117 @@ public class Wallet extends BaseIdAndTime {
     @OneToMany(mappedBy = "wallet", cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
     private List<RevenueLog> revenueLogs = new ArrayList<>();;
 
-    public Wallet(PaymentMember member) {
-        this.member = member;
+    public Wallet(PaymentMember holder) {
+        this.holder = holder;
         this.balance = 0L;
         this.revenue = 0L;
+    }
+
+    /**
+     * 입금 관련 메서드
+     **/
+
+    public void depositBalance(Long amount, EventType eventType){
+        if(!isHolderStateOK(this.holder.getState())){
+            throw new CustomException(ErrorCode.WALLET_IS_LOCKED);
+        }
+        this.balance += amount;
+        addWalletLog(amount, eventType);
+    }
+
+    public void depositRevenue(Long amount, EventType eventType){
+        if(!isHolderStateOK(this.holder.getState())){
+            throw new CustomException(ErrorCode.WALLET_IS_LOCKED);
+        }
+
+        this.revenue += amount;
+        addRevenueLog(amount, eventType);
+    }
+
+    /**
+     * 출금 관련 메서드
+     **/
+
+    public void withdrawBalance(Long amount, EventType eventType){
+        if (balance < amount){
+            throw new CustomException(ErrorCode.WALLET_NOT_WITHDRAW);
+        }
+
+        else if(balance == 0) {
+            throw new CustomException(ErrorCode.WALLET_NOT_WITHDRAW);
+        }
+
+        else if(!isHolderStateOK(this.holder.getState())){
+            throw new CustomException(ErrorCode.WALLET_IS_LOCKED);
+        }
+
+        this.balance -= amount;
+        addWalletLog(amount, eventType);
+    }
+
+    public void withdrawRevenue(Long amount, EventType eventType){
+        if (revenue < amount){
+            throw new CustomException(ErrorCode.WALLET_NOT_WITHDRAW);
+        }
+
+        else if(revenue == 0) {
+            throw new CustomException(ErrorCode.WALLET_NOT_WITHDRAW);
+        }
+
+        else if(!isHolderStateOK(this.holder.getState())){
+            throw new CustomException(ErrorCode.WALLET_IS_LOCKED);
+        }
+
+        this.revenue -= amount;
+        addRevenueLog(amount, eventType);
+    }
+
+    /**
+     * 캐시 로그 메서드
+     **/
+
+    private void addWalletLog(Long amount, EventType eventType) {
+        WalletLog walletLog = new WalletLog(
+                this.holder,
+                this,
+                eventType,
+                amount,
+                this.balance
+        );
+        walletLogs.add(walletLog);
+    }
+
+    private void addRevenueLog(Long amount, EventType eventType) {
+        RevenueLog revenueLog = new RevenueLog(
+                this.holder,
+                this,
+                eventType,
+                amount,
+                this.revenue
+        );
+        revenueLogs.add(revenueLog);
+    }
+
+    /**
+     * WalletDto
+     **/
+
+    public WalletDto toDto(){
+        return new WalletDto(
+                getId(),
+                getHolder().getId(),
+                getHolder().getName(),
+                getBalance(),
+                getRevenue(),
+                getCreatedAt(),
+                getUpdatedAt()
+        );
+    }
+
+    public boolean isHolderStateOK(MemberState memberState) {
+        if(memberState == MemberState.SUSPENDED || memberState == MemberState.WITHDRAWN){
+            return false;
+        }
+        return true;
     }
 }
