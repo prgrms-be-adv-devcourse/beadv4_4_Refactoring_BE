@@ -126,53 +126,93 @@ public class WalletTest {
         System.out.println("log revenue = " + log.getBalance());
     }
 
-//    @Test
-//    @DisplayName("지갑_출금_및_지갑_로그_테스트")
-//    void 지갑_출금_및_지갑_로그_테스트() {
-//        TransactionTemplate tx = new TransactionTemplate(txManager);
-//
-//        MemberDto memberDto = new MemberDto(
-//                1L,
-//                LocalDateTime.now().minusDays(1),
-//                LocalDateTime.now(),
-//                "test@example.com",
-//                "테스트유저",
-//                MemberRole.USER,
-//                MemberState.SUSPENDED
-//        );
-//
-//
-//        // 이벤트 발생 + 트랜잭션 commit
-//        tx.execute(status -> {
-//            eventPublisher.publish(new MemberModifiedEvent(memberDto));
-//            return null;
-//        });
-//
-//        // DB 실제 검사
-//        var member = paymentMemberRepository.findById(memberDto.getId());
-//
-//        assertThat(member).isPresent();
-//        assertThat(member.get().getEmail()).isEqualTo(memberDto.getEmail());
-//        assertThat(member.get().getName()).isEqualTo(memberDto.getName());
-//        assertThat(member.get().getRole()).isEqualTo(memberDto.getRole());
-//        assertThat(member.get().getState()).isEqualTo(memberDto.getState());
-//        System.out.println("-----------------------------------------------------");
-//        System.out.println("-----MemberModifiedEvent_PaymentSyncMember_테스트 + 지갑 생성 -----");
-//        System.out.println("-----------------------------------------------------");
-//        System.out.println("member state = " + member.get().getState());
-//
-//
-//        // 지갑 생성 테스트
-//        var wallet = walletRepository.findById(member.get().getId());
-//        assertThat(wallet).isPresent();
-//        assertThat(wallet.get().getHolder().getId()).isEqualTo(member.get().getId());
-//        System.out.println("wallet member id = " + wallet.get().getHolder().getId());
-//        System.out.println("wallet wallet id = " + wallet.get().getId());
-//        System.out.println("wallet balance = " + wallet.get().getBalance());
-//        System.out.println("wallet revenue = " + wallet.get().getRevenue());
-//        System.out.println("paymentMember id = " + member.get().getId());
-//        System.out.println("-----------------------------------------------------");
-//        System.out.println("-----------------------------------------------------");
-//        System.out.println("-----------------------------------------------------");
-//    }
+    @Test
+    @DisplayName("지갑_금액_출금_및_지갑_로그_테스트")
+    void 지갑_출금_및_지갑_로그_테스트() {
+        // given
+        PaymentMember member = new PaymentMember(
+                "test@mail.com",
+                "tester",
+                MemberState.ACTIVE,
+                MemberRole.USER,
+                1L,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+
+        Wallet wallet = new Wallet(member);
+
+        // when
+        System.out.println("-----------------------------------------------------");
+        System.out.println("-----지갑_출금_테스트 -----");
+        System.out.println("-----------------------------------------------------");
+        System.out.println("-----------------------------------------------------");
+        System.out.println("----- 출금 전 -----");
+        System.out.println("-----------------------------------------------------");
+        wallet.depositBalance(50_000L, EventType.입금);
+        System.out.println("balance = " + wallet.getBalance().toString());
+        assertThat(wallet.getBalance()).isEqualTo(50_000L);
+        System.out.println("-----------------------------------------------------");
+        System.out.println("----- 출금 후-----");
+        System.out.println("-----------------------------------------------------");
+        wallet.withdrawBalance(30_000L, EventType.출금);
+        System.out.println("balance = " + wallet.getBalance().toString());
+        // then
+        assertThat(wallet.getBalance()).isEqualTo(20_000L);
+        System.out.println("-----------------------------------------------------");
+        System.out.println("-----지갑_로그_테스트 -----");
+        System.out.println("-----------------------------------------------------");
+        WalletLog log = wallet.getWalletLogs().get(1);
+        assertThat(log.getAmount()).isEqualTo(30_000L);
+        assertThat(log.getEventType()).isEqualTo(EventType.출금);
+        assertThat(log.getBalance()).isEqualTo(20_000L);
+        System.out.println("log amount = " + log.getAmount());
+        System.out.println("log eventType = " + log.getEventType());
+        System.out.println("log balance = " + log.getBalance());
+    }
+
+    @Test
+    @DisplayName("지갑_판매수익_출금_및_판매수익_로그_테스트")
+    void 지갑_판매수익_출금_및_판매수익_로그_테스트() {
+        // given
+        PaymentMember member = new PaymentMember(
+                "test@mail.com",
+                "tester",
+                MemberState.ACTIVE,
+                MemberRole.USER,
+                1L,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+
+        Wallet wallet = new Wallet(member);
+
+        // when
+        System.out.println("-----------------------------------------------------");
+        System.out.println("-----판매수익_출금_테스트 -----");
+        System.out.println("-----------------------------------------------------");
+        System.out.println("-----------------------------------------------------");
+        System.out.println("----- 출금 전 -----");
+        System.out.println("-----------------------------------------------------");
+        System.out.println("revenue = " + wallet.getRevenue().toString());
+        assertThat(wallet.getRevenue()).isEqualTo(0L);
+        wallet.depositRevenue(100_000L, EventType.판매수익_입금);
+        System.out.println("-----------------------------------------------------");
+        System.out.println("----- 출금 후-----");
+        System.out.println("-----------------------------------------------------");
+        wallet.withdrawRevenue(30_000L, EventType.판매수익_출금);
+        System.out.println("revenue = " + wallet.getRevenue().toString());
+        // then
+        assertThat(wallet.getRevenue()).isEqualTo(70_000L);
+        System.out.println("-----------------------------------------------------");
+        System.out.println("-----판매수익_로그_테스트 -----");
+        System.out.println("-----------------------------------------------------");
+        RevenueLog log = wallet.getRevenueLogs().get(1);
+        assertThat(log.getAmount()).isEqualTo(30_000L);
+        assertThat(log.getEventType()).isEqualTo(EventType.판매수익_출금);
+        assertThat(log.getBalance()).isEqualTo(70_000L);
+        System.out.println("log amount = " + log.getAmount());
+        System.out.println("log eventType = " + log.getEventType());
+        System.out.println("log revenue = " + log.getBalance());
+    }
 }

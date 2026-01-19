@@ -19,10 +19,11 @@ public abstract class ReplicaMember extends BaseMember {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public ReplicaMember(String email, String name, MemberRole role, MemberState state, long id, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ReplicaMember(String email, String name, MemberRole role, MemberState state, Long id, LocalDateTime createdAt, LocalDateTime updatedAt) {
         super(email, name, role, state); //TODO: 변경
         this.id = id;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 }
+

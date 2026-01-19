@@ -29,18 +29,21 @@ public enum ErrorCode {
 
     // ===== 상품 =====
     SELLER_REQUIRED("PRODUCT-400-1", "판매자 ID는 필수입니다", HttpStatus.BAD_REQUEST),
-    PRODUCT_NAME_REQIRED("PRODUCT-400-2", "상품명은 필수입니다.", HttpStatus.BAD_REQUEST),
+    PRODUCT_NAME_REQUIRED("PRODUCT-400-2", "상품명은 필수입니다.", HttpStatus.BAD_REQUEST),
     PRODUCT_PRICE_INVALID("PRODUCT-400-3", "상품가격은 0원 이상이어야 합니다", HttpStatus.BAD_REQUEST),
-    PRODUCT_CATEGORY_REQUIRED("PRODUCT-400-4", "카테고리 설정은 필수입니다.", HttpStatus.BAD_REQUEST);
+    PRODUCT_CATEGORY_REQUIRED("PRODUCT-400-4", "카테고리 설정은 필수입니다.", HttpStatus.BAD_REQUEST),
+    PRODUCT_NOT_FOUND("PRODUCT-400-1", "존재하지 않는 상품입니다.", HttpStatus.NOT_FOUND),
 
     // ===== 장바구니 =====
-
+    CART_ITEM_NOT_FOUND("CART-404-1", "장바구니에 해당 상품이 존재하지 않습니다.", HttpStatus.NOT_FOUND),
     // ===== 주문 =====
 
     // ===== 배송 =====
 
     // ===== 결제 =====
-
+    WALLET_NOT_FOUND("WALLET-404-1", "지갑을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    WALLET_IS_LOCKED("WALLET-404-2", "이 지갑은 현재 정지 된 상태입니다.", HttpStatus.LOCKED),
+    WALLET_NOT_WITHDRAW("WALLET-404-3", "잔액이 부족합니다.", HttpStatus.NOT_FOUND);
     // ===== 정산 =====
 
     ;

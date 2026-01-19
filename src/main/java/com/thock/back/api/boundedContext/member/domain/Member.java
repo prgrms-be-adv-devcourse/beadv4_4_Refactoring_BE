@@ -2,32 +2,53 @@ package com.thock.back.api.boundedContext.member.domain;
 
 import com.thock.back.api.shared.member.domain.MemberRole;
 import com.thock.back.api.shared.member.domain.MemberState;
+import com.thock.back.api.shared.member.domain.SourceMember;
+import com.thock.back.api.shared.member.dto.MemberDto;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "member_members")
-public class Member {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false, unique = true)
-    private String email;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private MemberState state;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private MemberRole role;
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+public class Member extends SourceMember {
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
-    // 생성자, getter, 비즈니스 메서드 생략
+    private LocalDateTime withdrawnAt;
+
+    private Member(String email, String name) {
+        super(email, name, MemberRole.USER, MemberState.ACTIVE);
+    }
+
+    public static Member signUp(String email, String name) {
+        return new Member(email, name);
+    }
+
+    public void recordLogin() {
+        this.lastLoginAt = LocalDateTime.now();
+    }
+
+    public void withdraw() {
+        this.setState(MemberState.WITHDRAWN);
+        this.withdrawnAt = LocalDateTime.now();
+    }
+
+    public MemberDto toDto(){
+        return new MemberDto(
+                getId(),
+                getCreatedAt(),
+                getUpdatedAt(),
+                getEmail(),
+                getName(),
+                getRole(),
+                getState()
+        );
+    }
 }
 
