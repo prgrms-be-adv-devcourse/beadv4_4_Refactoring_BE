@@ -35,7 +35,9 @@ public enum ErrorCode {
     PRODUCT_NOT_FOUND("PRODUCT-400-1", "존재하지 않는 상품입니다.", HttpStatus.NOT_FOUND),
 
     // ===== 장바구니 =====
+    CART_PRODUCT_OUT_OF_STOCK("CART-400-1", "선택하신 상품의 재고가 부족합니다.", HttpStatus.BAD_REQUEST),
     CART_USER_NOT_FOUND("CART-404-1", "사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    CART_NOT_FOUND("CART-404-2", "장바구니를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     CART_ITEM_NOT_FOUND("CART-404-2", "장바구니에 해당 상품이 존재하지 않습니다.", HttpStatus.NOT_FOUND),
     CART_PRODUCT_API_FAILED("CART-500-1", "상품 정보를 불러올 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     // ===== 주문 =====
