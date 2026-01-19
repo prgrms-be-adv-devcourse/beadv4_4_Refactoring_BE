@@ -36,7 +36,7 @@ public class MemberSignUpService {
 
         // 비밀번호 해싱 후 Credential 생성
         String hashedPassword = passwordEncoder.encode(command.password());
-        Credential credential = Credential.create(member, hashedPassword);
+        Credential credential = Credential.create(member.getId(), hashedPassword);
         credentialRepository.save(credential);
 
 

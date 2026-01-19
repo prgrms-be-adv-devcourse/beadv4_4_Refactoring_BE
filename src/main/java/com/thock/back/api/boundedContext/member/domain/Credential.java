@@ -4,44 +4,37 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "member_credentials")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "member_credentials",
+        uniqueConstraints = @UniqueConstraint(name = "uk_member_credentials_member_id", columnNames = "member_id"))
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Credential {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long memberId; // Member PK를 그대로 사용 (공유키)
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false, unique = true)
-    private Member member;
-
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
-    @Column(name = "failed_count", nullable = false)
-    private int failedCount = 0;
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
-    @Column(name = "last_failed_at")
-    private LocalDateTime lastFailedAt;
-
-    @Column(name = "last_success_at")
-    private LocalDateTime lastSuccessAt;
-
-    @Column(name = "password_updated_at", nullable = false)
-    private LocalDateTime passwordUpdatedAt;
-
-    private Credential(Member member, String passwordHash) {
-        this.member = member;
+    private Credential(Long memberId, String passwordHash) {
+        this.memberId = memberId;
         this.passwordHash = passwordHash;
-        this.passwordUpdatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
-    public static Credential create(Member member, String passwordHash) {
-        return new Credential(member, passwordHash);
+    public static Credential create(Long memberId, String passwordHash) {
+        return new Credential(memberId, passwordHash);
+    }
+
+    public void changePassword(String newHash) {
+        this.passwordHash = newHash;
+        this.updatedAt = LocalDateTime.now();
     }
 }
