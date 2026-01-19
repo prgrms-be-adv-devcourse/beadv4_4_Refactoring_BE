@@ -11,10 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class MarketSyncMemberUseCase {
     private final MarketMemberRepository marketMemberRepository;
     private final EventPublisher eventPublisher;
+
+    @Transactional
     public MarketMember syncMember(MemberDto member) {
         // 기존 회원인지 판단
         boolean isNew = !marketMemberRepository.existsById(member.getId());
