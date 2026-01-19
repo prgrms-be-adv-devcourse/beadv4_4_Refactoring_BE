@@ -30,7 +30,7 @@ public class ApiV1ProductController {
     private final ProductService productService;
 
 
-    // 상품 등록
+    // 1. 상품 등록
     @Operation(summary = "상품 등록", description = "판매자가 새로운 상품을 등록합니다. (판매자 권한 필요)")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "상품 등록 성공"),
@@ -56,7 +56,7 @@ public class ApiV1ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(productId);
     }
 
-    // 카테고리별 상품 조회
+    // 2. 카테고리별 상품 조회
     @Operation(summary = "카테고리별 상품 리스트 조회", description = "카테고리별로 상품을 리스트를 보여줍니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공")
@@ -70,7 +70,7 @@ public class ApiV1ProductController {
     }
 
 
-    // 상품 상세조회
+    // 3. 상품 상세조회
     @Operation(summary = "상품 상세 조회", description = "상품 ID를 통해 상세 정보를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -83,7 +83,7 @@ public class ApiV1ProductController {
     }
 
 
-    // 상품 수정(U)
+    // 4. 상품 수정(U)
     @Operation(summary = "상품 수정", description = "상품 정보를 수정합니다. (본인 상품만 수정 가능)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
@@ -109,7 +109,7 @@ public class ApiV1ProductController {
         return ResponseEntity.ok(productId);
     }
 
-    // 상품 삭제(D)
+    // 5. 상품 삭제(D)
     @Operation(summary = "상품 삭제", description = "상품을 삭제합니다. (본인 혹은 관리자만 삭제 가능)")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "삭제 성공 (반환값 없음)"),
@@ -132,4 +132,13 @@ public class ApiV1ProductController {
         return ResponseEntity.noContent().build();
     }
 
+    // 6. 상품 검색
+    @Operation(summary = "상품 검색", description = "키워드로 상품을 검색합니다.")
+    @GetMapping("/search")
+    // GET /api/v1/products/search
+    public ResponseEntity<List<ProductListResponse>> search(
+            @Parameter(description = "검색어") @RequestParam String keyword
+    ) {
+        return ResponseEntity.ok(productService.searchByKeyword(keyword));
+    }
 }
