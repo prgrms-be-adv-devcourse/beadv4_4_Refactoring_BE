@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -49,18 +50,21 @@ public class AuthApplicationService {
 
         // JWT 토큰 발급
         String accessToken = jwtTokenProvider.createAccessToken(member.getId(), member.getRole(), member.getState());
-        String refreshTokenValue = jwtTokenProvider.createRefreshToken(member.getId());
 
-        // RefreshToken 저장/갱신
+        // 기존 RefreshToken 폐기
+        List<RefreshToken> oldTokens = refreshTokenRepository.findAllByMemberIdAndRevokedAtIsNull(member.getId());
+        oldTokens.forEach(RefreshToken::revoke);
+
+        // 새 RefreshToken 발급 & 저장
+        String refreshTokenValue = jwtTokenProvider.createRefreshToken(member.getId());
         RefreshToken refreshToken = RefreshToken.issue(
                 member.getId(),
                 refreshTokenValue,
                 LocalDateTime.now()
         );
 
-        //refreshTokenRepository.saveOrRotate(refreshToken);
-
-        // TODO: 로그인 이력 저장
+        // 로그인 이력 저장
+        loginHistoryRepository.save(LoginHistory.success(member.getId()));
 
         return new LoginResult(accessToken, refreshTokenValue);
     }

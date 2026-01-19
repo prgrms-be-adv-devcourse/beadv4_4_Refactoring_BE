@@ -22,31 +22,23 @@ public class LoginHistory {
     @Column(name = "member_id", nullable = false)
     private Long memberId;
 
-    @Column(name = "logged_in_at", nullable = false)
-    private LocalDateTime loggedInAt;
-
     @Column(name = "success", nullable = false)
     private boolean success;
 
-    @Column(name = "ip", length = 45)
-    private String ip;
+    @Column(name = "logged_in_at", nullable = false)
+    private LocalDateTime loggedInAt;
 
-    @Column(name = "user_agent", length = 255)
-    private String userAgent;
-
-    private LoginHistory(Long memberId, boolean success, String ip, String userAgent) {
+    private LoginHistory(Long memberId, boolean success, LocalDateTime loggedInAt) {
         this.memberId = memberId;
         this.loggedInAt = LocalDateTime.now();
         this.success = success;
-        this.ip = ip;
-        this.userAgent = userAgent;
     }
 
-    public static LoginHistory success(Long memberId, String ip, String userAgent) {
-        return new LoginHistory(memberId, true, ip, userAgent);
+    public static LoginHistory success(Long memberId) {
+        return new LoginHistory(memberId, true, LocalDateTime.now());
     }
 
-    public static LoginHistory fail(Long memberId, String ip, String userAgent) {
-        return new LoginHistory(memberId, false, ip, userAgent);
+    public static LoginHistory fail(Long memberId) {
+        return new LoginHistory(memberId, false, LocalDateTime.now());
     }
 }
