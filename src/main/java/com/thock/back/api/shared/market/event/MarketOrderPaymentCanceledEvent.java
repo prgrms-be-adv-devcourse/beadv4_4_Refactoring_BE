@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class MarketOrderPaymentRequestedEvent {
-    // TODO: 주문이 생겼을 때 payment에 이벤트 발행해야함
+public class MarketOrderPaymentCanceledEvent {
+    // TODO: 만약 주문이 취소되면 payment에 이벤트 발행 해야함
     private OrderDto order;
 }
