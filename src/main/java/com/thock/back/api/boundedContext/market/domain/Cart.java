@@ -30,6 +30,7 @@ public class Cart extends BaseManualIdAndTime {
     public Cart(MarketMember buyer){
         super(buyer.getId());
         this.buyer = buyer;
+        this.itemsCount = 0;
     }
 
     public boolean hasItems() {
@@ -37,10 +38,11 @@ public class Cart extends BaseManualIdAndTime {
     }
 
     // 장바구니에 상품 등록
-    public void addItem(Long productId, Integer quantity) {
+    public CartItem addItem(Long productId, Integer quantity) {
         CartItem cartItem = new CartItem(this, productId, quantity);
         this.items.add(cartItem);
         this.itemsCount++;
+        return cartItem;
     }
 
     public void updateItemQuantity(Long productId, Integer quantity) {

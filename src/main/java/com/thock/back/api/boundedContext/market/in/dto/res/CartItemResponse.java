@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-@Schema(description = "장바구니 상품 정보")
+@Schema(description = "장바구니 상품 정보 응답")
 @Getter
 @AllArgsConstructor
 @Builder

@@ -1,7 +1,9 @@
 package com.thock.back.api.boundedContext.market.app;
 
 import com.thock.back.api.boundedContext.market.domain.Cart;
+import com.thock.back.api.boundedContext.market.domain.CartItem;
 import com.thock.back.api.boundedContext.market.domain.MarketMember;
+import com.thock.back.api.boundedContext.market.in.dto.req.CartItemAddRequest;
 import com.thock.back.api.boundedContext.market.in.dto.res.CartItemListResponse;
 import com.thock.back.api.boundedContext.market.in.dto.res.CartItemResponse;
 import com.thock.back.api.boundedContext.market.out.api.dto.ProductInfo;
@@ -9,12 +11,14 @@ import com.thock.back.api.global.exception.CustomException;
 import com.thock.back.api.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CartService {
     private final MarketSupport marketSupport;
 
@@ -27,7 +31,7 @@ public class CartService {
 
         // 장바구니
         Cart cart = marketSupport.findCartByBuyer(member)
-                .orElseThrow(() -> new CustomException(ErrorCode.CART_ITEM_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
 
         // 장바구니가 비어있으면 빈 응답 반환
         if (!cart.hasItems()) {
@@ -82,4 +86,51 @@ public class CartService {
         );
     }
 
+    /**
+     * 장바구니에 상품 추가
+     * @param memberId 회원 ID
+     * @param request 상품 추가 요청 (productId, quantity)
+     * @return 추가된 상품 정보
+     */
+    @Transactional
+    public CartItemResponse addCartItem(Long memberId, CartItemAddRequest request) {
+        MarketMember member = marketSupport.findMemberById(memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
+
+        Cart cart = marketSupport.findCartByBuyer(member)
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
+
+        // Product 정보 조회 - API Call
+        ProductInfo product = marketSupport.getProduct(request.getProductId());
+        if (product == null) {
+            throw new CustomException(ErrorCode.CART_PRODUCT_API_FAILED);
+        }
+
+        // 재고 확인
+        if (product.getStock() < request.getQuantity()) {
+             throw new CustomException(ErrorCode.CART_PRODUCT_OUT_OF_STOCK);
+        }
+
+        // 장바구니에 상품 추가 : 도메인 로직 사용
+        CartItem addedCartItem = cart.addItem(request.getProductId(), request.getQuantity());
+
+        // CartItemResponse 생성 및 반환
+        Long totalPrice = addedCartItem.getQuantity() * product.getPrice();
+        Long totalSalePrice = addedCartItem.getQuantity() * product.getSalePrice();
+        Long discountAmount = totalPrice - totalSalePrice;
+
+        return new CartItemResponse(
+                addedCartItem.getId(),
+                addedCartItem.getQuantity(),
+                product.getId(),
+                product.getName(),
+                product.getImageUrl(),
+                product.getPrice(),
+                product.getSalePrice(),
+                product.getStock(),
+                totalPrice,
+                totalSalePrice,
+                discountAmount
+        );
+    }
 }

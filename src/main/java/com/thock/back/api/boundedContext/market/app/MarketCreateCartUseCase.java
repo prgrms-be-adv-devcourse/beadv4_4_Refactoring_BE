@@ -7,13 +7,16 @@ import com.thock.back.api.boundedContext.market.out.repository.MarketMemberRepos
 import com.thock.back.api.shared.market.dto.MarketMemberDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MarketCreateCartUseCase {
     private final MarketMemberRepository marketMemberRepository;
     private final CartRepository cartRepository;
 
+    @Transactional
     public Cart createCart(MarketMemberDto buyer) {
         MarketMember _buyer = marketMemberRepository.getReferenceById(buyer.getId());
 
