@@ -80,4 +80,17 @@ public class Product extends BaseIdAndTime {
         this.saleStartedAt = LocalDateTime.now();
         this.viewCount = 0L;
     }
+
+    public void modify(String name, Long price, Long salePrice, Integer stock,
+                       Category category, String description, String imageUrl,
+                       Map<String, Object> detail){
+        this.name = name;
+        this.price = price;
+        this.salePrice = salePrice;
+        this.stock = stock;
+        this.category = category;
+        this.description = description;
+        this.imageUrl = imageUrl;
+        this.detail = detail;
+    }
 }

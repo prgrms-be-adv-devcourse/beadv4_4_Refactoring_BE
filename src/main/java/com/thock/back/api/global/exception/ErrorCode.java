@@ -33,6 +33,8 @@ public enum ErrorCode {
     PRODUCT_PRICE_INVALID("PRODUCT-400-3", "상품가격은 0원 이상이어야 합니다", HttpStatus.BAD_REQUEST),
     PRODUCT_CATEGORY_REQUIRED("PRODUCT-400-4", "카테고리 설정은 필수입니다.", HttpStatus.BAD_REQUEST),
     PRODUCT_NOT_FOUND("PRODUCT-400-1", "존재하지 않는 상품입니다.", HttpStatus.NOT_FOUND),
+    USER_FORBIDDEN("PRODUCT-403-1", "판매자만 상품을 등록할 수 있습니다.", HttpStatus.FORBIDDEN),
+    SELLER_FORBIDDEN("PRODUCT-403-2", "본인의 상품만 수정/삭제할 수 있습니다.", HttpStatus.FORBIDDEN),
 
     // ===== 장바구니 =====
     CART_USER_NOT_FOUND("CART-404-1", "사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
