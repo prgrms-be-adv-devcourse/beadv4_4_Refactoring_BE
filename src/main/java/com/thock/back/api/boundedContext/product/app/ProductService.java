@@ -109,6 +109,7 @@ public class ProductService {
         return product.getId();
     }
 
+    // 상품 삭제(D)
     public void productDelete(Long productId, MemberDto memberDto) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));

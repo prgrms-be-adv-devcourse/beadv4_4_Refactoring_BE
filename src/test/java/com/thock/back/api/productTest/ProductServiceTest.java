@@ -49,17 +49,12 @@ public class ProductServiceTest {
         MemberDto memberDto = MemberDto.builder()
                 .id(1L)
                 .role(MemberRole.SELLER)
-                // name is purposely null or different to prove we use request.getName()
                 .name("판매자 이름")
                 .build();
 
         // when
-        // Mock save to return a product with ID (stubbing)
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> {
             Product p = invocation.getArgument(0);
-            // We can't easily set ID on entity if it doesn't have setter,
-            // but we can just return the same object or a mocked one.
-            // Let's assume we just want to verify what was passed to save.
             return p;
         });
 
@@ -70,8 +65,6 @@ public class ProductServiceTest {
         verify(productRepository).save(productCaptor.capture());
 
         Product capturedProduct = productCaptor.getValue();
-
-        // This is the critical check: Name should come from request, NOT memberDto
         assertThat(capturedProduct.getName()).isEqualTo("기계식 키보드");
         assertThat(capturedProduct.getSellerId()).isEqualTo(1L);
         assertThat(capturedProduct.getPrice()).isEqualTo(150000L);
