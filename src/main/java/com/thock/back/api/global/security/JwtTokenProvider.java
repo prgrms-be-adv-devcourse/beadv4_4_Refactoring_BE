@@ -33,13 +33,11 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .issuer(props.issuer())
-                .subject(String.valueOf(memberId)) // 표준 subject에 memberId
+                .subject(String.valueOf(memberId))
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(exp))
-                .claims(Map.of(
-                        "role", role,
-                        "state", state
-                ))
+                .claim("role", role.name())
+                .claim("state", state.name())
                 .signWith(key)
                 .compact();
     }
