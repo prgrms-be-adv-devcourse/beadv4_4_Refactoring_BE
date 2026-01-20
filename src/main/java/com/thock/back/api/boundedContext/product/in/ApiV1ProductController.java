@@ -149,7 +149,7 @@ public class ApiV1ProductController {
         return ResponseEntity.ok(productService.searchByKeyword(keyword));
     }
 
-
+    // 7. Market 내부 통신 ID 리스트로 상품 정보 조회
     @Operation(
             summary = "[내부용] 상품 ID 리스트로 정보 조회",
             description = "마켓(장바구니), 정산 모듈 등에서 <b>상품 ID 리스트</b>를 받아 핵심 정보를 조회합니다.<br>" +
