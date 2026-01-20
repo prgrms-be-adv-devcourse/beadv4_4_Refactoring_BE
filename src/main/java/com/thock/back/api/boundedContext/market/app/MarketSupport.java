@@ -11,12 +11,15 @@ import com.thock.back.api.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class MarketSupport {
     private final MarketMemberRepository marketMemberRepository;
     private final CartRepository cartRepository;
@@ -35,23 +38,44 @@ public class MarketSupport {
         return marketMemberRepository.findById(id);
     }
 
+
+
     /**
-     * Product 정보 조회
+     * Product 정보 조회 - 단건
      * @param productId 상품 ID
      * @return Product 정보 (실패 시 null)
      */
     public ProductInfo getProduct(Long productId) {
         try {
-            ProductInfo product = productClient.getProduct(productId);
-            if (product == null) {
-                log.warn("Product 정보가 null: productId={}", productId);
-                return null;  // null은 허용 (상품이 삭제된 경우 등)
+            List<ProductInfo> products = productClient.getProducts(List.of(productId));
+
+            if (products == null || products.isEmpty()) {
+                log.warn("Product 정보가 없음: productId={}", productId);
+                return null;
             }
-            return product;
+
+            return products.get(0);
 
         } catch (Exception e) {
             log.error("Product API 호출 실패: productId={}", productId, e);
-            // Product API 자체가 다운된 경우는 예외 발생
+            throw new CustomException(ErrorCode.CART_PRODUCT_API_FAILED, e);
+        }
+    }
+
+    // Cart에 들어있는 여러 CartItem 조회
+    public List<ProductInfo> getProducts(List<Long> productIds) {
+        try {
+            List<ProductInfo> products = productClient.getProducts(productIds);
+
+            if (products == null) {
+                log.warn("Product 정보 리스트가 null: productIds={}", productIds);
+                return List.of();
+            }
+
+            return products;
+
+        } catch (Exception e) {
+            log.error("Product API 호출 실패: productIds={}", productIds, e);
             throw new CustomException(ErrorCode.CART_PRODUCT_API_FAILED, e);
         }
     }

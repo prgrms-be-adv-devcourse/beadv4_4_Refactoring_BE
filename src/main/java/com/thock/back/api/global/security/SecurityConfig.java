@@ -38,7 +38,10 @@ public class SecurityConfig {
 
                                 // 인증/회원가입
                                 "/api/v1/auth/**",
-                                "/api/v1/members/signup"
+                                "/api/v1/members/signup",
+
+                                // 내부 API
+                                "/api/v1/products/internal/**"
                         ).permitAll()
                         .anyRequest().authenticated()   // ← 여기 중요 (JWT 없으면 접근 불가)
                 )

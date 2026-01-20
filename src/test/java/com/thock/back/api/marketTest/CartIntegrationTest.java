@@ -12,6 +12,7 @@ import com.thock.back.api.boundedContext.market.out.repository.CartRepository;
 import com.thock.back.api.boundedContext.market.out.repository.MarketMemberRepository;
 import com.thock.back.api.boundedContext.product.domain.Category;
 import com.thock.back.api.boundedContext.product.domain.Product;
+import com.thock.back.api.boundedContext.product.domain.ProductState;
 import com.thock.back.api.boundedContext.product.out.ProductRepository;
 import com.thock.back.api.shared.member.domain.MemberRole;
 import com.thock.back.api.shared.member.domain.MemberState;
@@ -24,8 +25,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 
@@ -89,9 +93,11 @@ public class CartIntegrationTest {
                 testProduct.getImageUrl(),
                 testProduct.getPrice(),
                 testProduct.getSalePrice(),
-                testProduct.getStock()
+                testProduct.getStock(),
+                testProduct.getState().name()
         );
-        given(productClient.getProduct(anyLong())).willReturn(mockProductInfo);
+        given(productClient.getProducts(anyList()))
+                .willReturn(List.of(mockProductInfo));
     }
 
     @Test
@@ -157,9 +163,11 @@ public class CartIntegrationTest {
                 cheapProduct.getImageUrl(),
                 cheapProduct.getPrice(),
                 cheapProduct.getSalePrice(),
-                cheapProduct.getStock()
+                cheapProduct.getStock(),
+                cheapProduct.getState().name()
         );
-        given(productClient.getProduct(cheapProduct.getId())).willReturn(mockCheapProductInfo);
+        given(productClient.getProducts(anyList()))
+                .willReturn(List.of(mockCheapProductInfo));
 
         // When: 저렴한 상품 1개 추가 (총 12,000원 - 배송비 발생)
         CartItemAddRequest request = new CartItemAddRequest(cheapProduct.getId(), 1);
@@ -214,9 +222,11 @@ public class CartIntegrationTest {
                 limitedProduct.getImageUrl(),
                 limitedProduct.getPrice(),
                 limitedProduct.getSalePrice(),
-                limitedProduct.getStock()
+                limitedProduct.getStock(),
+                limitedProduct.getState().name()
         );
-        given(productClient.getProduct(limitedProduct.getId())).willReturn(mockLimitedProductInfo);
+        given(productClient.getProducts(anyList()))
+                .willReturn(List.of(mockLimitedProductInfo));
 
         // When & Then: 재고보다 많은 수량 요청 시 예외 발생
         CartItemAddRequest request = new CartItemAddRequest(limitedProduct.getId(), 15);  // 15개 요청 (재고 10개)

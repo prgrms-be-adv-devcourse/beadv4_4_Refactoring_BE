@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class MarketFacade {
 
     private final MarketSyncMemberUseCase marketSyncMemberUseCase;
@@ -30,10 +29,12 @@ public class MarketFacade {
         return marketCreateCartUseCase.createCart(buyer);
     }
 
+    @Transactional(readOnly = true)
     public CartItemListResponse getCartItems(Long memberId){
         return cartService.getCartItems(memberId);
     }
 
+    @Transactional
     public CartItemResponse addCartItem(Long memberId, CartItemAddRequest request){
         return cartService.addCartItem(memberId, request);
     }
