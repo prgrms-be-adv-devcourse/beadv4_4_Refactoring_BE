@@ -5,8 +5,11 @@ import com.thock.back.api.boundedContext.market.out.client.ProductClient;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+
+import java.util.List;
 
 // Outbound Adapter (구현체)
 @Component
@@ -18,11 +21,13 @@ public class ProductApiClient implements ProductClient {
                 .baseUrl(internalBackUrl + "/api/v1/products")
                 .build();
     }
+
     @Override
-    public ProductInfo getProduct(Long productId) {
-        return restClient.get()
-                .uri("/{id}", productId)
+    public List<ProductInfo> getProducts(List<Long> productIds) {
+        return restClient.post()
+                .uri("/internal/list")
+                .body(productIds)
                 .retrieve()
-                .body(ProductInfo.class);
+                .body(new ParameterizedTypeReference<List<ProductInfo>>() {});
     }
 }

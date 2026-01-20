@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class MarketCreateCartUseCase {
     private final MarketMemberRepository marketMemberRepository;
     private final CartRepository cartRepository;

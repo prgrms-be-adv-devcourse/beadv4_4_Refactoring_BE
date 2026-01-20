@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartItemAddRequest {
-    @Schema(description = "상품 ID", example = "5")
+    @Schema(description = "상품 ID", example = "1")
     @NotNull(message = "상품 ID는 필수입니다.")
     private Long productId;
 

@@ -7,22 +7,33 @@ import com.thock.back.api.boundedContext.market.in.dto.req.CartItemAddRequest;
 import com.thock.back.api.boundedContext.market.in.dto.res.CartItemListResponse;
 import com.thock.back.api.boundedContext.market.in.dto.res.CartItemResponse;
 import com.thock.back.api.boundedContext.market.out.api.dto.ProductInfo;
+import com.thock.back.api.boundedContext.market.out.repository.CartRepository;
+import com.thock.back.api.boundedContext.market.out.repository.MarketMemberRepository;
 import com.thock.back.api.global.exception.CustomException;
 import com.thock.back.api.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Slf4j
 public class CartService {
     private final MarketSupport marketSupport;
+    private final CartRepository cartRepository;
+    private final MarketMemberRepository marketMemberRepository;
 
     // 장바구니 조회
+    @Transactional(readOnly = true)
     public CartItemListResponse getCartItems(Long memberId){
 
         // MarketMember가 존재하는지 확인
@@ -38,17 +49,28 @@ public class CartService {
             return new CartItemListResponse(cart.getId(), List.of(), 0, 0L, 0L, 0L);
         }
 
-        // Product 정보와 함께 CartItemResponse 생성
+        // productId 리스트 추출
+        List<Long> productIds = cart.getItems().stream()
+                .map(CartItem::getProductId)
+                .toList();
+
+        // 여러 개 조회 : getProducts() 사용
+        List<ProductInfo> products = marketSupport.getProducts(productIds);
+
+        // Map으로 변환
+        Map<Long, ProductInfo> productMap = products.stream()
+                .collect(Collectors.toMap(ProductInfo::getId, Function.identity()));
+
+        // CartItemResponse 생성
         List<CartItemResponse> items = cart.getItems().stream()
                 .map(cartItem -> {
-                    // MarketSupport를 통해 Product 정보 조회
-                    ProductInfo product = marketSupport.getProduct(cartItem.getProductId());
+                    ProductInfo product = productMap.get(cartItem.getProductId());
 
                     if (product == null) {
-                        return null; // Product 정보 없으면 제외
+                        log.warn("장바구니에 있지만 상품 정보가 없음: productId={}", cartItem.getProductId());
+                        return null;
                     }
 
-                    // 계산된 값
                     Long totalPrice = cartItem.getQuantity() * product.getPrice();
                     Long totalSalePrice = cartItem.getQuantity() * product.getSalePrice();
                     Long discountAmount = totalPrice - totalSalePrice;
@@ -67,7 +89,7 @@ public class CartService {
                             discountAmount
                     );
                 })
-                .filter(item -> item != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         // 전체 합계 계산
@@ -94,10 +116,10 @@ public class CartService {
      */
     @Transactional
     public CartItemResponse addCartItem(Long memberId, CartItemAddRequest request) {
-        MarketMember member = marketSupport.findMemberById(memberId)
+        MarketMember member = marketMemberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
 
-        Cart cart = marketSupport.findCartByBuyer(member)
+        Cart cart = cartRepository.findByBuyer(member)
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
 
         // Product 정보 조회 - API Call
@@ -111,8 +133,28 @@ public class CartService {
              throw new CustomException(ErrorCode.CART_PRODUCT_OUT_OF_STOCK);
         }
 
-        // 장바구니에 상품 추가 : 도메인 로직 사용
+        // TODO : 영속성 상태에 대해서 제대로 공부가 필요함.
         CartItem addedCartItem = cart.addItem(request.getProductId(), request.getQuantity());
+
+        // ✅ 로그 추가: 생성 직후 값 확인
+        log.info("🔍 CartItem 생성 직후: id={}, productId={}, quantity={}, cartId={}",
+                addedCartItem.getId(),
+                addedCartItem.getProductId(),
+                addedCartItem.getQuantity(),
+                addedCartItem.getCart() != null ? addedCartItem.getCart().getId() : "null"
+        );
+
+        // ⭐ 명시적으로 저장 - Cascade.PERSIST로 CartItem도 함께 영속화
+//        cartRepository.save(cart);
+//        cartRepository.flush();
+
+        // ✅ 로그 추가: flush 직후 값 확인
+        log.info("💾 flush 직후: id={}, productId={}, quantity={}, cartId={}",
+                addedCartItem.getId(),
+                addedCartItem.getProductId(),
+                addedCartItem.getQuantity(),
+                addedCartItem.getCart() != null ? addedCartItem.getCart().getId() : "null"
+        );
 
         // CartItemResponse 생성 및 반환
         Long totalPrice = addedCartItem.getQuantity() * product.getPrice();
