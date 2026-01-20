@@ -10,6 +10,7 @@ public class ProductEvent {
     private String name;
     private Long price;
     private Long salePrice;
+    private String description;
     private Integer stock;
     private String imageUrl;
     private String productState;
