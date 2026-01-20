@@ -1,5 +1,6 @@
 package com.thock.back.api.global.security;
 
+import com.thock.back.api.global.security.context.AuthMember;
 import com.thock.back.api.shared.member.domain.MemberRole;
 import com.thock.back.api.shared.member.domain.MemberState;
 import jakarta.servlet.FilterChain;
@@ -39,7 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             MemberRole role = jwtTokenProvider.extractRole(token);
             MemberState state = jwtTokenProvider.extractState(token);
 
-            JwtPrincipal principal = new JwtPrincipal(memberId, role, state);
+            AuthMember principal = new AuthMember(memberId, role, state);
 
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                     principal,
@@ -63,3 +64,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 }
+
