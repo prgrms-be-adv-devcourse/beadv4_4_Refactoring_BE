@@ -6,6 +6,7 @@ import com.thock.back.api.boundedContext.product.in.dto.ProductCreateRequest;
 import com.thock.back.api.boundedContext.product.in.dto.ProductDetailResponse;
 import com.thock.back.api.boundedContext.product.in.dto.ProductListResponse;
 import com.thock.back.api.boundedContext.product.in.dto.ProductUpdateRequest;
+import com.thock.back.api.boundedContext.product.in.dto.internal.ProductInternalResponse;
 import com.thock.back.api.boundedContext.product.out.ProductRepository;
 import com.thock.back.api.global.eventPublisher.EventPublisher;
 import com.thock.back.api.global.exception.CustomException;
@@ -15,6 +16,8 @@ import com.thock.back.api.shared.member.dto.MemberDto;
 import com.thock.back.api.shared.product.event.ProductEvent;
 import com.thock.back.api.shared.product.event.ProductEventType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,12 +58,9 @@ public class ProductService {
 
     // 카테고리를 통해 상품 조회(R)
     @Transactional(readOnly = true)
-    public List<ProductListResponse> searchByCategory(Category category) {
-        List<Product> products = productRepository.findByCategory(category);
-
-        return products.stream()
-                .map(ProductListResponse::new)
-                .toList();
+    public Page<ProductListResponse> searchByCategory(Category category, Pageable pageable) {
+        Page<Product> productPage = productRepository.findByCategory(category, pageable);
+        return productPage.map(ProductListResponse::new);
     }
 
     // 특정 상품의 id를 통해 해당 상품의 상세정보 조회(R)
@@ -135,6 +135,23 @@ public class ProductService {
         }
         return productRepository.findByNameContaining(keyword).stream()
                 .map(ProductListResponse::new)
+                .toList();
+    }
+
+    // 장바구니 상세정보 조회 기능
+
+    @Transactional(readOnly = true)
+    public List<ProductInternalResponse> getProductsByIds(List<Long> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return List.of();
+        }
+
+        // WHERE ID IN 과 같은 메소드
+        List<Product> products = productRepository.findAllByIdIn(productIds);
+
+        // 가져온 product를 productInternalResponse에 맞게 알아서 변환해줌
+        return products.stream()
+                .map(ProductInternalResponse::new) // 생성자로 변환
                 .toList();
     }
 }

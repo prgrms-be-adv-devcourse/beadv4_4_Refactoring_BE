@@ -6,6 +6,7 @@ import com.thock.back.api.boundedContext.product.in.dto.ProductCreateRequest;
 import com.thock.back.api.boundedContext.product.in.dto.ProductDetailResponse;
 import com.thock.back.api.boundedContext.product.in.dto.ProductListResponse;
 import com.thock.back.api.boundedContext.product.in.dto.ProductUpdateRequest;
+import com.thock.back.api.boundedContext.product.in.dto.internal.ProductInternalResponse;
 import com.thock.back.api.shared.member.domain.MemberRole;
 import com.thock.back.api.shared.member.dto.MemberDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +16,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -63,14 +68,16 @@ public class ApiV1ProductController {
     })
     // 요청: GET /api/v1/products?category=KEYBOARD
     @GetMapping
-    public ResponseEntity<List<ProductListResponse>> list(
-            @Parameter(description = "조회할 카테고리 (예: KEYBOARD, MOUSE)")
-            @RequestParam Category category) {
-        return ResponseEntity.ok(productService.searchByCategory(category));
+    public ResponseEntity<Page<ProductListResponse>> list(
+            @RequestParam Category category,
+            // 프론트가 ?page=1&size=10 처럼 보내면 알아서 Pageable 객체로 만들어줌
+            // 기본값: 0페이지(첫페이지), 10개씩, 최신순(id 내림차순)
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable){
+        return ResponseEntity.ok(productService.searchByCategory(category, pageable));
     }
 
 
-    // 3. 상품 상세조회
+    // 3. 상품 상세조회(R)
     @Operation(summary = "상품 상세 조회", description = "상품 ID를 통해 상세 정보를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -140,5 +147,32 @@ public class ApiV1ProductController {
             @Parameter(description = "검색어") @RequestParam String keyword
     ) {
         return ResponseEntity.ok(productService.searchByKeyword(keyword));
+    }
+
+    // 7. Market 내부 통신 ID 리스트로 상품 정보 조회
+    @Operation(
+            summary = "[내부용] 상품 ID 리스트로 정보 조회",
+            description = "마켓(장바구니), 정산 모듈 등에서 <b>상품 ID 리스트</b>를 받아 핵심 정보를 조회합니다.<br>" +
+                    "URL 길이 제한 이슈를 피하기 위해 <b>POST</b> 방식을 사용합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공 (존재하는 상품만 리스트로 반환)"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (빈 리스트 등)")
+    })
+    @PostMapping("/internal/list")
+    public ResponseEntity<List<ProductInternalResponse>> getProductsByIds(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "조회할 상품 ID 리스트",
+                    required = true,
+                    content = @io.swagger.v3.oas.annotations.media.Content(
+                            mediaType = "application/json",
+                            // ▼ 이게 있으면 Swagger에서 클릭 한 번으로 [1, 2, 3] 입력됨!
+                            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[1, 2, 3]")
+                    )
+            )
+            @RequestBody List<Long> productIds
+    ) {
+        List<ProductInternalResponse> responses = productService.getProductsByIds(productIds);
+        return ResponseEntity.ok(responses);
     }
 }
