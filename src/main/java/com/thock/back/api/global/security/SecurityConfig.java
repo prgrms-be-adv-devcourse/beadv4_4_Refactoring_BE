@@ -35,7 +35,10 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/h2-console/**",
-                                "/api/v1/auth/**"
+
+                                // 인증/회원가입
+                                "/api/v1/auth/**",
+                                "/api/v1/members/signup"
                         ).permitAll()
                         .anyRequest().authenticated()   // ← 여기 중요 (JWT 없으면 접근 불가)
                 )
