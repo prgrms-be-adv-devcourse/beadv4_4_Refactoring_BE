@@ -34,6 +34,7 @@ dependencies {
     // Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
     implementation 'org.apache.commons:commons-lang3:3.18.0'
+    implementation 'org.springdoc:springdoc-openapi-ui:1.7.0' // Swagger에서 헤더 사용 가능
 
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
