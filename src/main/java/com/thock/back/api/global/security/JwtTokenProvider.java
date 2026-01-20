@@ -3,6 +3,7 @@ package com.thock.back.api.global.security;
 import com.thock.back.api.shared.member.domain.MemberRole;
 import com.thock.back.api.shared.member.domain.MemberState;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
@@ -32,13 +33,11 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .issuer(props.issuer())
-                .subject(String.valueOf(memberId)) // 표준 subject에 memberId
+                .subject(String.valueOf(memberId))
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(exp))
-                .claims(Map.of(
-                        "role", role,
-                        "state", state
-                ))
+                .claim("role", role.name())
+                .claim("state", state.name())
                 .signWith(key)
                 .compact();
     }
@@ -57,40 +56,37 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public boolean validate(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public Long extractMemberId(String token) {
+        return Long.valueOf(getClaims(token).getSubject());
+    }
+
+    public MemberRole extractRole(String token) {
+        return MemberRole.valueOf(getClaims(token).get("role", String.class));
+    }
+
+    public MemberState extractState(String token) {
+        return MemberState.valueOf(getClaims(token).get("state", String.class));
+    }
+
     /** 토큰에서 Claims 추출 (검증 포함) */
-    public Claims parseClaims(String token) {
+    private Claims getClaims(String token) {
         return Jwts.parser()
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-    }
-
-    public Long extractMemberId(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-
-        return Long.parseLong(claims.getSubject());
-    }
-
-    public Long getMemberId(String token) {
-        Claims claims = parseClaims(token);
-        return Long.valueOf(claims.getSubject());
-    }
-
-    public String getRole(String token) {
-        Claims claims = parseClaims(token);
-        Object v = claims.get("role");
-        return v == null ? null : v.toString();
-    }
-
-    public String getState(String token) {
-        Claims claims = parseClaims(token);
-        Object v = claims.get("state");
-        return v == null ? null : v.toString();
     }
 
     public long getAccessTokenExpSeconds() {

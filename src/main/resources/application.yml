@@ -24,7 +24,7 @@ spring:
 
 jwt:
   secret: "thock-2026-backend-authentication-jwt-secret-key-very-very-long-256bit"
-  access-token-exp-seconds: 900
+  access-token-exp-seconds: 1800 # 30분
   refresh-token-exp-seconds: 1209600 # 14일
   issuer: "thock"
   
