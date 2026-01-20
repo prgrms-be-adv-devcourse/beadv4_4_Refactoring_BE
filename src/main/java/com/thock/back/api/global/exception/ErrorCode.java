@@ -26,6 +26,7 @@ public enum ErrorCode {
     // ===== 회원 =====
     USER_NOT_FOUND("USER-404-1", "사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     USER_ALREADY_EXISTS("USER-409-1", "이미 존재하는 사용자입니다.", HttpStatus.CONFLICT),
+    USER_UNAUTHORIZED("USER-401-1", "인증되지 않은 사용자입니다", HttpStatus.UNAUTHORIZED),
 
     // ===== 상품 =====
     SELLER_REQUIRED("PRODUCT-400-1", "판매자 ID는 필수입니다", HttpStatus.BAD_REQUEST),

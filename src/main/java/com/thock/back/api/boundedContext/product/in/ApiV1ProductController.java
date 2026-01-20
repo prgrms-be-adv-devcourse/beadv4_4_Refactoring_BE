@@ -7,6 +7,9 @@ import com.thock.back.api.boundedContext.product.in.dto.ProductDetailResponse;
 import com.thock.back.api.boundedContext.product.in.dto.ProductListResponse;
 import com.thock.back.api.boundedContext.product.in.dto.ProductUpdateRequest;
 import com.thock.back.api.boundedContext.product.in.dto.internal.ProductInternalResponse;
+import com.thock.back.api.global.exception.CustomException;
+import com.thock.back.api.global.exception.ErrorCode;
+import com.thock.back.api.global.security.context.AuthMember;
 import com.thock.back.api.shared.member.domain.MemberRole;
 import com.thock.back.api.shared.member.dto.MemberDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,14 +50,14 @@ public class ApiV1ProductController {
     @PostMapping
     public ResponseEntity<Long> create(
             @RequestBody @Valid ProductCreateRequest request,
-            // [임시] JWT 구현 전까지 이걸로 테스트. 나중에 이 두 줄만 지우면 됨.
-            @Parameter(hidden = true)@RequestHeader(value = "X-Member-Id", defaultValue = "1") Long memberId,
-            @Parameter(hidden = true)@RequestHeader(value = "X-Member-Role", defaultValue = "SELLER") String roleStr
-    ) {
-        // 임시 멤버 객체 생성
+            @AuthenticationPrincipal AuthMember authMember
+      ) {
+        if (authMember == null) {
+            throw new CustomException(ErrorCode.USER_UNAUTHORIZED);
+        }
         MemberDto member = MemberDto.builder()
-                .id(memberId)
-                .role(MemberRole.valueOf(roleStr))
+                .id(authMember.memberId())
+                .role(authMember.role())
                 .build();
 
         Long productId = productService.productCreate(request, member);
