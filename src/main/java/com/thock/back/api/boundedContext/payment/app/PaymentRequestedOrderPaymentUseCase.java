@@ -15,7 +15,7 @@ public class PaymentRequestedOrderPaymentUseCase {
     private final PaymentRepository paymentRepository;
     private final PaymentMemberRepository paymentMemberRepository;
 
-    public void requestedOrderPayment(OrderDto order, Long pgPaymentAmount, String paymentKey) {
+    public void requestedOrderPayment(OrderDto order, Long pgPaymentAmount) {
         PaymentMember member = paymentMemberRepository.getReferenceById(order.getBuyerId());
 
         Payment payment = paymentRepository.save(
@@ -25,9 +25,10 @@ public class PaymentRequestedOrderPaymentUseCase {
                     PaymentStatus.REQUESTED,
                     order.getOrderNumber(),
                     order.getTotalSalePrice(),
-                    paymentKey
+                    ""
             )
         );
+        payment.createPaymentLogEvent();
     }
 
 }
