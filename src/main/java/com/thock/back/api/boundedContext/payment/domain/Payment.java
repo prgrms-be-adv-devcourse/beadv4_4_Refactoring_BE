@@ -44,12 +44,6 @@ public class Payment extends BaseIdAndTime {
         this.orderId = orderId;
         this.amount = amount;
         this.paymentKey = paymentKey;
-
-        publishEvent(
-                new PaymentAddPaymentLogEvent(
-                        toDto()
-                )
-        );
     }
 
     public PaymentDto toDto(){
@@ -62,6 +56,13 @@ public class Payment extends BaseIdAndTime {
                 getPgAmount(),
                 getAmount(),
                 getCreatedAt()
+        );
+    }
+    public void createPaymentLogEvent(){
+        publishEvent(
+                new PaymentAddPaymentLogEvent(
+                        toDto()
+                )
         );
     }
 

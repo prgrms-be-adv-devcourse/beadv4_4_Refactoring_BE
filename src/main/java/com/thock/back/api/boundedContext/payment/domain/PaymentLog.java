@@ -24,11 +24,15 @@ public class PaymentLog extends BaseIdAndTime {
 
     private Long pgAmount;
 
-    public PaymentLog(PaymentMember buyer, String orderId, PaymentStatus paymentStatus, Long amount, Long pgAmount) {
+    @ManyToOne(fetch = LAZY)
+    private Payment payment;
+
+    public PaymentLog(PaymentMember buyer, String orderId, PaymentStatus paymentStatus, Long amount, Long pgAmount, Payment payment) {
         this.buyer = buyer;
         this.orderId = orderId;
         this.paymentStatus = paymentStatus;
         this.amount = amount;
         this.pgAmount = pgAmount;
+        this.payment = payment;
     }
 }
