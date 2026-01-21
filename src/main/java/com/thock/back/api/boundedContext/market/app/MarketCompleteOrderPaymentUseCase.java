@@ -1,4 +1,35 @@
 package com.thock.back.api.boundedContext.market.app;
 
+import com.thock.back.api.boundedContext.market.domain.Order;
+import com.thock.back.api.boundedContext.market.out.repository.OrderRepository;
+import com.thock.back.api.global.exception.CustomException;
+import com.thock.back.api.global.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
 public class MarketCompleteOrderPaymentUseCase {
+    private final OrderRepository orderRepository;
+
+    /**
+     * Payment 모듈로부터 결제 완료 알림을 받아 주문 상태를 업데이트
+     * Payment 모듈이 이벤트를 발행하면 MarketEventListener가 이 메서드를 호출함
+     * @param orderId 주문 ID
+     */
+    @Transactional
+    public void completeOrderPayment(Long orderId){
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+
+        // Order 도메인의 completePayment 호출
+        order.completePayment();
+
+        log.info("주문 결제 완료 처리: orderId={}, orderNumber={}",
+                orderId, order.getOrderNumber());
+    }
+
 }

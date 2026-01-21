@@ -12,9 +12,5 @@ public class OrderDto {
     private final Long buyerId;
     private final String buyerName;
     private final String orderNumber;
-    private final String state; // OrderState
-    private final Long totalPrice;
-    private final Long totalSalePrice;
-    private final LocalDateTime requestPaymentDate;
-    private final LocalDateTime paymentDate;
+    private final Long totalSalePrice; // 실제로 전체 지불해야 할 금액
 }

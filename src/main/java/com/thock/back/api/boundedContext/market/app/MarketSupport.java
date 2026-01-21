@@ -3,6 +3,8 @@ package com.thock.back.api.boundedContext.market.app;
 import com.thock.back.api.boundedContext.market.domain.Cart;
 import com.thock.back.api.boundedContext.market.domain.MarketMember;
 import com.thock.back.api.boundedContext.market.out.api.dto.ProductInfo;
+import com.thock.back.api.boundedContext.market.out.api.dto.WalletInfo;
+import com.thock.back.api.boundedContext.market.out.client.PaymentWalletClient;
 import com.thock.back.api.boundedContext.market.out.client.ProductClient;
 import com.thock.back.api.boundedContext.market.out.repository.CartRepository;
 import com.thock.back.api.boundedContext.market.out.repository.MarketMemberRepository;
@@ -19,7 +21,6 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 public class MarketSupport {
     private final MarketMemberRepository marketMemberRepository;
     private final CartRepository cartRepository;
@@ -29,6 +30,7 @@ public class MarketSupport {
      * 구체 클래스 방식: MarketSupport 코드도 수정해야 함
      */
     private final ProductClient productClient; // 인터페이스로 주입 : ProductApiClient 라는 구체 클래스에 의존❌
+    private final PaymentWalletClient paymentWalletClient;
 
     public Optional<Cart> findCartByBuyer(MarketMember buyer) {
         return cartRepository.findByBuyer(buyer);
@@ -45,6 +47,7 @@ public class MarketSupport {
      * @param productId 상품 ID
      * @return Product 정보 (실패 시 null)
      */
+    @Transactional(readOnly = true)
     public ProductInfo getProduct(Long productId) {
         try {
             List<ProductInfo> products = productClient.getProducts(List.of(productId));
@@ -63,6 +66,7 @@ public class MarketSupport {
     }
 
     // Cart에 들어있는 여러 CartItem 조회
+    @Transactional(readOnly = true)
     public List<ProductInfo> getProducts(List<Long> productIds) {
         try {
             List<ProductInfo> products = productClient.getProducts(productIds);
@@ -78,5 +82,10 @@ public class MarketSupport {
             log.error("Product API 호출 실패: productIds={}", productIds, e);
             throw new CustomException(ErrorCode.CART_PRODUCT_API_FAILED, e);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public WalletInfo getWallet(Long memberId) {
+        return paymentWalletClient.getWallet(memberId);
     }
 }

@@ -6,7 +6,6 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class MarketOrderPaymentRequestedEvent {
+public class MarketOrderPaymentRequestCanceledEvent {
     private OrderDto order;
-    private Long pgAmount; // 전체 주문 가격 - 예치금
 }
