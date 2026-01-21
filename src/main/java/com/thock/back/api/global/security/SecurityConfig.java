@@ -38,7 +38,13 @@ public class SecurityConfig {
 
                                 // 인증/회원가입
                                 "/api/v1/auth/**",
-                                "/api/v1/members/signup"
+                                "/api/v1/members/signup",
+
+                                // PG return pages
+                                "/api/v1/payments/confirm/**",
+                                "/success.html/**",
+                                "/checkout.html/**",
+                                "/fail.html/**"
                         ).permitAll()
                         .anyRequest().authenticated()   // ← 여기 중요 (JWT 없으면 접근 불가)
                 )
