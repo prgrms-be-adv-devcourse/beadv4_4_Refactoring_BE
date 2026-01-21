@@ -1,6 +1,7 @@
 package com.thock.back.api.boundedContext.payment.in;
 
 import com.thock.back.api.boundedContext.payment.app.PaymentFacade;
+import com.thock.back.api.shared.market.event.MarketOrderPaymentCompletedEvent;
 import com.thock.back.api.shared.market.event.MarketOrderPaymentRequestedEvent;
 import com.thock.back.api.shared.member.event.MemberJoinedEvent;
 import com.thock.back.api.shared.member.event.MemberModifiedEvent;
@@ -35,8 +36,15 @@ public class PaymentEventListener {
     @TransactionalEventListener(phase = AFTER_COMMIT)
     @Transactional(propagation = REQUIRES_NEW)
     public void handle(MarketOrderPaymentRequestedEvent event) {
-        paymentFacade.requestedOrderPayment(event.getOrder(), event.getPgAmount(), event.getPaymentKey());
+        paymentFacade.requestedOrderPayment(event.getOrder(), event.getPgAmount());
     }
+
+    @TransactionalEventListener(phase = AFTER_COMMIT)
+    @Transactional(propagation = REQUIRES_NEW)
+    public void handle(MarketOrderPaymentCompletedEvent event) {
+        paymentFacade.completedOrderPayment(event.getOrder());
+    }
+
 
     @TransactionalEventListener(phase = AFTER_COMMIT)
     @Transactional(propagation = REQUIRES_NEW)
