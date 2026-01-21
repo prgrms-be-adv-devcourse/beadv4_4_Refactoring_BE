@@ -21,6 +21,10 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR("GLOBAL-500-1", "서버 내부 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_REQUEST("GLOBAL-400-1", "잘못된 요청입니다.", HttpStatus.BAD_REQUEST),
 
+    PAYMENT_TOSS_CONFIRM_FAILED("PAYMENT-400-1", "토스 결제 승인 실패", HttpStatus.BAD_REQUEST),
+    PAYMENT_TOSS_EMPTY_RESPONSE("PAYMENT-500-1", "토스 결제 승인 응답이 비어있습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    PAYMENT_TOSS_CALL_EXCEPTION("PAYMENT-500-2", "토스 결제 승인 호출 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+
     // ===== 인증 =====
 
     // ===== 회원 =====
@@ -38,13 +42,19 @@ public enum ErrorCode {
 
     // ===== 장바구니 =====
     CART_PRODUCT_OUT_OF_STOCK("CART-400-1", "선택하신 상품의 재고가 부족합니다.", HttpStatus.BAD_REQUEST),
+    CART_EMPTY("CART-400-2", "장바구니가 비어있습니다.", HttpStatus.BAD_REQUEST),
     CART_USER_NOT_FOUND("CART-404-1", "사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     CART_NOT_FOUND("CART-404-2", "장바구니를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-    CART_ITEM_NOT_FOUND("CART-404-2", "장바구니에 해당 상품이 존재하지 않습니다.", HttpStatus.NOT_FOUND),
+    CART_ITEM_NOT_FOUND("CART-404-3", "장바구니에 해당 상품이 존재하지 않습니다.", HttpStatus.NOT_FOUND),
+    CART_PRODUCT_INFO_NOT_FOUND("CART-404-4", "장바구니 상품의 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     CART_PRODUCT_API_FAILED("CART-500-1", "상품 정보를 불러올 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+
     // ===== 주문 =====
-    ORDER_INVALID_STATE("ORDER-400-1", "주문 상태가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
-    ORDER_CANNOT_CANCEL("ORDER-400-2", "주문 취소가 불가능한 상태입니다.", HttpStatus.BAD_REQUEST),
+    ORDER_BUYER_REQUIRED("ORDER-400-1", "구매자 정보가 필요합니다.", HttpStatus.BAD_REQUEST),
+    ORDER_INVALID_STATE("ORDER-400-2", "주문 상태가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    ORDER_CANNOT_CANCEL("ORDER-400-3", "주문 취소가 불가능한 상태입니다.", HttpStatus.BAD_REQUEST),
+    ORDER_NO_ITEMS_SELECTED("ORDER-400-4", "주문할 상품을 선택해주세요.", HttpStatus.BAD_REQUEST),
+    ORDER_NOT_FOUND("ORDER-404-1", "주문을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     // ===== 배송 =====
 
     // ===== 결제 =====

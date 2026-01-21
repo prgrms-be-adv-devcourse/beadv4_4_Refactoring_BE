@@ -3,8 +3,10 @@ package com.thock.back.api.boundedContext.market.app;
 import com.thock.back.api.boundedContext.market.domain.Cart;
 import com.thock.back.api.boundedContext.market.domain.MarketMember;
 import com.thock.back.api.boundedContext.market.in.dto.req.CartItemAddRequest;
+import com.thock.back.api.boundedContext.market.in.dto.req.OrderCreateRequest;
 import com.thock.back.api.boundedContext.market.in.dto.res.CartItemListResponse;
 import com.thock.back.api.boundedContext.market.in.dto.res.CartItemResponse;
+import com.thock.back.api.boundedContext.market.in.dto.res.OrderCreateResponse;
 import com.thock.back.api.shared.market.dto.MarketMemberDto;
 import com.thock.back.api.shared.member.dto.MemberDto;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ public class MarketFacade {
 
     private final MarketSyncMemberUseCase marketSyncMemberUseCase;
     private final MarketCreateCartUseCase marketCreateCartUseCase;
+    private final MarketCreateOrderUseCase marketCreateOrderUseCase;
     private final CartService cartService;
 
     @Transactional
@@ -37,5 +40,10 @@ public class MarketFacade {
     @Transactional
     public CartItemResponse addCartItem(Long memberId, CartItemAddRequest request){
         return cartService.addCartItem(memberId, request);
+    }
+
+    @Transactional
+    public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request) {
+        return marketCreateOrderUseCase.createOrder(memberId, request);
     }
 }
