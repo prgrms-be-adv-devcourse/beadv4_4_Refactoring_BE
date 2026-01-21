@@ -2,9 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [ "dev", "main" ]
-  push:
-    branches: [ "dev", "main" ]
+    branches: [ "feat/999-infra-test" ]
 
 jobs:
   build-test-docker:
@@ -24,7 +22,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Run tests
+      - name: Run test
         run: ./gradlew test
 
       - name: Build project
@@ -32,3 +30,14 @@ jobs:
 
       - name: Build Docker Image (amd64)
         run: docker build --platform linux/amd64 -t team08-app:ci .
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image (amd64)
+        run: |
+          docker build --platform linux/amd64 -t sang234/team08-app:latest .
+          docker push sang234/team08-app:latest
