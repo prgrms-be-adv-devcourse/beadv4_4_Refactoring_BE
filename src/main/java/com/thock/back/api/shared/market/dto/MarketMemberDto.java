@@ -24,7 +24,7 @@ public class MarketMemberDto {
     private final String detailAddress;
 
     // 계좌 정보
-    private final String bankCode;
-    private final String accountNumber;
-    private final String accountHolder;
+//    private final String bankCode;
+//    private final String accountNumber;
+//    private final String accountHolder;
 }

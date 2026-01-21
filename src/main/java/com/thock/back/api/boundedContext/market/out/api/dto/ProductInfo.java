@@ -2,15 +2,19 @@ package com.thock.back.api.boundedContext.market.out.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Value;
 
-@Getter
-@AllArgsConstructor
+@Value
 public class ProductInfo {
-    private Long id;
-    private String name;
-    private String imageUrl;
-    private Long price;
-    private Long salePrice;
-    private Integer stock;
-    private String state; // ProductState
+    Long id;
+    String name;
+    String imageUrl;
+    Long price;
+    Long salePrice;
+    Integer stock;
+    String state; // ProductState
+
+    public boolean isAvailable() {
+        return "ON_SALE".equals(state) && stock != null && stock > 0;
+    }
 }

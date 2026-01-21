@@ -44,7 +44,14 @@ public class SecurityConfig {
                                 "/api/v1/payments/confirm/**",
                                 "/success.html/**",
                                 "/checkout.html/**",
-                                "/fail.html/**"
+                                "/fail.html/**",
+                                // 장바구니, 상품
+                                "/api/v1/carts/**",
+                                "/api/v1/orders/**",
+
+                                // 내부 API
+                                "/api/v1/products/internal/**",
+                                "/api/v1/payments/internal/**"
                         ).permitAll()
                         .anyRequest().authenticated()   // ← 여기 중요 (JWT 없으면 접근 불가)
                 )
