@@ -1,15 +1,17 @@
 package com.thock.back.api.boundedContext.payment.app;
 
+import com.thock.back.api.boundedContext.payment.domain.EventType;
 import com.thock.back.api.boundedContext.payment.domain.Payment;
 import com.thock.back.api.boundedContext.payment.domain.PaymentStatus;
-import com.thock.back.api.boundedContext.payment.domain.dto.PaymentConfirmRequestDto;
+import com.thock.back.api.boundedContext.payment.domain.Wallet;
+import com.thock.back.api.boundedContext.payment.domain.dto.request.PaymentConfirmRequestDto;
 import com.thock.back.api.boundedContext.payment.out.PaymentRepository;
+import com.thock.back.api.boundedContext.payment.out.WalletRepository;
 import com.thock.back.api.global.eventPublisher.EventPublisher;
 import com.thock.back.api.global.exception.CustomException;
 import com.thock.back.api.global.exception.ErrorCode;
 import com.thock.back.api.shared.payment.dto.PaymentDto;
 import com.thock.back.api.shared.payment.event.PaymentCompletedEvent;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
@@ -24,6 +26,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentConfirmService {
     private final PaymentRepository paymentRepository;
+    private final WalletRepository walletRepository;
     private final EventPublisher eventPublisher;
     private static final String TOSS_BASE_URL = "https://api.tosspayments.com";
     private static final String CONFIRM_PATH = "/v1/payments/confirm";
@@ -34,7 +37,7 @@ public class PaymentConfirmService {
     public Map<String, Object> confirmPayment(PaymentConfirmRequestDto req) {
         Payment payment = paymentRepository.findByOrderId(req.getOrderId())
                 .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER));
-
+        Wallet wallet = walletRepository.findByHolderId(payment.getBuyer().getId()).get();
         // 상태 체크
         if (payment.getStatus() != PaymentStatus.REQUESTED) {
             throw new CustomException(ErrorCode.PAYMENT_NOT_REQUEST);
@@ -88,7 +91,10 @@ public class PaymentConfirmService {
                         paymentDto
                 )
         );
-
+        wallet.depositBalance(payment.getAmount(), EventType.주문_입금);
+        walletRepository.save(wallet);
+        wallet.withdrawBalance(payment.getAmount(), EventType.주문_출금);
+        walletRepository.save(wallet);
         return confirmResponse;
     }
 }

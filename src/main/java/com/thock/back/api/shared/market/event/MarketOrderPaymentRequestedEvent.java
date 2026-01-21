@@ -9,5 +9,4 @@ import lombok.Getter;
 public class MarketOrderPaymentRequestedEvent {
     private OrderDto order;
     private Long pgAmount;
-    private String paymentKey;
 }

@@ -1,4 +1,4 @@
-package com.thock.back.api.boundedContext.payment.domain.dto;
+package com.thock.back.api.boundedContext.payment.domain.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
