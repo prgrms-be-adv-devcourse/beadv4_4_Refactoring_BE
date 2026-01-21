@@ -48,8 +48,19 @@ public enum ErrorCode {
 
     // ===== 결제 =====
     WALLET_NOT_FOUND("WALLET-404-1", "지갑을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-    WALLET_IS_LOCKED("WALLET-404-2", "이 지갑은 현재 정지 된 상태입니다.", HttpStatus.LOCKED),
-    WALLET_NOT_WITHDRAW("WALLET-404-3", "잔액이 부족합니다.", HttpStatus.NOT_FOUND);
+    WALLET_IS_LOCKED("WALLET-404-2", "이 지갑은 현재 정지 된 상태입니다.", HttpStatus.NOT_FOUND),
+    WALLET_NOT_WITHDRAW("WALLET-404-3", "잔액이 부족합니다.", HttpStatus.NOT_FOUND),
+    TOSS_EMPTY_RESPONSE("PAYMENT-400-1", "토스 결제 승인 응답 바디가 비었습니다.", HttpStatus.BAD_REQUEST),
+    TOSS_HTTP_ERROR("PAYMENT-400-2", "토스 결제 승인 HTTP 호출 실패", HttpStatus.BAD_REQUEST),
+    TOSS_UNKNOWN_CODE("PAYMENT-400-3", "토스 결제 승인 중 알 수 없는 오류 발생", HttpStatus.BAD_REQUEST),
+    TOSS_CONFIRM_FAIL("PAYMENT-400-4", "토스 결제 승인 실패", HttpStatus.BAD_REQUEST),
+    TOSS_CALL_EXCEPTION("PAYMENT-400-5", "토스 결제 승인 호출 중 예외", HttpStatus.BAD_REQUEST),
+    TOSS_AMOUNT_NOT_MATCH("PAYMENT-400-6", "결제 금액이 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
+    TOSS_ORDER_NOT_MATCH("PAYMENT-400-7", "주문번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
+    TOSS_MISSING_FIELDS("PAYMENT-400-8", "토스 PG 응답 필드 부족", HttpStatus.BAD_REQUEST),
+    PAYMENT_NOT_REQUEST("PAYMENT-400-9", "결제 상태가 요청이 아닙니다.", HttpStatus.BAD_REQUEST),
+    PAYMENT_UNKNOWN_ORDER_NUMBER("PAYMENT-404-1", "주문번호에 맞는 결제정보가 없습니다.", HttpStatus.NOT_FOUND),
+    TOSS_REJECTED("PAYMENT-402-1", "PG에서 결제가 거절되었습니다.", HttpStatus.PAYMENT_REQUIRED);
     // ===== 정산 =====
 
     ;

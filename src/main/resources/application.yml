@@ -19,7 +19,7 @@ spring:
   # JPA 설정 (필수!)
   jpa:
     hibernate:
-      ddl-auto: update  # 엔티티 변경 시 자동으로 테이블 생성/수정
+      ddl-auto: create-drop  # 엔티티 변경 시 자동으로 테이블 생성/수정
     show-sql: true  # SQL 로그 출력
 
 jwt:
@@ -32,7 +32,13 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
+    reactor.netty: TRACE
+    org.springframework.web: TRACE
 
 custom:
   global:
     internalBackUrl: http://localhost:${server.port:8080}
+  payment:
+    toss:
+      payments:
+        secretKey: ${TOSS_PAYMENTS_SECRET_KEY:}

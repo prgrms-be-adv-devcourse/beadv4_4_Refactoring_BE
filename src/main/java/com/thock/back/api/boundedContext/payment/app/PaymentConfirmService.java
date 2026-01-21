@@ -1,0 +1,94 @@
+package com.thock.back.api.boundedContext.payment.app;
+
+import com.thock.back.api.boundedContext.payment.domain.Payment;
+import com.thock.back.api.boundedContext.payment.domain.PaymentStatus;
+import com.thock.back.api.boundedContext.payment.domain.dto.PaymentConfirmRequestDto;
+import com.thock.back.api.boundedContext.payment.out.PaymentRepository;
+import com.thock.back.api.global.eventPublisher.EventPublisher;
+import com.thock.back.api.global.exception.CustomException;
+import com.thock.back.api.global.exception.ErrorCode;
+import com.thock.back.api.shared.payment.dto.PaymentDto;
+import com.thock.back.api.shared.payment.event.PaymentCompletedEvent;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.Base64;
+import java.util.Map;
+
+@Service
+@RequiredArgsConstructor
+public class PaymentConfirmService {
+    private final PaymentRepository paymentRepository;
+    private final EventPublisher eventPublisher;
+    private static final String TOSS_BASE_URL = "https://api.tosspayments.com";
+    private static final String CONFIRM_PATH = "/v1/payments/confirm";
+
+    @Value("${custom.payment.toss.payments.secretKey}")
+    private String tossSecretKey;
+
+    public Map<String, Object> confirmPayment(PaymentConfirmRequestDto req) {
+        Payment payment = paymentRepository.findByOrderId(req.getOrderId())
+                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER));
+
+        // 상태 체크
+        if (payment.getStatus() != PaymentStatus.REQUESTED) {
+            throw new CustomException(ErrorCode.PAYMENT_NOT_REQUEST);
+        }
+
+        Map<String, Object> body = Map.of(
+                "paymentKey", req.getPaymentKey(),
+                "orderId", req.getOrderId(),
+                "amount", req.getAmount()
+        );
+
+        Map<String, Object> confirmResponse = WebClient.builder()
+                .baseUrl(TOSS_BASE_URL)
+                .defaultHeaders(headers -> {
+                    String auth = Base64.getEncoder()
+                            .encodeToString((tossSecretKey + ":").getBytes());
+                    headers.set("Authorization", "Basic " + auth);
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+                })
+                .build()
+                .post()
+                .uri(CONFIRM_PATH)
+                .bodyValue(body)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, r -> r.bodyToMono(String.class).map(msg -> {
+                    throw new CustomException(ErrorCode.TOSS_CONFIRM_FAIL);
+                }))
+                .bodyToMono(Map.class)
+                .block();
+
+        // confirm 결과 검증 (토스 응답)
+        Integer approvedAmount = (Integer) confirmResponse.get("totalAmount");
+        if (!payment.getPgAmount().equals(approvedAmount.longValue())) {
+            payment.updatePaymentStatus(PaymentStatus.CANCELED);
+            throw new CustomException(ErrorCode.TOSS_AMOUNT_NOT_MATCH);
+        }
+
+        // 검증 후 process
+        payment.updatePaymentStatus(PaymentStatus.COMPLETED);
+
+        PaymentDto paymentDto = new PaymentDto(payment.getId(),
+                                                payment.getOrderId(),
+                                                payment.getPaymentKey(),
+                                                payment.getBuyer().getId(),
+                                                payment.getStatus(),
+                                                payment.getPgAmount(),
+                                                payment.getAmount(),
+                                                payment.getCreatedAt());
+        eventPublisher.publish(
+                new PaymentCompletedEvent(
+                        paymentDto
+                )
+        );
+
+        return confirmResponse;
+    }
+}
