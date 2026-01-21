@@ -1,4 +1,4 @@
-name: CD - Deploy to EC2
+name: CD
 on:
   pull_request:
     branches: [ "feat/999-infra-test" ]
