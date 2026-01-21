@@ -1,5 +1,4 @@
 name: CD - Deploy to EC2
-
 on:
   pull_request:
     branches: [ "feat/999-infra-test" ]
@@ -16,8 +15,13 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Add known hosts
+      - name: Debug and Add known hosts
         run: |
+          echo "Testing connection to host..."
+          nc -zv ${{ secrets.EC2_HOST }} 22 -w 5 || echo "Port 22 not reachable"
+          echo "Running ssh-keyscan..."
+          ssh-keyscan -v -H ${{ secrets.EC2_HOST }} 2>&1 || echo "ssh-keyscan failed"
+          mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
