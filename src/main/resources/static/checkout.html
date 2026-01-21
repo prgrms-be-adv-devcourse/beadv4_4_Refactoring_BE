@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>토스 결제 테스트 - Checkout</title>
+
+    <!-- 토스페이먼츠 결제창 SDK (v1) -->
+    <script src="https://js.tosspayments.com/v1/payment"></script>
+
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 480px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+        h1 { font-size: 20px; margin-bottom: 16px; }
+        label { display: block; margin: 8px 0 4px; }
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .hint { font-size: 12px; color: #555; margin-top: 4px; }
+    </style>
+</head>
+<body>
+<h1>토스 결제 테스트 (checkout)</h1>
+
+<div>
+    <label>주문번호(orderId)</label>
+    <input id="orderId" type="text" />
+    <div class="hint">
+        ⚠ 이 orderId / amount 값은 <strong>백엔드 Payment 테이블에 미리 생성된 값</strong>과 같아야
+        <code>confirmPayment</code>에서 통과함.
+    </div>
+
+    <label>결제금액(amount)</label>
+    <input id="amount" type="number" value="1000" />
+
+    <label>주문명(orderName)</label>
+    <input id="orderName" type="text" value="테스트 결제 상품" />
+</div>
+
+<button onclick="requestTossPayment()">토스로 결제하기</button>
+
+<script>
+    // TODO: 실제 토스 테스트 클라이언트 키로 교체
+    // 예: test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq
+    const clientKey = "test_ck_ORzdMaqN3wONXJBEp1bg35AkYXQG";
+
+    const tossPayments = TossPayments(clientKey);
+
+    function requestTossPayment() {
+        const orderId = document.getElementById("orderId").value.trim();
+        const amount = Number(document.getElementById("amount").value);
+        const orderName = document.getElementById("orderName").value.trim() || "테스트 결제";
+
+        if (!orderId) {
+            alert("orderId를 입력하세요. (백엔드 Payment에 있는 orderId와 동일해야 합니다)");
+            return;
+        }
+        if (!amount || amount <= 0) {
+            alert("amount(결제금액)를 올바르게 입력해주세요.");
+            return;
+        }
+
+        // TODO: success/fail URL은 실제 서버 주소에 맞게 수정
+        const successUrl = "http://localhost:8080/success.html";
+        const failUrl = "http://localhost:8080/fail.html";
+
+        tossPayments.requestPayment("카드", {
+            amount,          // 결제 금액
+            orderId,         // 주문번호 (백엔드 Payment.orderId와 동일해야 함)
+            orderName,       // 주문명
+            successUrl,      // 결제 성공 후 이동할 URL
+            failUrl          // 결제 실패 후 이동할 URL
+        });
+    }
+</script>
+</body>
+</html>
