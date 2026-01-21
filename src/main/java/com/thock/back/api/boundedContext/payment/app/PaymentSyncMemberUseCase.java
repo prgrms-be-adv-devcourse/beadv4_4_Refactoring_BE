@@ -19,6 +19,7 @@ public class PaymentSyncMemberUseCase {
     /**
      *     Member - PaymentMember 동기화
      **/
+
     public PaymentMember syncMember(MemberDto member){
         boolean isNew = !paymentMemberRepository.existsById(member.getId());
 

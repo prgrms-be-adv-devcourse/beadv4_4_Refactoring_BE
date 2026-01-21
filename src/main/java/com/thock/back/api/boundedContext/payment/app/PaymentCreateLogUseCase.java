@@ -16,6 +16,7 @@ public class PaymentCreateLogUseCase {
     private final RevenueLogRepository revenueLogRepository;
     private final PaymentMemberRepository paymentMemberRepository;
     private final WalletRepository walletRepository;
+    private final PaymentRepository paymentRepository;
 
     @Transactional
     public void saveBalanceLog(WalletDto wallet, EventType eventType, Long amount){
@@ -50,14 +51,16 @@ public class PaymentCreateLogUseCase {
     @Transactional
     public void savePaymentLog(PaymentDto payment) {
         PaymentMember member = paymentMemberRepository.getReferenceById(payment.getBuyerId());
-
+        Payment _payment = paymentRepository.getReferenceById(payment.getId());
         paymentLogRepository.save(
                 new PaymentLog(
                         member,
                         payment.getOrderId(),
                         payment.getStatus(),
                         payment.getAmount(),
-                        payment.getPgAmount())
+                        payment.getPgAmount(),
+                        _payment)
         );
+
     }
 }
