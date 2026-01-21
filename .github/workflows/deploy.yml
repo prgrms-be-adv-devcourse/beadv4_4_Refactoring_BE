@@ -1,21 +1,25 @@
 name: CD - Deploy to EC2
-
 on:
   pull_request:
     branches: [ "feat/999-infra-test" ]
     types: [ closed ]
-
 jobs:
   deploy:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-
     steps:
-      - name: Setup SSH
+      - name: Load SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Debug and Add known hosts
         run: |
+          echo "Testing connection to host..."
+          nc -zv ${{ secrets.EC2_HOST }} 22 -w 5 || echo "Port 22 not reachable"
+          echo "Running ssh-keyscan..."
+          ssh-keyscan -v -H ${{ secrets.EC2_HOST }} 2>&1 || echo "ssh-keyscan failed"
           mkdir -p ~/.ssh
-          printf "%s" "${{ secrets.EC2_SSH_KEY_B64 }}" | base64 --decode > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
