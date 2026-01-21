@@ -1,10 +1,10 @@
 name: CI
 
 on:
-  pull_request:
-    branches: [ "dev", "main" ]
   push:
-    branches: [ "dev", "main" ]
+    branches: [ "feat/999-infra-test" ]
+  pull_request:
+    branches: [ "feat/999-infra-test" ]
 
 jobs:
   build-test-docker:
