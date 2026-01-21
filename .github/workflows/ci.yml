@@ -3,8 +3,6 @@ name: CI
 on:
   pull_request:
     branches: [ "feat/999-infra-test" ]
-  push:
-    branches: [ "feat/999-infra-test" ]
 
 jobs:
   build-test-docker:
