@@ -38,6 +38,9 @@ logging:
 custom:
   global:
     internalBackUrl: http://localhost:${server.port:8080}
+  market:
+    product:
+      payoutRate: 80
   payment:
     toss:
       payments:
