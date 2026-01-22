@@ -1,9 +1,9 @@
 package com.thock.back.api.boundedContext.member.in;
 
 import com.thock.back.api.boundedContext.member.app.MemberSignUpService;
-import com.thock.back.api.boundedContext.member.domain.SignUpCommand;
-import com.thock.back.api.boundedContext.member.domain.SignUpRequest;
-import com.thock.back.api.boundedContext.member.domain.SignUpResponse;
+import com.thock.back.api.boundedContext.member.domain.command.SignUpCommand;
+import com.thock.back.api.boundedContext.member.in.dto.SignUpRequest;
+import com.thock.back.api.boundedContext.member.in.dto.SignUpResponse;
 import com.thock.back.api.global.security.AuthContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,5 +30,7 @@ public class MemberController {
     public String test() throws Exception {
         return AuthContext.memberId().toString();
     }
+
+    @PostMapping("/")
 
 }

@@ -1,4 +1,4 @@
-package com.thock.back.api.boundedContext.member.domain;
+package com.thock.back.api.boundedContext.member.domain.entity;
 
 import com.thock.back.api.shared.member.domain.MemberRole;
 import com.thock.back.api.shared.member.domain.MemberState;

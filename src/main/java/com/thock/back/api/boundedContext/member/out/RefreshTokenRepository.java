@@ -1,6 +1,6 @@
 package com.thock.back.api.boundedContext.member.out;
 
-import com.thock.back.api.boundedContext.member.domain.RefreshToken;
+import com.thock.back.api.boundedContext.member.domain.entity.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

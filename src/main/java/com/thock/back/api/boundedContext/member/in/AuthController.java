@@ -1,8 +1,8 @@
 package com.thock.back.api.boundedContext.member.in;
 
 import com.thock.back.api.boundedContext.member.app.AuthApplicationService;
-import com.thock.back.api.boundedContext.member.domain.*;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import com.thock.back.api.boundedContext.member.domain.command.LoginCommand;
+import com.thock.back.api.boundedContext.member.in.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.thock.back.api.boundedContext.member.domain;
+package com.thock.back.api.boundedContext.member.in.dto;
 
 public record SignUpResponse(
         Long memberId

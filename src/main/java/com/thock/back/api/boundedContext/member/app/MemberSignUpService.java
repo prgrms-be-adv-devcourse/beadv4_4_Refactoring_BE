@@ -1,8 +1,8 @@
 package com.thock.back.api.boundedContext.member.app;
 
-import com.thock.back.api.boundedContext.member.domain.Credential;
-import com.thock.back.api.boundedContext.member.domain.Member;
-import com.thock.back.api.boundedContext.member.domain.SignUpCommand;
+import com.thock.back.api.boundedContext.member.domain.entity.Credential;
+import com.thock.back.api.boundedContext.member.domain.entity.Member;
+import com.thock.back.api.boundedContext.member.domain.command.SignUpCommand;
 import com.thock.back.api.boundedContext.member.out.CredentialRepository;
 import com.thock.back.api.boundedContext.member.out.MemberRepository;
 import com.thock.back.api.global.eventPublisher.EventPublisher;
