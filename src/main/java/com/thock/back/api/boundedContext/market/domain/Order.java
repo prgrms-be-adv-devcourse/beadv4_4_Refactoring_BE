@@ -157,9 +157,9 @@ public class Order extends BaseIdAndTime {
         log.info("❌ 결제 요청 취소: orderId={}, orderNumber={}", getId(), orderNumber);
 
         // Payment 모듈에 결제 취소 알림
-        publishEvent(new MarketOrderPaymentRequestCanceledEvent(
-                this.toDto()
-        ));
+//        publishEvent(new MarketOrderPaymentRequestCanceledEvent(
+//                this.toDto()
+//        ));
     }
 
     /**

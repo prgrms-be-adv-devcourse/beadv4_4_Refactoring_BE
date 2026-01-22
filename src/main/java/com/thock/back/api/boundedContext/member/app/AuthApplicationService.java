@@ -1,6 +1,11 @@
 package com.thock.back.api.boundedContext.member.app;
 
-import com.thock.back.api.boundedContext.member.domain.*;
+import com.thock.back.api.boundedContext.member.domain.command.LoginCommand;
+import com.thock.back.api.boundedContext.member.domain.entity.Credential;
+import com.thock.back.api.boundedContext.member.domain.entity.LoginHistory;
+import com.thock.back.api.boundedContext.member.domain.entity.Member;
+import com.thock.back.api.boundedContext.member.domain.entity.RefreshToken;
+import com.thock.back.api.boundedContext.member.in.dto.LoginResult;
 import com.thock.back.api.boundedContext.member.out.CredentialRepository;
 import com.thock.back.api.boundedContext.member.out.LoginHistoryRepository;
 import com.thock.back.api.boundedContext.member.out.MemberRepository;
@@ -8,7 +13,6 @@ import com.thock.back.api.boundedContext.member.out.RefreshTokenRepository;
 import com.thock.back.api.global.security.JwtTokenProvider;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.token.TokenService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

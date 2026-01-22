@@ -70,8 +70,11 @@ public enum ErrorCode {
     TOSS_ORDER_NOT_MATCH("PAYMENT-400-7", "주문번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
     TOSS_MISSING_FIELDS("PAYMENT-400-8", "토스 PG 응답 필드 부족", HttpStatus.BAD_REQUEST),
     PAYMENT_NOT_REQUEST("PAYMENT-400-9", "결제 상태가 요청이 아닙니다.", HttpStatus.BAD_REQUEST),
+    PAYMENT_NOT_COMPLETE("PAYMENT-400-10", "결제 상태가 완료가 아닙니다.", HttpStatus.BAD_REQUEST),
     PAYMENT_UNKNOWN_ORDER_NUMBER("PAYMENT-404-1", "주문번호에 맞는 결제정보가 없습니다.", HttpStatus.NOT_FOUND),
-    TOSS_REJECTED("PAYMENT-402-1", "PG에서 결제가 거절되었습니다.", HttpStatus.PAYMENT_REQUIRED);
+    REFUND_NOT_CANCEL_REASON("REFUND-404-1", "환불 사유가 비어있습니다.", HttpStatus.NOT_FOUND),
+    TOSS_REJECTED("PAYMENT-402-1", "PG에서 결제가 거절되었습니다.", HttpStatus.PAYMENT_REQUIRED),
+    PAYMENT_NOT_MATCH_MEMBER("PAYMENT-400-11", "요청 멤버하고 결제 멤버하고 다릅니다.", HttpStatus.BAD_REQUEST);
     // ===== 정산 =====
 
     ;

@@ -1,6 +1,6 @@
 package com.thock.back.api.boundedContext.member.out;
 
-import com.thock.back.api.boundedContext.member.domain.Member;
+import com.thock.back.api.boundedContext.member.domain.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

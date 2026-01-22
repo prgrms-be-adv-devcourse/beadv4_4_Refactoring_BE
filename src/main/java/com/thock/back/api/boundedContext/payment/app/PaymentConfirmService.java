@@ -4,6 +4,7 @@ import com.thock.back.api.boundedContext.payment.domain.EventType;
 import com.thock.back.api.boundedContext.payment.domain.Payment;
 import com.thock.back.api.boundedContext.payment.domain.PaymentStatus;
 import com.thock.back.api.boundedContext.payment.domain.Wallet;
+import com.thock.back.api.shared.payment.dto.PaymentCancelRequestDto;
 import com.thock.back.api.boundedContext.payment.domain.dto.request.PaymentConfirmRequestDto;
 import com.thock.back.api.boundedContext.payment.out.PaymentRepository;
 import com.thock.back.api.boundedContext.payment.out.WalletRepository;
@@ -11,7 +12,9 @@ import com.thock.back.api.global.eventPublisher.EventPublisher;
 import com.thock.back.api.global.exception.CustomException;
 import com.thock.back.api.global.exception.ErrorCode;
 import com.thock.back.api.shared.payment.dto.PaymentDto;
+import com.thock.back.api.shared.payment.dto.RefundResponseDto;
 import com.thock.back.api.shared.payment.event.PaymentCompletedEvent;
+import com.thock.back.api.shared.payment.event.PaymentRefundCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
@@ -30,10 +33,14 @@ public class PaymentConfirmService {
     private final EventPublisher eventPublisher;
     private static final String TOSS_BASE_URL = "https://api.tosspayments.com";
     private static final String CONFIRM_PATH = "/v1/payments/confirm";
+    private static final String CANCEL_PATH = "/v1/payments/{paymentKey}/cancel";
 
     @Value("${custom.payment.toss.payments.secretKey}")
     private String tossSecretKey;
 
+    /**
+     * 토스페이먼츠 검증 기능
+     **/
     public Map<String, Object> confirmPayment(PaymentConfirmRequestDto req) {
         Payment payment = paymentRepository.findByOrderId(req.getOrderId())
                 .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER));
@@ -77,6 +84,8 @@ public class PaymentConfirmService {
 
         // 검증 후 process
         payment.updatePaymentStatus(PaymentStatus.COMPLETED);
+        payment.updatePaymentKey(req.getPaymentKey());
+        paymentRepository.save(payment);
 
         PaymentDto paymentDto = new PaymentDto(payment.getId(),
                                                 payment.getOrderId(),
@@ -96,5 +105,103 @@ public class PaymentConfirmService {
         wallet.withdrawBalance(payment.getAmount(), EventType.주문_출금);
         walletRepository.save(wallet);
         return confirmResponse;
+    }
+
+    /**
+     * 토스페이먼츠 취소 기능
+     **/
+
+    public void cancelToss(PaymentCancelRequestDto req){
+        // 검증
+        Payment payment = paymentRepository.findByOrderId(req.getOrderId())
+                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER));
+
+        Wallet wallet = walletRepository.findByHolderId(payment.getBuyer().getId()).get();
+
+        // 상태 체크
+        if (payment.getStatus() != PaymentStatus.COMPLETED) {
+            throw new CustomException(ErrorCode.PAYMENT_NOT_COMPLETE);
+        }
+
+        Map<String, Object> body = Map.of(
+                "paymentKey", payment.getPaymentKey(),
+                "cancelReason", req.getCancelReason()
+        );
+
+        Map<String, Object> confirmResponse = WebClient.builder()
+                .baseUrl(TOSS_BASE_URL)
+                .defaultHeaders(headers -> {
+                    String auth = Base64.getEncoder()
+                            .encodeToString((tossSecretKey + ":").getBytes());
+                    headers.set("Authorization", "Basic " + auth);
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+                })
+                .build()
+                .post()
+                .uri(CANCEL_PATH, payment.getPaymentKey())
+                .bodyValue(body)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, r -> r.bodyToMono(String.class).map(msg -> {
+                    throw new CustomException(ErrorCode.TOSS_CONFIRM_FAIL);
+                }))
+                .bodyToMono(Map.class)
+                .block();
+
+        // cancel 결과 검증 (토스 응답)
+        String status = (String) confirmResponse.get("status");
+        if (status.equals("CANCELED")) {
+            payment.updatePaymentStatus(PaymentStatus.CANCELED);
+            paymentRepository.save(payment);
+        }
+
+        // 지갑 업데이트
+        wallet.depositBalance(payment.getAmount(), EventType.주문취소_입금);
+        walletRepository.save(wallet);
+
+        eventPublisher.publish(
+                new PaymentRefundCompletedEvent(
+                        new RefundResponseDto(
+                                payment.getBuyer().getId(),
+                                payment.getOrderId(),
+                                payment.getStatus()
+                        )
+                )
+        );
+    }
+
+    /**
+     * 내부 결제 취소 기능
+     **/
+
+    public void cancelPayment(PaymentCancelRequestDto req){
+        // 검증
+        Payment payment = paymentRepository.findByOrderId(req.getOrderId())
+                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER));
+
+        Wallet wallet = walletRepository.findByHolderId(payment.getBuyer().getId()).get();
+
+        // 상태 체크
+        if (payment.getStatus() != PaymentStatus.COMPLETED) {
+            throw new CustomException(ErrorCode.PAYMENT_NOT_COMPLETE);
+        }
+
+        // cancel 결과 검증
+        payment.updatePaymentStatus(PaymentStatus.CANCELED);
+        paymentRepository.save(payment);
+
+
+        // 지갑 업데이트
+        wallet.depositBalance(payment.getAmount(), EventType.주문취소_입금);
+        walletRepository.save(wallet);
+
+        eventPublisher.publish(
+                new PaymentRefundCompletedEvent(
+                        new RefundResponseDto(
+                                payment.getBuyer().getId(),
+                                payment.getOrderId(),
+                                payment.getStatus()
+                        )
+                )
+        );
     }
 }

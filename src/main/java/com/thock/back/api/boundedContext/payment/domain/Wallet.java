@@ -29,11 +29,11 @@ public class Wallet extends BaseIdAndTime {
 
     private Long revenue;
 
-    @OneToMany(mappedBy = "wallet")
-    private List<WalletLog> walletLogs = new ArrayList<>();;
-
-    @OneToMany(mappedBy = "wallet")
-    private List<RevenueLog> revenueLogs = new ArrayList<>();;
+//    @OneToMany(mappedBy = "wallet")
+//    private List<WalletLog> walletLogs = new ArrayList<>();;
+//
+//    @OneToMany(mappedBy = "wallet")
+//    private List<RevenueLog> revenueLogs = new ArrayList<>();;
 
     public Wallet(PaymentMember holder) {
         this.holder = holder;
