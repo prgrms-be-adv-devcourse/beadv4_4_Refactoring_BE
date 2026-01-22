@@ -34,7 +34,7 @@ public class ApiV1PaymentController {
             @ApiResponse(responseCode = "WALLET-404-2", description = "이 지갑은 현재 정지 된 상태입니다.")
     })
     @GetMapping("internal/wallet/{memberId}")
-    public ResponseEntity<WalletDto> getWallet(@PathVariable("member-id") Long memberId) {
+    public ResponseEntity<WalletDto> getWallet(@PathVariable("memberId") Long memberId) {
         // 내부 호출용 API
         return ResponseEntity.ok().body(paymentFacade.walletFindByMemberId(memberId));
     }
@@ -48,7 +48,7 @@ public class ApiV1PaymentController {
             @ApiResponse(responseCode = "WALLET-404-1", description = "지갑을 찾을 수 없습니다."),
             @ApiResponse(responseCode = "WALLET-404-2", description = "이 지갑은 현재 정지 된 상태입니다.")
     })
-    @GetMapping("/BalanceLog")
+    @GetMapping("/balanceLog")
     public ResponseEntity<WalletLogResponseDto> getWalletLog() throws Exception {
         Long memberId = AuthContext.memberId();
         return ResponseEntity.ok().body(paymentFacade.getWalletLog(memberId));
@@ -63,7 +63,7 @@ public class ApiV1PaymentController {
             @ApiResponse(responseCode = "WALLET-404-1", description = "지갑을 찾을 수 없습니다."),
             @ApiResponse(responseCode = "WALLET-404-2", description = "이 지갑은 현재 정지 된 상태입니다.")
     })
-    @GetMapping("/PaymentLog")
+    @GetMapping("/paymentLog")
     public ResponseEntity<PaymentLogResponseDto> getPaymentLog() throws Exception {
         Long memberId = AuthContext.memberId();
         return ResponseEntity.ok().body(paymentFacade.getPaymentLog(memberId));
