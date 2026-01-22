@@ -30,7 +30,4 @@ public class MemberController {
     public String test() throws Exception {
         return AuthContext.memberId().toString();
     }
-
-    @PostMapping("/")
-
 }
