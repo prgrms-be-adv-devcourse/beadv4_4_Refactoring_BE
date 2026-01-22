@@ -19,3 +19,4 @@ public class PaymentMember extends ReplicaMember {
         super(email, name, role, state, id, createdAt, modifiedAt);
     }
 }
+
