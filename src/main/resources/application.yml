@@ -4,18 +4,6 @@ spring:
   application:
     name:Thock Backend API Server
 
-  datasource:
-    url: jdbc:h2:./db_dev;MODE=MySQL
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-
-  # H2 Console (필수! 개발할 때 DB 확인용)
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-
   # JPA 설정 (필수!)
   jpa:
     hibernate:
@@ -32,6 +20,8 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
+    reactor.netty: TRACE
+    org.springframework.web: TRACE
 
 custom:
   global:
@@ -39,3 +29,7 @@ custom:
   market:
     product:
       payoutRate: 80
+  payment:
+    toss:
+      payments:
+        secretKey: ${TOSS_PAYMENTS_SECRET_KEY:}

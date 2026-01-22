@@ -1,5 +1,7 @@
 package com.thock.back.api.boundedContext.market.in.dto.res;
 
+import com.thock.back.api.boundedContext.market.domain.Order;
+import com.thock.back.api.boundedContext.market.domain.OrderItem;
 import com.thock.back.api.boundedContext.market.domain.OrderState;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -7,6 +9,7 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Schema(description = "주문 생성 응답")
 @Getter
@@ -51,6 +54,29 @@ public class OrderCreateResponse {
     @Schema(description = "주문 생성 시간")
     private LocalDateTime createdAt;
 
+    // 정적 팩토리 메서드
+    public static OrderCreateResponse from(Order order) {
+        List<OrderItemInfo> itemInfos = order.getItems().stream()
+                .map(OrderItemInfo::from)
+                .collect(Collectors.toList());
+
+        return new OrderCreateResponse(
+                order.getId(),
+                order.getOrderNumber(),
+                order.getState(),
+                itemInfos,
+                order.getTotalPrice(),
+                order.getTotalSalePrice(),
+                order.getTotalDiscountAmount(),
+                order.getTotalPayoutAmount(),
+                order.getTotalFeeAmount(),
+                order.getZipCode(),
+                order.getBaseAddress(),
+                order.getDetailAddress(),
+                order.getCreatedAt()
+        );
+    }
+
     @Schema(description = "주문 아이템 정보")
     @Getter
     @AllArgsConstructor
@@ -84,5 +110,20 @@ public class OrderCreateResponse {
 
         @Schema(description = "할인 금액", example = "60000")
         private Long discountAmount;
+
+        public static OrderItemInfo from(OrderItem orderItem) {
+            return new OrderItemInfo(
+                    orderItem.getId(),
+                    orderItem.getProductId(),
+                    orderItem.getProductName(),
+                    orderItem.getProductImageUrl(),
+                    orderItem.getPrice(),
+                    orderItem.getSalePrice(),
+                    orderItem.getQuantity(),
+                    orderItem.getTotalPrice(),
+                    orderItem.getTotalSalePrice(),
+                    orderItem.getDiscountAmount()
+            );
+        }
     }
 }

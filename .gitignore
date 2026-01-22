@@ -36,12 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 
-### Spring Boot Application ###
-application-local.yml
-application-dev.yml
-application-prod.yml
-application-*.yml
-
 ### Logs ###
 logs/
 *.log

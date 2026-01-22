@@ -22,15 +22,11 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CartService {
     private final MarketSupport marketSupport;
-    private final CartRepository cartRepository;
-    private final MarketMemberRepository marketMemberRepository;
 
     // 장바구니 조회
     @Transactional(readOnly = true)
@@ -116,11 +112,11 @@ public class CartService {
      */
     @Transactional
     public CartItemResponse addCartItem(Long memberId, CartItemAddRequest request) {
-        MarketMember member = marketMemberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
 
-        Cart cart = cartRepository.findByBuyer(member)
-                .orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
+        MarketMember member = marketSupport.findMemberById(memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
+        Cart cart = marketSupport.findCartByBuyer(member)
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
 
         // Product 정보 조회 - API Call
         ProductInfo product = marketSupport.getProduct(request.getProductId());
@@ -133,28 +129,7 @@ public class CartService {
              throw new CustomException(ErrorCode.CART_PRODUCT_OUT_OF_STOCK);
         }
 
-        // TODO : 영속성 상태에 대해서 제대로 공부가 필요함.
         CartItem addedCartItem = cart.addItem(request.getProductId(), request.getQuantity());
-
-        // ✅ 로그 추가: 생성 직후 값 확인
-        log.info("🔍 CartItem 생성 직후: id={}, productId={}, quantity={}, cartId={}",
-                addedCartItem.getId(),
-                addedCartItem.getProductId(),
-                addedCartItem.getQuantity(),
-                addedCartItem.getCart() != null ? addedCartItem.getCart().getId() : "null"
-        );
-
-        // ⭐ 명시적으로 저장 - Cascade.PERSIST로 CartItem도 함께 영속화
-//        cartRepository.save(cart);
-//        cartRepository.flush();
-
-        // ✅ 로그 추가: flush 직후 값 확인
-        log.info("💾 flush 직후: id={}, productId={}, quantity={}, cartId={}",
-                addedCartItem.getId(),
-                addedCartItem.getProductId(),
-                addedCartItem.getQuantity(),
-                addedCartItem.getCart() != null ? addedCartItem.getCart().getId() : "null"
-        );
 
         // CartItemResponse 생성 및 반환
         Long totalPrice = addedCartItem.getQuantity() * product.getPrice();

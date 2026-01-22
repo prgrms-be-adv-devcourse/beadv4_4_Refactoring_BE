@@ -2,7 +2,6 @@ package com.thock.back.api.boundedContext.market.out.api;
 
 import com.thock.back.api.boundedContext.market.out.api.dto.ProductInfo;
 import com.thock.back.api.boundedContext.market.out.client.ProductClient;
-import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -18,14 +17,14 @@ public class ProductApiClient implements ProductClient {
 
     public ProductApiClient(@Value("${custom.global.internalBackUrl}") String internalBackUrl) {
         this.restClient = RestClient.builder()
-                .baseUrl(internalBackUrl + "/api/v1/products")
+                .baseUrl(internalBackUrl + "/api/v1/products/internal")
                 .build();
     }
 
     @Override
     public List<ProductInfo> getProducts(List<Long> productIds) {
         return restClient.post()
-                .uri("/internal/list")
+                .uri("/list")
                 .body(productIds)
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<ProductInfo>>() {});
