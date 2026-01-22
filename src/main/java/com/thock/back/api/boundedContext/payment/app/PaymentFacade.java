@@ -7,8 +7,10 @@ import com.thock.back.api.boundedContext.payment.domain.Wallet;
 import com.thock.back.api.boundedContext.payment.domain.dto.response.PaymentLogResponseDto;
 import com.thock.back.api.boundedContext.payment.domain.dto.response.RevenueLogResponseDto;
 import com.thock.back.api.boundedContext.payment.domain.dto.response.WalletLogResponseDto;
+import com.thock.back.api.boundedContext.payment.out.PaymentRepository;
 import com.thock.back.api.shared.market.dto.OrderDto;
 import com.thock.back.api.shared.member.dto.MemberDto;
+import com.thock.back.api.shared.payment.dto.PaymentCancelRequestDto;
 import com.thock.back.api.shared.payment.dto.PaymentDto;
 import com.thock.back.api.shared.payment.dto.WalletDto;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +27,9 @@ public class PaymentFacade {
     private final PaymentCreateLogUseCase paymentCreateLogUseCase;
     private final PaymentRequestedOrderPaymentUseCase paymentRequestedOrderPaymentUseCase;
     private final PaymentCompletedOrderPaymentUseCase paymentCompletedOrderPaymentUseCase;
+    private final PaymentRepository paymentRepository;
     private final PaymentFindUseCase paymentFindUseCase;
+    private final PaymentConfirmService paymentConfirmService;
 
     @Transactional
     public PaymentMember syncMember(MemberDto member){
@@ -36,6 +40,7 @@ public class PaymentFacade {
     public Optional<Wallet> findWalletByHolder(PaymentMember holder) {
         return paymentSupport.findWalletByHolder(holder);
     }
+
     @Transactional
     public void requestedOrderPayment(OrderDto order, Long pgPaymentAmount) {
         paymentRequestedOrderPaymentUseCase.requestedOrderPayment(order, pgPaymentAmount);
@@ -45,6 +50,26 @@ public class PaymentFacade {
     @Transactional
     public void completedOrderPayment(OrderDto order) {
         paymentCompletedOrderPaymentUseCase.completedOrderPayment(order);
+    }
+
+    // 취소 이벤트 발행되면 토스 결제인지 일반 결제인지 체크하는 곳
+    @Transactional
+    public void canceledPayment(PaymentCancelRequestDto dto) {
+        Long pgAmount = paymentRepository.findByOrderId(dto.getOrderId()).get().getPgAmount();
+        if(pgAmount > 0) { // 토스페이먼츠 결제
+            this.canceledOrderTossPayment(dto);
+        }
+        this.canceledOrderPayment(dto);
+    }
+
+    @Transactional
+    public void canceledOrderPayment(PaymentCancelRequestDto dto) {
+        paymentConfirmService.cancelPayment(dto);
+    }
+
+    @Transactional
+    public void canceledOrderTossPayment(PaymentCancelRequestDto dto) {
+        paymentConfirmService.cancelToss(dto);
     }
 
     @Transactional
