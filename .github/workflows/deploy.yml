@@ -1,25 +1,24 @@
-name: CD - Deploy to EC2
+name: CD
 
 on:
-  pull_request:
+  push:
     branches: [ "main", "dev" ]
-    types: [ closed ]
+
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+
     steps:
       - name: Load SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Debug and Add known hosts
+      - name: Add known hosts (with debug)
         run: |
           echo "Testing connection to host..."
           nc -zv ${{ secrets.EC2_HOST }} 22 -w 5 || echo "Port 22 not reachable"
-          echo "Running ssh-keyscan..."
-          ssh-keyscan -v -H ${{ secrets.EC2_HOST }} 2>&1 || echo "ssh-keyscan failed"
+          echo "Scanning SSH host key..."
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
