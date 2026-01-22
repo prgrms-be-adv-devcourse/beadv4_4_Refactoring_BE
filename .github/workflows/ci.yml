@@ -5,7 +5,7 @@ on:
     branches: [ "main", "dev" ]
 
 jobs:
-  build-test-docker:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
