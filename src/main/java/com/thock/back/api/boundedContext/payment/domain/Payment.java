@@ -29,13 +29,7 @@ public class Payment extends BaseIdAndTime {
     @ManyToOne(fetch = LAZY)
     private PaymentMember buyer;
 
-    @ManyToOne(fetch = LAZY)
-    private Wallet wallet;
-
     private Long pgAmount;
-
-    @OneToMany
-    private static List<PaymentLog> paymentLogs = new ArrayList<>();
 
     public Payment(Long pgAmount, PaymentMember buyer, PaymentStatus status, String orderId, Long amount, String paymentKey) {
         this.pgAmount = pgAmount;
@@ -73,5 +67,9 @@ public class Payment extends BaseIdAndTime {
                         toDto()
                 )
         );
+    }
+
+    public void updatePaymentKey(String paymentKey){
+        this.paymentKey = paymentKey;
     }
 }

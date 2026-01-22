@@ -32,14 +32,12 @@ public class PaymentCompletedOrderPaymentUseCase {
                 new Payment(
                         0L,
                         member,
-                        PaymentStatus.REQUESTED,
+                        PaymentStatus.COMPLETED,
                         order.getOrderNumber(),
                         order.getTotalSalePrice(),
                         ""
                 )
         );
-
-        payment.updatePaymentStatus(PaymentStatus.COMPLETED);
 
         PaymentDto paymentDto = new PaymentDto(payment.getId(),
                 payment.getOrderId(),
