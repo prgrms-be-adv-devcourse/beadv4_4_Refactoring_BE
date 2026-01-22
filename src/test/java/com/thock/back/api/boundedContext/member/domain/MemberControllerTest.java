@@ -2,6 +2,8 @@ package com.thock.back.api.boundedContext.member.domain;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thock.back.api.boundedContext.member.app.MemberSignUpService;
+import com.thock.back.api.boundedContext.member.domain.command.SignUpCommand;
+import com.thock.back.api.boundedContext.member.in.dto.SignUpRequest;
 import com.thock.back.api.global.exception.CustomException;
 import com.thock.back.api.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;

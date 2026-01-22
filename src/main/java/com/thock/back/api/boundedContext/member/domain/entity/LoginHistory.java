@@ -1,6 +1,5 @@
-package com.thock.back.api.boundedContext.member.domain;
+package com.thock.back.api.boundedContext.member.domain.entity;
 
-import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

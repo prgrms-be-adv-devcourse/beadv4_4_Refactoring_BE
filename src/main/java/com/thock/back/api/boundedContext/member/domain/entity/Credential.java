@@ -1,4 +1,4 @@
-package com.thock.back.api.boundedContext.member.domain;
+package com.thock.back.api.boundedContext.member.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
