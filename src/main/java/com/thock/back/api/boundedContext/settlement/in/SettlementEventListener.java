@@ -18,5 +18,5 @@ public class SettlementEventListener {
 //TODO:
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handle(SellerRegisteredEvent event) {settlementFacade.sync}
+    public void handle(SellerRegisteredEvent event) {settlementFacade.syncMember();};
 }

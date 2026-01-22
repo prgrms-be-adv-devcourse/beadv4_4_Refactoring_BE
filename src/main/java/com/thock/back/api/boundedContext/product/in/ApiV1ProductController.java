@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -72,7 +73,7 @@ public class ApiV1ProductController {
             @RequestParam Category category,
             // 프론트가 ?page=1&size=10 처럼 보내면 알아서 Pageable 객체로 만들어줌
             // 기본값: 0페이지(첫페이지), 10개씩, 최신순(id 내림차순)
-            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable){
+            @ParameterObject @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable){
         return ResponseEntity.ok(productService.searchByCategory(category, pageable));
     }
 

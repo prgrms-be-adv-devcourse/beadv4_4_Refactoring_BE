@@ -7,5 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class SettlementFacade {
-    public SettlementMember syncMember(){};
+    public  SettlementMember syncMember() {
+        return null;
+    }
 }
