@@ -13,14 +13,26 @@ import static jakarta.persistence.FetchType.LAZY;
 @Table(name = "payment_payment_logs")
 public class PaymentLog extends BaseIdAndTime {
     @ManyToOne(fetch = LAZY)
-    private PaymentMember member;
+    private PaymentMember buyer;
+
+    private String orderId;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
+
+    private Long amount;
+
+    private Long pgAmount;
 
     @ManyToOne(fetch = LAZY)
     private Payment payment;
 
-    @ManyToOne(fetch = LAZY)
-    private PaymentRefund refund;
-
-    @Enumerated(EnumType.STRING)
-    private EventType eventType;
+    public PaymentLog(PaymentMember buyer, String orderId, PaymentStatus paymentStatus, Long amount, Long pgAmount, Payment payment) {
+        this.buyer = buyer;
+        this.orderId = orderId;
+        this.paymentStatus = paymentStatus;
+        this.amount = amount;
+        this.pgAmount = pgAmount;
+        this.payment = payment;
+    }
 }

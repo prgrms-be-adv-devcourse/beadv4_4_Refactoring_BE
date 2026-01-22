@@ -20,6 +20,8 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
+    reactor.netty: TRACE
+    org.springframework.web: TRACE
 
 custom:
   global:
@@ -27,3 +29,7 @@ custom:
   market:
     product:
       payoutRate: 80
+  payment:
+    toss:
+      payments:
+        secretKey: ${TOSS_PAYMENTS_SECRET_KEY:}
