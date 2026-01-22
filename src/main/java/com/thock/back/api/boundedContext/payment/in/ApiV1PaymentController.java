@@ -33,7 +33,7 @@ public class ApiV1PaymentController {
             @ApiResponse(responseCode = "WALLET-404-1", description = "지갑을 찾을 수 없습니다."),
             @ApiResponse(responseCode = "WALLET-404-2", description = "이 지갑은 현재 정지 된 상태입니다.")
     })
-    @GetMapping("internal/wallet/{memberId}")
+    @GetMapping("internal/wallets/{memberId}")
     public ResponseEntity<WalletDto> getInternalWallet(@PathVariable("memberId") Long memberId) {
         // 내부 호출용 API
         return ResponseEntity.ok().body(paymentFacade.walletFindByMemberId(memberId));

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/orders")
-@Tag(name = "order-controller")
+@Tag(name = "order-controller", description = "주문 관련 API")
 public class ApiV1OrderController {
     private final MarketFacade marketFacade;
 
