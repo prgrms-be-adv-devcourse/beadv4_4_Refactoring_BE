@@ -86,6 +86,8 @@ public class PaymentConfirmService {
         payment.updatePaymentStatus(PaymentStatus.COMPLETED);
         payment.updatePaymentKey(req.getPaymentKey());
         paymentRepository.save(payment);
+        // TODO : updatePaymentStatus 후 Log 작성 안되는중
+        payment.createPaymentLogEvent();
 
         PaymentDto paymentDto = new PaymentDto(payment.getId(),
                                                 payment.getOrderId(),
@@ -100,10 +102,12 @@ public class PaymentConfirmService {
                         paymentDto
                 )
         );
-        wallet.depositBalance(payment.getAmount(), EventType.주문_입금);
+        wallet.depositBalance(payment.getAmount());
         walletRepository.save(wallet);
-        wallet.withdrawBalance(payment.getAmount(), EventType.주문_출금);
+        wallet.createBalanceLogEvent(payment.getAmount(), EventType.주문_입금);
+        wallet.withdrawBalance(payment.getAmount());
         walletRepository.save(wallet);
+        wallet.createBalanceLogEvent(payment.getAmount(), EventType.주문_출금);
         return confirmResponse;
     }
 
@@ -155,8 +159,9 @@ public class PaymentConfirmService {
         }
 
         // 지갑 업데이트
-        wallet.depositBalance(payment.getAmount(), EventType.주문취소_입금);
+        wallet.depositBalance(payment.getAmount());
         walletRepository.save(wallet);
+        wallet.createBalanceLogEvent(payment.getAmount(), EventType.주문취소_입금);
 
         eventPublisher.publish(
                 new PaymentRefundCompletedEvent(
@@ -191,8 +196,9 @@ public class PaymentConfirmService {
 
 
         // 지갑 업데이트
-        wallet.depositBalance(payment.getAmount(), EventType.주문취소_입금);
+        wallet.depositBalance(payment.getAmount());
         walletRepository.save(wallet);
+        wallet.createBalanceLogEvent(payment.getAmount(), EventType.주문취소_입금);
 
         eventPublisher.publish(
                 new PaymentRefundCompletedEvent(

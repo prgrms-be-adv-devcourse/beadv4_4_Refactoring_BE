@@ -6,6 +6,7 @@ import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
 import com.thock.back.api.shared.member.domain.MemberState;
 import com.thock.back.api.shared.payment.dto.WalletDto;
 import com.thock.back.api.shared.payment.event.PaymentAddBalanceLogEvent;
+import com.thock.back.api.shared.payment.event.PaymentAddPaymentLogEvent;
 import com.thock.back.api.shared.payment.event.PaymentAddRevenueLogEvent;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -45,40 +46,28 @@ public class Wallet extends BaseIdAndTime {
      * 입금 관련 메서드
      **/
 
-    public void depositBalance(Long amount, EventType eventType){
+    public void depositBalance(Long amount){
         if(!isHolderStateOK(this.holder.getState())){
             throw new CustomException(ErrorCode.WALLET_IS_LOCKED);
         }
         this.balance += amount;
-        publishEvent(
-                new PaymentAddBalanceLogEvent(
-                        toDto(),
-                        eventType,
-                        amount
-                )
-        );
     }
 
-    public void depositRevenue(Long amount, EventType eventType){
+
+
+    public void depositRevenue(Long amount){
         if(!isHolderStateOK(this.holder.getState())){
             throw new CustomException(ErrorCode.WALLET_IS_LOCKED);
         }
-
         this.revenue += amount;
-        publishEvent(
-                new PaymentAddRevenueLogEvent(
-                        toDto(),
-                        eventType,
-                        amount
-                )
-        );
+
     }
 
     /**
      * 출금 관련 메서드
      **/
 
-    public void withdrawBalance(Long amount, EventType eventType){
+    public void withdrawBalance(Long amount){
         if (balance < amount){
             throw new CustomException(ErrorCode.WALLET_NOT_WITHDRAW);
         }
@@ -92,16 +81,9 @@ public class Wallet extends BaseIdAndTime {
         }
 
         this.balance -= amount;
-        publishEvent(
-                new PaymentAddBalanceLogEvent(
-                        toDto(),
-                        eventType,
-                        amount
-                )
-        );
     }
 
-    public void withdrawRevenue(Long amount, EventType eventType){
+    public void withdrawRevenue(Long amount){
         if (revenue < amount){
             throw new CustomException(ErrorCode.WALLET_NOT_WITHDRAW);
         }
@@ -115,13 +97,6 @@ public class Wallet extends BaseIdAndTime {
         }
 
         this.revenue -= amount;
-        publishEvent(
-                new PaymentAddRevenueLogEvent(
-                        toDto(),
-                        eventType,
-                        amount
-                )
-        );
     }
 
     /**
@@ -145,5 +120,28 @@ public class Wallet extends BaseIdAndTime {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 로그 이벤트 관련
+     */
+
+    public void createBalanceLogEvent(Long amount, EventType eventType){
+        publishEvent(
+                new PaymentAddBalanceLogEvent(
+                        toDto(),
+                        eventType,
+                        amount
+                )
+        );
+    }
+    public void createRevenueLogEvent(Long amount, EventType eventType){
+        publishEvent(
+                new PaymentAddRevenueLogEvent(
+                        toDto(),
+                        eventType,
+                        amount
+                )
+        );
     }
 }
