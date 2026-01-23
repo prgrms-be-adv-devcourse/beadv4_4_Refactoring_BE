@@ -24,7 +24,8 @@ public class PaymentCompletedOrderPaymentUseCase {
         PaymentMember member = paymentMemberRepository.getReferenceById(order.getBuyerId());
 
         if(wallet.getBalance() >= order.getTotalSalePrice()){
-            wallet.withdrawBalance(order.getTotalSalePrice(), EventType.주문_출금);
+            wallet.withdrawBalance(order.getTotalSalePrice());
+            wallet.createBalanceLogEvent(order.getTotalSalePrice(), EventType.주문_출금);
             walletRepository.save(wallet);
         }else return;
 

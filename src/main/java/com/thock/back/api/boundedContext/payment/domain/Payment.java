@@ -62,11 +62,6 @@ public class Payment extends BaseIdAndTime {
 
     public void updatePaymentStatus(PaymentStatus status){
         this.status = status;
-        publishEvent(
-                new PaymentAddPaymentLogEvent(
-                        toDto()
-                )
-        );
     }
 
     public void updatePaymentKey(String paymentKey){
