@@ -4,7 +4,6 @@ import com.thock.back.api.global.exception.CustomException;
 import com.thock.back.api.global.exception.ErrorCode;
 import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
 import com.thock.back.api.shared.market.dto.OrderDto;
-import com.thock.back.api.shared.market.event.MarketOrderPaymentRequestCanceledEvent;
 import com.thock.back.api.shared.market.event.MarketOrderPaymentCompletedEvent;
 import com.thock.back.api.shared.market.event.MarketOrderPaymentRequestedEvent;
 import jakarta.persistence.*;
@@ -31,7 +30,7 @@ public class Order extends BaseIdAndTime {
     private MarketMember buyer;
 
     @Column(unique = true, nullable = false, length = 50)
-    private String orderNumber; // 주문번호 (예: ORDER-20250119-UUID)
+    private String orderNumber;
 
     @OneToMany(mappedBy = "order", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
@@ -40,14 +39,12 @@ public class Order extends BaseIdAndTime {
     @Column(nullable = false)
     private OrderState state;
 
-    // 가격 정보
-    private Long totalPrice;           // 총 정가
-    private Long totalSalePrice;       // 총 판매가
-    private Long totalDiscountAmount;  // 총 할인액
-    private Long totalPayoutAmount;    // 총 정산 금액 (판매자가 받을 금액)
-    private Long totalFeeAmount;       // 총 수수료 (플랫폼 수익)
+    // 구매자 관점의 금액만
+    private Long totalPrice;
+    private Long totalSalePrice;
+    private Long totalDiscountAmount;
 
-    // 배송지 정보 (주문 시점 스냅샷)
+    // 배송지 정보
     @Column(length = 6)
     private String zipCode;
     private String baseAddress;
@@ -58,7 +55,6 @@ public class Order extends BaseIdAndTime {
     private LocalDateTime paymentDate;         // 결제 완료 시간
     private LocalDateTime cancelDate;          // 취소 시간
 
-    // Cart로부터 Order생성
     public Order(MarketMember buyer, String zipCode, String baseAddress, String detailAddress) {
         if (buyer == null) {
             throw new CustomException(ErrorCode.CART_USER_NOT_FOUND);
@@ -71,12 +67,9 @@ public class Order extends BaseIdAndTime {
         this.baseAddress = baseAddress;
         this.detailAddress = detailAddress;
 
-        // 가격 정보 초기화
         this.totalPrice = 0L;
         this.totalSalePrice = 0L;
         this.totalDiscountAmount = 0L;
-        this.totalPayoutAmount = 0L;
-        this.totalFeeAmount = 0L;
     }
 
     /**
@@ -90,24 +83,21 @@ public class Order extends BaseIdAndTime {
     }
 
     // ProductInfo를 받아서 스냅샷 저장
-    public OrderItem addItem(Long productId, String productName, String productImageUrl,
+    public OrderItem addItem(Long sellerId, Long productId, String productName, String productImageUrl,
                              Long price, Long salePrice, Integer quantity) {
-        OrderItem orderItem = new OrderItem(this, productId, productName, productImageUrl,
+        OrderItem orderItem = new OrderItem(this, sellerId, productId, productName, productImageUrl,
                 price, salePrice, quantity);
 
         this.items.add(orderItem);
 
-        // 주문 총액 업데이트
         this.totalPrice += orderItem.getTotalPrice();
         this.totalSalePrice += orderItem.getTotalSalePrice();
         this.totalDiscountAmount += orderItem.getDiscountAmount();
-        this.totalPayoutAmount += orderItem.getPayoutAmount();
-        this.totalFeeAmount += orderItem.getFeeAmount();
 
         return orderItem;
     }
 
-    public boolean hasItems(){
+    public boolean hasItems() {
         return !items.isEmpty();
     }
 
@@ -118,7 +108,7 @@ public class Order extends BaseIdAndTime {
      * pgAmount <= 0: 예치금으로 충분 → MarketOrderPaymentCompletedEvent (pgAmount 없이)
      * pgAmount > 0: PG 결제 필요 → MarketOrderPaymentRequestedEvent (pgAmount 포함)
      */
-    public void requestPayment(Long balance){
+    public void requestPayment(Long balance) {
         if (this.state != OrderState.PENDING_PAYMENT) {
             throw new CustomException(ErrorCode.ORDER_INVALID_STATE);
         }
@@ -126,14 +116,14 @@ public class Order extends BaseIdAndTime {
         this.requestPaymentDate = LocalDateTime.now();
 
         Long pgAmount = Math.max(0L, this.totalSalePrice - balance);
+
         if (pgAmount <= 0) {
             // 예치금으로 충분 - pgAmount 없이 이벤트 발행
             log.info("💰 예치금 결제: orderId={}, orderNumber={}, totalAmount={}, balance={}",
                     getId(), orderNumber, totalSalePrice, balance);
 
             publishEvent(new MarketOrderPaymentCompletedEvent(this.toDto()));
-        }
-        else {
+        } else {
             // PG 결제 필요 - pgAmount 포함하여 이벤트 발행
             log.info("💳 PG 결제 요청: orderId={}, orderNumber={}, totalAmount={}, pgAmount={}",
                     getId(), orderNumber, totalSalePrice, pgAmount);
@@ -143,27 +133,22 @@ public class Order extends BaseIdAndTime {
     }
 
     /**
-     * 결제 전 취소 - 환불 금액 없음
-     * TODO : 결제 완료 이후 취소 - 환불 MarketOrderPaymentRefundRequestedEvent
+     * 결제 전 취소
      */
     public void cancelRequestPayment() {
-        if (!isPaymentInProgress()){
+        if (!isPaymentInProgress()) {
             throw new CustomException(ErrorCode.ORDER_INVALID_STATE);
         }
+
         this.requestPaymentDate = null;
         this.state = OrderState.CANCELLED;
         this.cancelDate = LocalDateTime.now();
 
         log.info("❌ 결제 요청 취소: orderId={}, orderNumber={}", getId(), orderNumber);
-
-        // Payment 모듈에 결제 취소 알림
-//        publishEvent(new MarketOrderPaymentRequestCanceledEvent(
-//                this.toDto()
-//        ));
     }
 
     /**
-     * 결제 완료 처리
+     * 결제 완료 처리 (Payment 모듈이 호출)
      * TODO : Payment 모듈이 결제 완료 후 이 메서드를 호출함 (이벤트 리스너를 통해)
      */
     public void completePayment() {
@@ -174,86 +159,113 @@ public class Order extends BaseIdAndTime {
         this.state = OrderState.PAYMENT_COMPLETED;
         this.paymentDate = LocalDateTime.now();
 
+        // 모든 OrderItem도 결제 완료 상태로 변경
+        this.items.forEach(OrderItem::completePayment);
+
         log.info("✅ 결제 완료: orderId={}, orderNumber={}, paymentDate={}",
                 getId(), orderNumber, paymentDate);
     }
 
     /**
-     * 주문 취소 - OrderState로 결제 완료 여부 판단
+     * 주문 전체 취소
      */
     public void cancel() {
         if (!this.state.isCancellable()) {
             throw new CustomException(ErrorCode.ORDER_CANNOT_CANCEL);
         }
-        OrderState previousState = this.state;
 
-        // 결제 완료 이후 상태였다면 환불 필요
-        if (previousState == OrderState.PAYMENT_COMPLETED ||
-                previousState == OrderState.PREPARING) {
-            // TODO: MarketOrderRefundRequestedEvent 발행
-            log.info("💸 환불 필요: orderId={}, refundAmount={}", getId(), totalSalePrice);
-        }
+        OrderState previousState = this.state;
+        boolean needsRefund = previousState == OrderState.PAYMENT_COMPLETED ||
+                previousState == OrderState.PREPARING;
+
+        // 모든 OrderItem 취소
+        this.items.forEach(OrderItem::cancel);
 
         this.state = OrderState.CANCELLED;
         this.cancelDate = LocalDateTime.now();
 
-        log.info("🚫 주문 취소: orderId={}, orderNumber={}, previousState={}, cancelDate={}",
+        log.info("🚫 주문 전체 취소: orderId={}, orderNumber={}, previousState={}, cancelDate={}",
                 getId(), orderNumber, previousState, cancelDate);
+
+        if (needsRefund) {
+            log.info("💸 환불 필요: orderId={}, refundAmount={}", getId(), totalSalePrice);
+            // TODO: MarketOrderRefundRequestedEvent 발행
+        }
     }
 
     /**
-     * 배송 준비 시작
+     * 특정 상품만 취소 (부분 취소)
      */
-    public void startPreparing() {
-        if (this.state != OrderState.PAYMENT_COMPLETED) {
-             throw new CustomException(ErrorCode.ORDER_INVALID_STATE);
+    public void cancelItem(Long orderItemId) {
+        OrderItem orderItem = items.stream()
+                .filter(item -> item.getId().equals(orderItemId))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.ORDER_ITEM_NOT_FOUND));
+
+        if (!orderItem.getState().isCancellable()) {
+            throw new CustomException(ErrorCode.ORDER_CANNOT_CANCEL);
         }
 
-        this.state = OrderState.PREPARING;
+        orderItem.cancel();
+        updateStateFromItems();
+
+        log.info("🚫 상품 부분 취소: orderId={}, orderItemId={}, productName={}",
+                getId(), orderItemId, orderItem.getProductName());
     }
 
     /**
-     * 배송 시작
+     * Order 전체 상태를 OrderItem 상태 기반으로 계산
      */
-    public void startShipping() {
-        if (this.state != OrderState.PREPARING) {
-            throw new CustomException(ErrorCode.ORDER_INVALID_STATE);
+    public void updateStateFromItems() {
+        if (items.isEmpty()) {
+            return;
         }
 
-        this.state = OrderState.SHIPPING;
-    }
+        long confirmedCount = items.stream()
+                .filter(item -> item.getState() == OrderItemState.CONFIRMED)
+                .count();
 
-    /**
-     * 배송 완료
-     */
-    public void completeDelivery() {
-        if (this.state != OrderState.SHIPPING) {
-            throw new CustomException(ErrorCode.ORDER_INVALID_STATE);
+        long cancelledCount = items.stream()
+                .filter(item -> item.getState() == OrderItemState.CANCELLED)
+                .count();
+
+        long shippingCount = items.stream()
+                .filter(item -> item.getState() == OrderItemState.SHIPPING)
+                .count();
+
+        long deliveredCount = items.stream()
+                .filter(item -> item.getState() == OrderItemState.DELIVERED)
+                .count();
+
+        int totalItems = items.size();
+
+        if (confirmedCount == totalItems) {
+            this.state = OrderState.CONFIRMED;
+        } else if (cancelledCount == totalItems) {
+            this.state = OrderState.CANCELLED;
+        } else if (cancelledCount > 0) {
+            this.state = OrderState.PARTIALLY_CANCELLED;
+        } else if (deliveredCount == totalItems) {
+            this.state = OrderState.DELIVERED;
+        } else if (shippingCount > 0) {
+            this.state = shippingCount == totalItems ?
+                    OrderState.SHIPPING : OrderState.PARTIALLY_SHIPPED;
+        } else if (this.state == OrderState.PAYMENT_COMPLETED) {
+            this.state = OrderState.PREPARING;
         }
-
-        this.state = OrderState.DELIVERED;
     }
 
-    /**
-     * 구매 확정
-     */
-    public void confirm() {
-        if (!this.state.isConfirmable()) {
-            throw new CustomException(ErrorCode.ORDER_INVALID_STATE);
-        }
-
-        this.state = OrderState.CONFIRMED;
-    }
-
-    // 결제 진행 중인지 확인
     public boolean isPaymentInProgress() {
         return requestPaymentDate != null &&
                 paymentDate == null &&
                 cancelDate == null;
     }
 
-    // Dto
-    public OrderDto toDto(){
+    public boolean isPaid() {
+        return this.paymentDate != null;
+    }
+
+    public OrderDto toDto() {
         return new OrderDto(
                 getId(),
                 buyer.getId(),
@@ -262,5 +274,4 @@ public class Order extends BaseIdAndTime {
                 getTotalSalePrice()
         );
     }
-
 }

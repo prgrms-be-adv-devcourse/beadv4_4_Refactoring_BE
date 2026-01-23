@@ -96,6 +96,7 @@ public class MarketCreateOrderUseCase {
 
             // 주문 아이템 추가 (스냅샷 저장)
             order.addItem(
+                    product.getSellerId(),
                     product.getId(),
                     product.getName(),
                     product.getImageUrl(),
