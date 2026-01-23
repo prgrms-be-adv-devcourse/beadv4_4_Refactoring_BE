@@ -56,7 +56,10 @@ public class SecurityConfig {
 
                                 // 내부 API
                                 "/api/v1/products/internal/**",
-                                "/api/v1/payments/internal/**"
+                                "/api/v1/payments/internal/**",
+
+                                // 테스트
+                                "/test/**"
                         ).permitAll()
                         .anyRequest().authenticated() // ← 여기 중요 (JWT 없으면 접근 불가)
                 )

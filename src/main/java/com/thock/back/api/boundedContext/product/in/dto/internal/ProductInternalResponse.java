@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ProductInternalResponse {
     private Long id;
+    private Long sellerId;
     private String name;
     private String imageUrl; // 마켓이 원함
     private Long price;
@@ -23,6 +24,7 @@ public class ProductInternalResponse {
 
     public ProductInternalResponse(Product product) {
         this.id = product.getId();
+        this.sellerId = product.getSellerId();
         this.name = product.getName();
         this.imageUrl = product.getImageUrl();
         this.price = product.getPrice();
