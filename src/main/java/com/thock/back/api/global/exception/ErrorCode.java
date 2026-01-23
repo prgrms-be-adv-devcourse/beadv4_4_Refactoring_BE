@@ -55,6 +55,7 @@ public enum ErrorCode {
     ORDER_CANNOT_CANCEL("ORDER-400-3", "주문 취소가 불가능한 상태입니다.", HttpStatus.BAD_REQUEST),
     ORDER_NO_ITEMS_SELECTED("ORDER-400-4", "주문할 상품을 선택해주세요.", HttpStatus.BAD_REQUEST),
     ORDER_NOT_FOUND("ORDER-404-1", "주문을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+    ORDER_ITEM_NOT_FOUND("ORDER-404-1", "주문 상품을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     // ===== 배송 =====
 
     // ===== 결제 =====

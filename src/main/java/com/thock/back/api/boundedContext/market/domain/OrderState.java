@@ -6,14 +6,16 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum OrderState {
-    PENDING_PAYMENT("결제 대기"),      // 주문 생성 직후
-    PAYMENT_COMPLETED("결제 완료"),    // 결제 완료
-    PREPARING("배송 준비중"),          // 상품 준비중
-    SHIPPING("배송중"),                // 배송 시작
-    DELIVERED("배송 완료"),            // 배송 완료
-    CONFIRMED("구매 확정"),            // 구매자가 확정
-    CANCELLED("취소됨"),               // 주문 취소
-    REFUNDED("환불 완료");             // 환불 완료
+    PENDING_PAYMENT("결제 대기"),
+    PAYMENT_COMPLETED("결제 완료"),
+    PARTIALLY_SHIPPED("부분 배송"),
+    PREPARING("배송 준비중"),
+    SHIPPING("배송중"),
+    DELIVERED("배송 완료"),
+    CONFIRMED("구매 확정"),
+    PARTIALLY_CANCELLED("부분 취소"),
+    CANCELLED("취소됨"),
+    REFUNDED("환불 완료");
 
     private final String description;
 
