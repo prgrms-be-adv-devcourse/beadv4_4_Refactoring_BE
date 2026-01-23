@@ -2,6 +2,7 @@ package com.thock.back.api.boundedContext.market.in;
 
 import com.thock.back.api.boundedContext.market.app.MarketFacade;
 import com.thock.back.api.shared.market.event.MarketMemberCreatedEvent;
+import com.thock.back.api.shared.market.event.MarketOrderPaymentCompletedEvent;
 import com.thock.back.api.shared.member.event.MemberJoinedEvent;
 import com.thock.back.api.shared.member.event.MemberModifiedEvent;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,12 @@ public class MarketEventListener {
         marketFacade.createCart(event.getMember());
     }
 
-
+    @TransactionalEventListener(phase = AFTER_COMMIT)
+    @Transactional(propagation = REQUIRES_NEW)
+    public void handle(MarketOrderPaymentCompletedEvent event){
+        Long orderId = event.getOrder().getId();
+        marketFacade.completeOrderPayment(orderId);
+    }
 
 
 }

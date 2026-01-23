@@ -5,7 +5,9 @@ import com.thock.back.api.global.exception.ErrorCode;
 import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
 import com.thock.back.api.shared.market.dto.OrderDto;
 import com.thock.back.api.shared.market.event.MarketOrderPaymentCompletedEvent;
+import com.thock.back.api.shared.market.event.MarketOrderPaymentRequestCanceledEvent;
 import com.thock.back.api.shared.market.event.MarketOrderPaymentRequestedEvent;
+import com.thock.back.api.shared.payment.dto.PaymentCancelRequestDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -133,23 +135,7 @@ public class Order extends BaseIdAndTime {
     }
 
     /**
-     * 결제 전 취소
-     */
-    public void cancelRequestPayment() {
-        if (!isPaymentInProgress()) {
-            throw new CustomException(ErrorCode.ORDER_INVALID_STATE);
-        }
-
-        this.requestPaymentDate = null;
-        this.state = OrderState.CANCELLED;
-        this.cancelDate = LocalDateTime.now();
-
-        log.info("❌ 결제 요청 취소: orderId={}, orderNumber={}", getId(), orderNumber);
-    }
-
-    /**
      * 결제 완료 처리 (Payment 모듈이 호출)
-     * TODO : Payment 모듈이 결제 완료 후 이 메서드를 호출함 (이벤트 리스너를 통해)
      */
     public void completePayment() {
         if (this.state != OrderState.PENDING_PAYMENT) {
@@ -164,6 +150,29 @@ public class Order extends BaseIdAndTime {
 
         log.info("✅ 결제 완료: orderId={}, orderNumber={}, paymentDate={}",
                 getId(), orderNumber, paymentDate);
+    }
+
+    /**
+     * 결제 전 취소
+     */
+    public void cancelRequestPayment() {
+        if (!isPaymentInProgress()) {
+            throw new CustomException(ErrorCode.ORDER_INVALID_STATE);
+        }
+
+        this.requestPaymentDate = null;
+        this.state = OrderState.CANCELLED;
+        this.cancelDate = LocalDateTime.now();
+
+        log.info("❌ 결제 요청 취소: orderId={}, orderNumber={}", getId(), orderNumber);
+
+        // Payment 모듈에 취소 알림 (환불 불필요)
+        PaymentCancelRequestDto cancelDto = new PaymentCancelRequestDto(
+                this.orderNumber,
+                "사용자 요청에 의한 결제 취소",
+                0L  // 결제하지 않았으니 0원
+        );
+        publishEvent(new MarketOrderPaymentRequestCanceledEvent(cancelDto));
     }
 
     /**
@@ -189,7 +198,13 @@ public class Order extends BaseIdAndTime {
 
         if (needsRefund) {
             log.info("💸 환불 필요: orderId={}, refundAmount={}", getId(), totalSalePrice);
-            // TODO: MarketOrderRefundRequestedEvent 발행
+
+            PaymentCancelRequestDto cancelDto = new PaymentCancelRequestDto(
+                    this.orderNumber,
+                    "사용자 요청에 의한 주문 취소 (전액 환불)",
+                    null  // 전액 환불
+            );
+            publishEvent(new MarketOrderPaymentRequestCanceledEvent(cancelDto));
         }
     }
 
@@ -206,11 +221,25 @@ public class Order extends BaseIdAndTime {
             throw new CustomException(ErrorCode.ORDER_CANNOT_CANCEL);
         }
 
+        Long refundAmount = orderItem.getTotalSalePrice();
+
         orderItem.cancel();
         updateStateFromItems();
 
         log.info("🚫 상품 부분 취소: orderId={}, orderItemId={}, productName={}",
                 getId(), orderItemId, orderItem.getProductName());
+
+        // 결제 완료 후에만 부분 환불 이벤트 발행
+        if (this.isPaid()) {
+            PaymentCancelRequestDto cancelDto = new PaymentCancelRequestDto(
+                    this.orderNumber,
+                    String.format("주문 상품 부분 취소 (상품명: %s)", orderItem.getProductName()),
+                    refundAmount  // 부분 환불 금액
+            );
+            publishEvent(new MarketOrderPaymentRequestCanceledEvent(cancelDto));
+
+            log.info("💸 부분 환불 요청: orderId={}, refundAmount={}", getId(), refundAmount);
+        }
     }
 
     /**
