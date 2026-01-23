@@ -27,6 +27,7 @@ public class PaymentFacade {
     private final PaymentCreateLogUseCase paymentCreateLogUseCase;
     private final PaymentRequestedOrderPaymentUseCase paymentRequestedOrderPaymentUseCase;
     private final PaymentCompletedOrderPaymentUseCase paymentCompletedOrderPaymentUseCase;
+    private final PaymentSettlementCompleteUseCase paymentSettlementCompleteUseCase;
     private final PaymentRepository paymentRepository;
     private final PaymentFindUseCase paymentFindUseCase;
     private final PaymentConfirmService paymentConfirmService;
@@ -105,5 +106,10 @@ public class PaymentFacade {
     @Transactional(readOnly = true)
     public RevenueLogResponseDto getRevenueLog(Long memberId) {
         return paymentFindUseCase.getRevenueLog(memberId);
+    }
+
+    @Transactional
+    public void completeSettlementPayment(Long memberID, Long amount) {
+        paymentSettlementCompleteUseCase.completeSettlementPayment(memberID, amount);
     }
 }
