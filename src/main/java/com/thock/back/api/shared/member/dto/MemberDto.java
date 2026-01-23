@@ -19,4 +19,7 @@ public class MemberDto {
     private final String name;
     private final MemberRole role;
     private final MemberState state;
+    private String bankCode;
+    private String accountNumber;
+    private String accountHolder;
 }
