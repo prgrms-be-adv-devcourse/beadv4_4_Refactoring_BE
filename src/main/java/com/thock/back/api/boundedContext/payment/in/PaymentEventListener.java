@@ -9,6 +9,7 @@ import com.thock.back.api.shared.member.event.MemberModifiedEvent;
 import com.thock.back.api.shared.payment.event.PaymentAddBalanceLogEvent;
 import com.thock.back.api.shared.payment.event.PaymentAddPaymentLogEvent;
 import com.thock.back.api.shared.payment.event.PaymentAddRevenueLogEvent;
+import com.thock.back.api.shared.settlement.event.SettlementCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,5 +70,11 @@ public class PaymentEventListener {
     @Transactional(propagation = REQUIRES_NEW)
     public void handle(MarketOrderPaymentRequestCanceledEvent event) {
         paymentFacade.canceledPayment(event.getDto());
+    }
+
+    @TransactionalEventListener(phase = AFTER_COMMIT)
+    @Transactional(propagation = REQUIRES_NEW)
+    public void handle(SettlementCompletedEvent event) {
+        paymentFacade.completeSettlementPayment(event.getMemberID(), event.getAmount());
     }
 }
