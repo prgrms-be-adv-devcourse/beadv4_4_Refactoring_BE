@@ -20,6 +20,7 @@ public class Member extends SourceMember {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
+    @Column(name = "withdrawn_at")
     private LocalDateTime withdrawnAt;
 
     private Member(String email, String name) {
@@ -51,7 +52,10 @@ public class Member extends SourceMember {
                 getEmail(),
                 getName(),
                 getRole(),
-                getState()
+                getState(),
+                getBankCode(),
+                getAccountNumber(),
+                getAccountHolder()
         );
     }
 }

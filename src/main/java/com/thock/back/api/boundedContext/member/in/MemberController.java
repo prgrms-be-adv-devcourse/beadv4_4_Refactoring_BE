@@ -1,11 +1,14 @@
 package com.thock.back.api.boundedContext.member.in;
 
 import com.thock.back.api.boundedContext.member.app.MemberSignUpService;
+import com.thock.back.api.boundedContext.member.app.MemberUpdateService;
 import com.thock.back.api.boundedContext.member.domain.command.SignUpCommand;
 import com.thock.back.api.boundedContext.member.in.dto.SignUpRequest;
 import com.thock.back.api.boundedContext.member.in.dto.SignUpResponse;
+import com.thock.back.api.boundedContext.member.in.dto.UpdateNameRequest;
 import com.thock.back.api.global.exception.ErrorResponse;
 import com.thock.back.api.global.security.AuthContext;
+import com.thock.back.api.shared.member.domain.MemberRole;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -25,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberSignUpService memberSignUpService;
-
+    private final MemberUpdateService memberUpdateService;
 
     @Operation(summary = "회원 가입", description = "이메일, 이름, 비밀번호를 이용하여 회원 가입을 진행합니다. " + "가입이 완료되면 생성된 회원의 ID를 반환합니다.")
     @ApiResponses({
@@ -51,5 +54,18 @@ public class MemberController {
     @GetMapping("/me")
     public String test() throws Exception {
         return AuthContext.memberId().toString();
+    }
+
+    @PatchMapping("/role")
+    public ResponseEntity<?> updateRole(
+            @RequestBody UpdateNameRequest request) throws Exception {
+        Long memberId = AuthContext.memberId();
+
+        if (memberId == null) {
+            throw new Exception();
+        }
+
+        memberUpdateService.updateMemberRole(memberId, request.bankCode(), request.accountNumber(), request.accountHolder());
+        return ResponseEntity.ok().build();
     }
 }

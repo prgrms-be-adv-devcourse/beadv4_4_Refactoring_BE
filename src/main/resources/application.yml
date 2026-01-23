@@ -4,6 +4,9 @@ spring:
   application:
     name:Thock Backend API Server
 
+  profiles:
+    active: local
+
   # JPA 설정 (필수!)
   jpa:
     hibernate:
