@@ -60,9 +60,12 @@ public class MemberController {
     public ResponseEntity<?> updateRole(
             @RequestBody UpdateNameRequest request) throws Exception {
         Long memberId = AuthContext.memberId();
-        MemberRole role = request.role();
 
-        memberUpdateService.updateMemberRole(memberId, role);
+        if (memberId == null) {
+            throw new Exception();
+        }
+
+        memberUpdateService.updateMemberRole(memberId, request.bankCode(), request.accountNumber(), request.accountHolder());
         return ResponseEntity.ok().build();
     }
 }

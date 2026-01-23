@@ -20,13 +20,22 @@ public class MemberUpdateService {
     private final MemberRepository memberRepository;
     private final EventPublisher eventPublisher;
 
-    public void updateMemberRole(Long memberId, MemberRole role) {
+    public void updateMemberRole(Long memberId, String bankCode, String accountNumber, String accountHolder) throws Exception {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        member.setRole(role);
-        memberRepository.save(member);
+        String memberRole = member.getRole().toString();
 
-        eventPublisher.publish(new MemberModifiedEvent(member.toDto()));
+        if (memberRole.equals("USER")) {
+            member.setRole(MemberRole.SELLER);
+            member.setBankCode(bankCode);
+            member.setAccountNumber(accountNumber);
+            member.setAccountHolder(accountHolder);
+            memberRepository.save(member);
+
+            eventPublisher.publish(new MemberModifiedEvent(member.toDto()));
+        } else {
+            throw new Exception();
+        }
     }
 }
