@@ -7,6 +7,7 @@ import lombok.Value;
 @Value
 public class ProductInfo {
     Long id;
+    Long sellerId;
     String name;
     String imageUrl;
     Long price;
