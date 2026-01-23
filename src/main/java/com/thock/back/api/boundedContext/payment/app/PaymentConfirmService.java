@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Base64;
@@ -41,6 +42,7 @@ public class PaymentConfirmService {
     /**
      * 토스페이먼츠 검증 기능
      **/
+    @Transactional
     public Map<String, Object> confirmPayment(PaymentConfirmRequestDto req) {
         Payment payment = paymentRepository.findByOrderId(req.getOrderId())
                 .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER));
@@ -86,7 +88,6 @@ public class PaymentConfirmService {
         payment.updatePaymentStatus(PaymentStatus.COMPLETED);
         payment.updatePaymentKey(req.getPaymentKey());
         paymentRepository.save(payment);
-        // TODO : updatePaymentStatus 후 Log 작성 안되는중
         payment.createPaymentLogEvent();
 
         PaymentDto paymentDto = new PaymentDto(payment.getId(),
@@ -114,7 +115,7 @@ public class PaymentConfirmService {
     /**
      * 토스페이먼츠 취소 기능
      **/
-
+    @Transactional
     public void cancelToss(PaymentCancelRequestDto req){
         // 검증
         Payment payment = paymentRepository.findByOrderId(req.getOrderId())
@@ -177,7 +178,7 @@ public class PaymentConfirmService {
     /**
      * 내부 결제 취소 기능
      **/
-
+    @Transactional
     public void cancelPayment(PaymentCancelRequestDto req){
         // 검증
         Payment payment = paymentRepository.findByOrderId(req.getOrderId())
