@@ -63,8 +63,25 @@ public class DailySettlementUseCase {
                 .appliedFeeRate(5.0)
                 .build();
 
-        // 상세 내역 추가 로직 (생략 - 기존과 동일) ...
+        // 4. [상세 내역 추가]
+        for (SettlementOrderDto orderDto : orders) {
+            SettlementDetail detail = SettlementDetail.builder()
+                    .orderId(orderDto.getOrderId())         // 주문 번호
+                    .orderItemId(orderDto.getOrderItemId()) // 주문 상품 번호
+                    .productId(orderDto.getProductId())     // 상품 ID
+                    .productName(orderDto.getProductName()) // 상품명 (스냅샷)
+                    .quantity(orderDto.getQuantity())       // 수량
+                    .paymentAmount(orderDto.getTotalSalePrice()) // 결제 금액
+                    .payoutAmount(orderDto.getPayoutAmount())    // 정산 금액
+                    .fee(orderDto.getFeeAmount())                // 수수료
+                    .build();
 
+            // Settlement(부모)에 Detail(자식)을 연결
+            settlement.addDetail(detail);
+        }
+        // ==========================================
+
+        // 5. 저장 (이때 마스터와 디테일이 같이 저장됨 - Cascade 설정 덕분)
         settlementRepository.save(settlement);
 
         // 4. [핵심] 이벤트 발행! 📢
