@@ -14,6 +14,15 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public abstract class BaseMember extends BaseEntity {
+
+    @Column(name = "bank_code")
+    private String bankCode;
+
+    @Column(name = "account_number")
+    private String accountNumber;
+
+    @Column(name = "account_holder")
+    private String accountHolder;
     // 모든 상속받는 멤버가 다 가지고있어야하는 필드
     @Column(nullable = false, unique = true)
     private String email;

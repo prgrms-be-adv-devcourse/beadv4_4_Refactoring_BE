@@ -17,15 +17,6 @@ import java.time.LocalDateTime;
 @Getter
 public class Member extends SourceMember {
 
-    @Column(name = "bank_code")
-    private String bankCode;
-
-    @Column(name = "account_number")
-    private String accountNumber;
-
-    @Column(name = "account_holder")
-    private String accountHolder;
-
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
