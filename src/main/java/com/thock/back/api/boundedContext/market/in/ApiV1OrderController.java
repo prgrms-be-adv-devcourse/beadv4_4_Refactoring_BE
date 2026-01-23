@@ -37,9 +37,49 @@ public class ApiV1OrderController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 (상품 정보 조회 실패 등)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
-    public ResponseEntity<OrderCreateResponse> addCartItem(@Valid @RequestBody OrderCreateRequest request) throws Exception {
+    public ResponseEntity<OrderCreateResponse> createOrder(@Valid @RequestBody OrderCreateRequest request) throws Exception {
         Long memberId = AuthContext.memberId();
         OrderCreateResponse response = marketFacade.createOrder(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @Operation(
+            summary = "주문 전체 취소",
+            description = "주문 전체를 취소합니다. " +
+                    "결제 완료된 주문의 경우 환불 처리가 진행됩니다. " +
+                    "주문은 삭제되지 않고 취소 상태로 변경됩니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "주문 취소 성공"),
+            @ApiResponse(responseCode = "400", description = "취소 불가능한 주문 상태"),
+            @ApiResponse(responseCode = "403", description = "본인의 주문이 아님"),
+            @ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
+    })
+    @PostMapping("/{orderId}")
+    public ResponseEntity<Void> calcelOrder(@PathVariable Long orderId) throws Exception {
+        Long memberId = AuthContext.memberId();
+        marketFacade.cancelOrder(memberId,orderId);
+        return ResponseEntity.ok().build();
+    }
+
+//    @Operation(
+//            summary = "주문 상품 부분 취소",
+//            description = "주문 내 특정 상품만 취소합니다. " +
+//                    "결제 완료된 경우 해당 상품 금액만큼 부분 환불됩니다."
+//    )
+//    @ApiResponses({
+//            @ApiResponse(responseCode = "200", description = "상품 취소 성공"),
+//            @ApiResponse(responseCode = "400", description = "취소 불가능한 상태"),
+//            @ApiResponse(responseCode = "403", description = "본인의 주문이 아님"),
+//            @ApiResponse(responseCode = "404", description = "주문 또는 상품을 찾을 수 없음")
+//    })
+//    @PostMapping("/{orderId}/items/{orderItemId}")
+//    public ResponseEntity<Void> cancelOrderItem(
+//            @PathVariable Long orderId,
+//            @PathVariable Long orderItemId
+//    ) throws Exception {
+//        Long memberId = AuthContext.memberId();
+//        marketFacade.cancelOrderItem(memberId, orderId, orderItemId);
+//        return ResponseEntity.ok().build();
+//    }
 }

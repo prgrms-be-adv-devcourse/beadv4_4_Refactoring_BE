@@ -20,6 +20,8 @@ public class MarketFacade {
     private final MarketSyncMemberUseCase marketSyncMemberUseCase;
     private final MarketCreateCartUseCase marketCreateCartUseCase;
     private final MarketCreateOrderUseCase marketCreateOrderUseCase;
+    private final MarketCompleteOrderPaymentUseCase marketCompleteOrderPaymentUseCase;
+    private final MarketCancelOrderPaymentUseCase marketCancelOrderPaymentUseCase;
     private final CartService cartService;
 
     @Transactional
@@ -45,5 +47,20 @@ public class MarketFacade {
     @Transactional
     public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request) {
         return marketCreateOrderUseCase.createOrder(memberId, request);
+    }
+
+    @Transactional
+    public void completeOrderPayment(Long orderId){
+        marketCompleteOrderPaymentUseCase.completeOrderPayment(orderId);
+    }
+
+    @Transactional
+    public void cancelOrder(Long memberId, Long orderId) {
+        marketCancelOrderPaymentUseCase.cancelOrder(memberId, orderId);
+    }
+
+    @Transactional
+    public void cancelOrderItem(Long memberId, Long orderId, Long orderItemId) {
+        marketCancelOrderPaymentUseCase.cancelOrderItem(memberId, orderId, orderItemId);
     }
 }
