@@ -3,6 +3,7 @@ package com.thock.back.api.global.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -35,6 +36,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
@@ -42,7 +44,10 @@ public class SecurityConfig {
 
                                 // 인증/회원가입
                                 "/api/v1/auth/**",
-                                "/api/v1/members/signup",
+                                "/api/v1/members/**",
+
+                                // 상품
+                                "/api/v1/products/**",
 
                                 // PG return pages
                                 "/api/v1/payments/confirm/**",
@@ -50,7 +55,7 @@ public class SecurityConfig {
                                 "/checkout.html/**",
                                 "/fail.html/**",
 
-                                // 장바구니, 상품
+                                // 장바구니, 주문
                                 "/api/v1/carts/**",
                                 "/api/v1/orders/**",
 
@@ -77,7 +82,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:5173"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
