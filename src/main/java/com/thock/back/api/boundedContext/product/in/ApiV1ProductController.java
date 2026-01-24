@@ -7,6 +7,9 @@ import com.thock.back.api.boundedContext.product.in.dto.ProductDetailResponse;
 import com.thock.back.api.boundedContext.product.in.dto.ProductListResponse;
 import com.thock.back.api.boundedContext.product.in.dto.ProductUpdateRequest;
 import com.thock.back.api.boundedContext.product.in.dto.internal.ProductInternalResponse;
+import com.thock.back.api.global.exception.CustomException;
+import com.thock.back.api.global.exception.ErrorCode;
+import com.thock.back.api.global.security.context.AuthMember;
 import com.thock.back.api.shared.member.domain.MemberRole;
 import com.thock.back.api.shared.member.dto.MemberDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,21 +47,12 @@ public class ApiV1ProductController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청 (필수 값 누락, 가격 0원 이하 등)"),
             @ApiResponse(responseCode = "403", description = "권한 없음 (판매자만 등록 가능)")
     })
-    // 요청: POST /api/v1/products?category=KEYBOARD
     @PostMapping
     public ResponseEntity<Long> create(
             @RequestBody @Valid ProductCreateRequest request,
-            // [임시] JWT 구현 전까지 이걸로 테스트. 나중에 이 두 줄만 지우면 됨.
-            @Parameter(hidden = true)@RequestHeader(value = "X-Member-Id", defaultValue = "1") Long memberId,
-            @Parameter(hidden = true)@RequestHeader(value = "X-Member-Role", defaultValue = "SELLER") String roleStr
+            @AuthenticationPrincipal AuthMember authMember
     ) {
-        // 임시 멤버 객체 생성
-        MemberDto member = MemberDto.builder()
-                .id(memberId)
-                .role(MemberRole.valueOf(roleStr))
-                .build();
-
-        Long productId = productService.productCreate(request, member);
+        Long productId = productService.productCreate(request, authMember.memberId(), authMember.role());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(productId);
     }
@@ -91,28 +86,21 @@ public class ApiV1ProductController {
     }
 
 
-    // 4. 상품 수정(U)
     @Operation(summary = "상품 수정", description = "상품 정보를 수정합니다. (본인 상품만 수정 가능)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 (유효성 검사 실패)"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
             @ApiResponse(responseCode = "403", description = "권한 없음 (본인의 상품만 수정 가능)"),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 상품입니다.")
     })
-    // 요청: PUT /api/v1/products/{id}
     @PutMapping("/{id}")
     public ResponseEntity<Long> update(
             @PathVariable Long id,
             @RequestBody @Valid ProductUpdateRequest request,
-            @Parameter(hidden = true) @RequestHeader(value = "X-Member-Id", defaultValue = "1") Long memberId,
-            @Parameter(hidden = true) @RequestHeader(value = "X-Member-Role", defaultValue = "SELLER") String roleStr
+            @AuthenticationPrincipal AuthMember authMember // 👈 인증 객체 주입
     ) {
-        MemberDto member = MemberDto.builder()
-                .id(memberId)
-                .role(MemberRole.valueOf(roleStr))
-                .build();
-
-        Long productId = productService.productUpdate(id, request, member);
+        // 서비스에 필요한 정보만 쏙쏙 골라 전달
+        Long productId = productService.productUpdate(id, request, authMember.memberId(), authMember.role());
 
         return ResponseEntity.ok(productId);
     }
@@ -120,23 +108,17 @@ public class ApiV1ProductController {
     // 5. 상품 삭제(D)
     @Operation(summary = "상품 삭제", description = "상품을 삭제합니다. (본인 혹은 관리자만 삭제 가능)")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "삭제 성공 (반환값 없음)"),
-            @ApiResponse(responseCode = "403", description = "권한 없음 (본인 혹은 관리자만 삭제 가능)"),
+            @ApiResponse(responseCode = "204", description = "삭제 성공"),
+            @ApiResponse(responseCode = "403", description = "권한 없음"),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 상품입니다.")
     })
-    // DELETE /api/v1/products/{id}
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
-            @Parameter(hidden = true) @RequestHeader(value = "X-Member-Id", defaultValue = "1") Long memberId,
-            @Parameter(hidden = true) @RequestHeader(value = "X-Member-Role", defaultValue = "SELLER") String roleStr
+            @AuthenticationPrincipal AuthMember authMember // 👈 인증 객체 주입
     ) {
-        MemberDto member = MemberDto.builder()
-                .id(memberId)
-                .role(MemberRole.valueOf(roleStr))
-                .build();
+        productService.productDelete(id, authMember.memberId(), authMember.role());
 
-        productService.productDelete(id, member);
         return ResponseEntity.noContent().build();
     }
 
