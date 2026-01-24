@@ -21,8 +21,8 @@ public class MarketCompleteOrderPaymentUseCase {
      * @param orderId 주문 ID
      */
     @Transactional
-    public void completeOrderPayment(Long orderId){
-        Order order = orderRepository.findById(orderId)
+    public void completeOrderPayment(String orderId){
+        Order order = orderRepository.findByOrderNumber(orderId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
         // Order 도메인의 completePayment 호출

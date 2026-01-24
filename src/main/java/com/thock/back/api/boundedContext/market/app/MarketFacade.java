@@ -50,7 +50,7 @@ public class MarketFacade {
     }
 
     @Transactional
-    public void completeOrderPayment(Long orderId){
+    public void completeOrderPayment(String orderId){
         marketCompleteOrderPaymentUseCase.completeOrderPayment(orderId);
     }
 
