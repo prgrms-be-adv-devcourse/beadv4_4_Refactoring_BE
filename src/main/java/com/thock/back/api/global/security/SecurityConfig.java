@@ -53,7 +53,7 @@ public class SecurityConfig {
                                 "/fail.html/**",
 
                                 // 장바구니, 주문
-
+                                "/api/v1/products/internal/list",
                                 // 내부 API
 
                                 // 테스트
