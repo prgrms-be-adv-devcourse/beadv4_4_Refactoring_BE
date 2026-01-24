@@ -47,7 +47,6 @@ public class ApiV1ProductController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청 (필수 값 누락, 가격 0원 이하 등)"),
             @ApiResponse(responseCode = "403", description = "권한 없음 (판매자만 등록 가능)")
     })
-    // 요청: POST /api/v1/products?category=KEYBOARD
     @PostMapping
     public ResponseEntity<Long> create(
             @RequestBody @Valid ProductCreateRequest request,
