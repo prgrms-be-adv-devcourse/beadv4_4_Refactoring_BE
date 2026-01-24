@@ -57,6 +57,7 @@ public class SecurityConfig {
 
                                 // 장바구니, 주문
                                 "/api/v1/products/internal/list",
+                                "/api/v1/payments/internal/wallets/**",
                                 // 내부 API
 
                                 // 테스트
