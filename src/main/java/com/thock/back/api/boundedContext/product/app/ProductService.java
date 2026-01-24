@@ -31,12 +31,16 @@ public class ProductService {
 
     // 상품 등록(C). 이후 등록한 사람의 ID를 반환
     @Transactional
-    public Long productCreate(ProductCreateRequest request, MemberDto memberDto) {
-        if (memberDto.getRole() != MemberRole.SELLER) {
+    public Long productCreate(ProductCreateRequest request, Long sellerId, MemberRole role) {
+
+        // 1. 권한 검증 (서비스에서 비즈니스 로직으로 체크)
+        if (role != MemberRole.SELLER) {
             throw new CustomException(ErrorCode.USER_FORBIDDEN);
         }
+
+        // 2. 엔티티 생성
         Product product = Product.builder()
-                .sellerId(memberDto.getId())
+                .sellerId(sellerId)  // 넘겨받은 ID 사용
                 .name(request.getName())
                 .price(request.getPrice())
                 .salePrice(request.getSalePrice())
@@ -46,13 +50,16 @@ public class ProductService {
                 .imageUrl(request.getImageUrl())
                 .detail(request.getDetail())
                 .build();
+
         Product savedProduct = productRepository.save(product);
 
+        // 3. 이벤트 발행
         eventPublisher.publish(ProductEvent.builder()
                 .productId(savedProduct.getId())
                 .sellerId(savedProduct.getSellerId())
-                .eventType(ProductEventType.CREATE) // 중요: 타입 명시
+                .eventType(ProductEventType.CREATE)
                 .build());
+
         return savedProduct.getId();
     }
 
@@ -71,18 +78,20 @@ public class ProductService {
         return new ProductDetailResponse(product);
     }
 
-    // 상품 정보 업데이트(U)
+    // 4. 상품 정보 업데이트(U)
     @Transactional
-    public Long productUpdate(Long productId, ProductUpdateRequest request, MemberDto memberDto) {
-        // 상품 존재 하는지 확인
+    public Long productUpdate(Long productId, ProductUpdateRequest request, Long memberId, MemberRole role) {
+        // 1. 상품 존재 확인
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-        // 본인의 상품이 맞는지 확인
-        if (!product.getSellerId().equals(memberDto.getId())) {
+
+        // 2. 권한 검증 (관리자(ADMIN)가 아니고, 내 상품(sellerId)도 아니면 에러)
+        // role == ADMIN 이면 통과, 아니면 ID 비교
+        if (role != MemberRole.ADMIN && !product.getSellerId().equals(memberId)) {
             throw new CustomException(ErrorCode.SELLER_FORBIDDEN);
         }
 
-        // 수정
+        // 3. 수정 (Dirty Checking)
         product.modify(
                 request.getName(),
                 request.getPrice(),
@@ -91,9 +100,10 @@ public class ProductService {
                 request.getCategory(),
                 request.getDescription(),
                 request.getImageUrl(),
-                request.getDetail());
+                request.getDetail()
+        );
 
-        // 이벤트 발행. 마켓모듈에 알림
+        // 4. 이벤트 발행
         eventPublisher.publish(ProductEvent.builder()
                 .productId(product.getId())
                 .sellerId(product.getSellerId())
@@ -109,18 +119,26 @@ public class ProductService {
         return product.getId();
     }
 
-    // 상품 삭제(D)
-    public void productDelete(Long productId, MemberDto memberDto) {
+    // 5. 상품 삭제(D)
+    @Transactional // 삭제도 트랜잭션 필수!
+    public void productDelete(Long productId, Long memberId, MemberRole role) {
+        // 1. 상품 존재 확인
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-        if (!product.getSellerId().equals(memberDto.getId()) || memberDto.getRole() == MemberRole.USER) {
+
+        // 2. 권한 검증 (관리자가 아니고, 내 상품도 아니면 에러)
+        if (role != MemberRole.ADMIN && !product.getSellerId().equals(memberId)) {
             throw new CustomException(ErrorCode.SELLER_FORBIDDEN);
         }
 
+        // 3. 데이터 보존을 위해 변수에 담아둠 (삭제 후엔 접근 못하니까)
         Long deletedId = product.getId();
         Long sellerId = product.getSellerId();
+
+        // 4. 삭제
         productRepository.delete(product);
 
+        // 5. 이벤트 발행
         eventPublisher.publish(ProductEvent.builder()
                 .productId(deletedId)
                 .sellerId(sellerId)
