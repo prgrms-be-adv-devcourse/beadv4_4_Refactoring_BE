@@ -37,6 +37,9 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
 
+                        // ✅ CORS preflight를 위한 OPTIONS 요청 허용 (반드시 제일 먼저!)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
