@@ -9,8 +9,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Component
-@Primary // <-- 중요! "진짜가 오기 전까진 내가 대장이다"라는 뜻
+//@Component
+//@Primary // <-- 중요! "진짜가 오기 전까진 내가 대장이다"라는 뜻
 public class FakeMarketDataAdapter implements MarketDataPort {
 
     @Override
