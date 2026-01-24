@@ -68,8 +68,8 @@ public class ApiV1ProductController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
-    // 요청: GET /api/v1/products?category=KEYBOARD
-    @GetMapping
+    // 요청: GET /api/v1/products/view?category=KEYBOARD
+    @GetMapping("/view")
     public ResponseEntity<Page<ProductListResponse>> list(
             @RequestParam Category category,
             // 프론트가 ?page=1&size=10 처럼 보내면 알아서 Pageable 객체로 만들어줌
@@ -86,7 +86,7 @@ public class ApiV1ProductController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 상품입니다.")
     })
     // 요청: GET /api/v1/products/1
-    @GetMapping("/{id}")
+    @GetMapping("/view/{id}")
     public ProductDetailResponse detail(@PathVariable Long id) {
         return productService.productDetail(id);
     }
