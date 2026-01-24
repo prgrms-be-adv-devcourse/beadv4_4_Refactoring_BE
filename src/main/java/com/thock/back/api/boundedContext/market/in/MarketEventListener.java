@@ -5,6 +5,7 @@ import com.thock.back.api.shared.market.event.MarketMemberCreatedEvent;
 import com.thock.back.api.shared.market.event.MarketOrderPaymentCompletedEvent;
 import com.thock.back.api.shared.member.event.MemberJoinedEvent;
 import com.thock.back.api.shared.member.event.MemberModifiedEvent;
+import com.thock.back.api.shared.payment.event.PaymentCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,8 +39,8 @@ public class MarketEventListener {
 
     @TransactionalEventListener(phase = AFTER_COMMIT)
     @Transactional(propagation = REQUIRES_NEW)
-    public void handle(MarketOrderPaymentCompletedEvent event){
-        Long orderId = event.getOrder().getId();
+    public void handle(PaymentCompletedEvent event){
+        String orderId = event.getPayment().getOrderId();
         marketFacade.completeOrderPayment(orderId);
     }
 
