@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,6 +21,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -35,20 +37,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = resolveBearerToken(request);
 
-        if (token != null && jwtTokenProvider.validate(token)) {
-            Long memberId = jwtTokenProvider.extractMemberId(token);
-            MemberRole role = jwtTokenProvider.extractRole(token);
-            MemberState state = jwtTokenProvider.extractState(token);
+        // ===== 1. 토큰 존재 여부 로그 =====
+        if (token != null) {
+            log.info("[JWT] Token exists. path={}, tokenPrefix={}",
+                    request.getRequestURI(),
+                    token.substring(0, Math.min(20, token.length())));
+        } else {
+            log.info("[JWT] Token is null. path={}", request.getRequestURI());
+        }
 
-            AuthMember principal = new AuthMember(memberId, role, state);
+        try {
+            // ===== 2. 토큰 검증 =====
+            if (token != null && jwtTokenProvider.validate(token)) {
+                log.info("[JWT] Token is VALID. path={}", request.getRequestURI());
 
-            Authentication authentication = new UsernamePasswordAuthenticationToken(
-                    principal,
-                    null,
-                    List.of(new SimpleGrantedAuthority("ROLE_" + role.name()))
-            );
+                Long memberId = jwtTokenProvider.extractMemberId(token);
+                MemberRole role = jwtTokenProvider.extractRole(token);
+                MemberState state = jwtTokenProvider.extractState(token);
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                AuthMember principal = new AuthMember(memberId, role, state);
+
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                        principal,
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + role.name()))
+                );
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            } else if (token != null) {
+                // ===== 3. 토큰이 있는데 검증 실패한 경우 =====
+                log.warn("[JWT] Token is INVALID. path={}", request.getRequestURI());
+                SecurityContextHolder.clearContext(); // 익명 사용자로 통과
+            }
+        } catch (Exception e) {
+            // ===== 4. 파싱/검증 중 예외 =====
+            log.error("[JWT] Token validation exception. path={}", request.getRequestURI(), e);
+            SecurityContextHolder.clearContext(); // 403 만들지 말고 익명으로 처리
         }
 
         filterChain.doFilter(request, response);
@@ -64,4 +89,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 }
-
