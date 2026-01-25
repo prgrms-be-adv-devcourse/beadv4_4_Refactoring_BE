@@ -3,6 +3,7 @@ package com.thock.back.api.boundedContext.market.in;
 import com.thock.back.api.boundedContext.market.app.MarketFacade;
 import com.thock.back.api.boundedContext.market.in.dto.req.OrderCreateRequest;
 import com.thock.back.api.boundedContext.market.in.dto.res.OrderCreateResponse;
+import com.thock.back.api.boundedContext.market.in.dto.res.OrderDetailResponse;
 import com.thock.back.api.global.security.AuthContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -17,12 +18,45 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/orders")
 @Tag(name = "order-controller", description = "주문 관련 API")
 public class ApiV1OrderController {
     private final MarketFacade marketFacade;
+
+    @Operation(
+            summary = "내 주문 목록 조회",
+            description = "로그인한 사용자의 주문 내역을 최신순으로 조회합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
+    })
+    @GetMapping
+    public ResponseEntity<List<OrderDetailResponse>> getMyOrders() throws Exception {
+        Long memberId = AuthContext.memberId();
+        List<OrderDetailResponse> orders = marketFacade.getMyOrders(memberId);
+        return ResponseEntity.ok(orders);
+    }
+
+    @Operation(
+            summary = "주문 상세 조회",
+            description = "특정 주문의 상세 정보를 조회합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "본인의 주문이 아님"),
+            @ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
+    })
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable Long orderId) throws Exception {
+        Long memberId = AuthContext.memberId();
+        OrderDetailResponse order = marketFacade.getOrderDetail(memberId, orderId);
+        return ResponseEntity.ok(order);
+    }
 
     @Operation(
             summary = "주문 생성",
