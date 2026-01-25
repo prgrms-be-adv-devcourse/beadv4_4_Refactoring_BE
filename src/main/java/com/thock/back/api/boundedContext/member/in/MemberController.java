@@ -3,6 +3,7 @@ package com.thock.back.api.boundedContext.member.in;
 import com.thock.back.api.boundedContext.member.app.MemberSignUpService;
 import com.thock.back.api.boundedContext.member.app.MemberUpdateService;
 import com.thock.back.api.boundedContext.member.domain.command.SignUpCommand;
+import com.thock.back.api.boundedContext.member.in.dto.MemberInfoResponse;
 import com.thock.back.api.boundedContext.member.in.dto.SignUpRequest;
 import com.thock.back.api.boundedContext.member.in.dto.SignUpResponse;
 import com.thock.back.api.boundedContext.member.in.dto.UpdateNameRequest;
@@ -52,8 +53,11 @@ public class MemberController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/me")
-    public String test() throws Exception {
-        return AuthContext.memberId().toString();
+    public ResponseEntity<MemberInfoResponse> getMyInfo() throws Exception {
+        Long memberId = AuthContext.memberId();
+        MemberRole role = AuthContext.role();
+
+        return ResponseEntity.ok(new MemberInfoResponse(memberId, role));
     }
 
     @PatchMapping("/role")
