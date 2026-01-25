@@ -113,6 +113,7 @@ public class MarketCreateOrderUseCase {
         WalletInfo wallet = marketSupport.getWallet(buyer.getId());
         Long balance = wallet.getBalance();
 
+        Long pgAmount = Math.max(0L, savedOrder.getTotalSalePrice() - balance);
 
         // 9. 결제 요청 (Order 내부에서 pgAmount 계산 후 조건부 이벤트 발행)
         // - pgAmount <= 0: MarketOrderPaymentCompletedEvent 발행 (예치금만)
@@ -127,6 +128,6 @@ public class MarketCreateOrderUseCase {
                 savedOrder.getItems().size());
 
         // 11. 응답 생성 및 반환
-        return OrderCreateResponse.from(savedOrder);
+        return OrderCreateResponse.from(savedOrder, pgAmount);
     }
 }

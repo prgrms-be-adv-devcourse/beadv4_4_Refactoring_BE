@@ -37,6 +37,9 @@ public class OrderCreateResponse {
     @Schema(description = "총 할인 금액", example = "60000")
     private Long totalDiscountAmount;
 
+    @Schema(description = "PG 결제 금액 (총 판매가 - 예치금)", example = "200000")
+    private Long pgAmount;
+
     @Schema(description = "배송지 - 우편번호", example = "06234")
     private String zipCode;
 
@@ -50,7 +53,7 @@ public class OrderCreateResponse {
     private LocalDateTime createdAt;
 
     // 정적 팩토리 메서드
-    public static OrderCreateResponse from(Order order) {
+    public static OrderCreateResponse from(Order order, Long pgAmount) {
         List<OrderItemInfo> itemInfos = order.getItems().stream()
                 .map(OrderItemInfo::from)
                 .collect(Collectors.toList());
@@ -63,6 +66,7 @@ public class OrderCreateResponse {
                 order.getTotalPrice(),
                 order.getTotalSalePrice(),
                 order.getTotalDiscountAmount(),
+                pgAmount,
                 order.getZipCode(),
                 order.getBaseAddress(),
                 order.getDetailAddress(),
