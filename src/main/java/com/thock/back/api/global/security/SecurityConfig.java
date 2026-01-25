@@ -85,7 +85,7 @@ public class SecurityConfig {
                 "http://localhost:5173",      // 로컬 개발
                 "https://thock.site",         // 운영 (www 없음)
                 "https://www.thock.site",      // 운영 (www 있음)
-                "https://api.thock.site"
+                "https://api.thock.site"        // 운영 API (DNS 주소)
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
