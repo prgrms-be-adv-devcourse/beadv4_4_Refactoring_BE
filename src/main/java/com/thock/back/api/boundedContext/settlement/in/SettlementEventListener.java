@@ -5,6 +5,7 @@ import com.thock.back.api.boundedContext.settlement.out.SettlementMemberReposito
 import com.thock.back.api.shared.member.domain.MemberRole;
 import com.thock.back.api.shared.member.domain.MemberState;
 import com.thock.back.api.shared.member.dto.MemberDto;
+import com.thock.back.api.shared.member.event.MemberModifiedEvent;
 import com.thock.back.api.shared.member.event.SellerRegisteredEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
@@ -21,22 +22,12 @@ public class SettlementEventListener {
 //TODO:
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handle(SellerRegisteredEvent event) {
-        MemberDto memberDto = MemberDto.builder()
-                .id(event.getMemberId())          // ID 매핑
-                .email(event.getEmail())
-                .name(event.getName())
-                // 이벤트는 '판매자 등록'이니까 권한과 상태를 확실하게 박아줍니다.
-                .role(MemberRole.SELLER)
-                .state(MemberState.ACTIVE)
-                .bankCode(event.getBankCode())
-                .accountNumber(event.getAccountNumber())
-                .accountHolder(event.getAccountHolder())
-                .createdAt(event.getCreatedAt())  // 원본 가입일
-                .updatedAt(event.getUpdatedAt())  // 원본 수정일
-                .build();
+    public void handle(MemberModifiedEvent event) {
+        MemberDto memberDto = event.getMember();
 
-        // 2. Facade 호출
-        settlementFacade.syncMember(memberDto);
-    };
+        // [필터링] "판매자(SELLER)"인 경우에만 정산 모듈로 정보를 가져옵니다.
+        if (memberDto.getRole() == MemberRole.SELLER) {
+            settlementFacade.syncMember(memberDto);
+        }
+    }
 }
