@@ -4,18 +4,19 @@ import com.thock.back.api.boundedContext.settlement.domain.SettlementMember;
 import com.thock.back.api.boundedContext.settlement.out.SettlementMemberRepository;
 import com.thock.back.api.shared.member.dto.MemberDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service; // 👈 이거 꼭 붙여주세요!
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service // 빈 등록 필수
+@Slf4j
+@Service
 @RequiredArgsConstructor
 public class SettlementMemberSyncUseCase {
 
     private final SettlementMemberRepository settlementMemberRepository;
 
     @Transactional
-    public void syncMember(MemberDto memberDto) { // 메서드 이름 소문자 시작 권장 (camelCase)
-
+    public void syncMember(MemberDto memberDto) {
         settlementMemberRepository.findById(memberDto.getId())
                 .ifPresentOrElse(
                         // 1. 이미 존재하면 -> 업데이트 (Update)
@@ -30,12 +31,10 @@ public class SettlementMemberSyncUseCase {
                                     memberDto.getAccountHolder(),
                                     memberDto.getUpdatedAt() // 수정일 동기화
                             );
-                            // Transactional 덕분에 save 호출 안 해도 자동 update 쿼리 나감 (더티 체킹)
                         },
-                        // 2. 없으면 -> 새로 생성 (Insert)
                         () -> {
-                            SettlementMember newMember = SettlementMember.builder() // 빌더 패턴 추천
-                                    .id(memberDto.getId())
+                            SettlementMember newMember = SettlementMember.builder()
+                                    .id(memberDto.getId()) // ID 그대로 사용 (중요)
                                     .email(memberDto.getEmail())
                                     .name(memberDto.getName())
                                     .role(memberDto.getRole())

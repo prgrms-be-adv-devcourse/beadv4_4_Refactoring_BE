@@ -22,7 +22,7 @@ public class MarketDataAdapter implements MarketDataPort {
         // 1. 구매 확정된 주문 아이템 조회
         List<OrderItem> items = orderItemRepository.findBySellerIdAndStatusAndDate(
                 sellerId,
-                OrderItemState.CONFIRMED,
+                OrderItemState.PAYMENT_COMPLETED,
                 date
         );
 
