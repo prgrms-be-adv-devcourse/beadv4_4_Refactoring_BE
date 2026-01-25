@@ -23,4 +23,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByNameContainingOrDescriptionContaining(String name, String keyword);
 
     List<Product> findAllByIdIn(List<Long> ids);
+
+    // 판매자가 등록한 자신의 상품 조회 - 판매자 페이지에서 이용
+    Page<Product> findBySellerId(Long sellerId, Pageable pageable);
 }

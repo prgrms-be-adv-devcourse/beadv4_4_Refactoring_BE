@@ -158,4 +158,26 @@ public class ApiV1ProductController {
         List<ProductInternalResponse> responses = productService.getProductsByIds(productIds);
         return ResponseEntity.ok(responses);
     }
+
+
+
+    // 판매자가 등록한 자신의 상품 조회 - 판매자 페이지에서 이용
+    @Operation(summary = "내가 등록한 상품 리스트 조회", description = "판매자가 본인이 등록한 상품들을 페이지네이션으로 조회합니다. " + "판매자 권한이 필요하며, 최신 등록순으로 정렬됩니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "상품 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (판매자 권한 필요)"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @GetMapping("/me")
+    public ResponseEntity<Page<ProductListResponse>> getMyProducts(
+            @AuthenticationPrincipal AuthMember authMember,
+            // 프론트가 ?page=1&size=10 처럼 보내면 알아서 Pageable 객체로 만들어줌
+            // 기본값: 0페이지(첫페이지), 10개씩, 최신순(id 내림차순)
+            @ParameterObject @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable)
+    {
+        Page<ProductListResponse> response = productService.getMyProducts(authMember.memberId(), pageable);
+        return ResponseEntity.ok(response);
+    }
+
 }

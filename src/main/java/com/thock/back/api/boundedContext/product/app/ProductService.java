@@ -172,4 +172,11 @@ public class ProductService {
                 .map(ProductInternalResponse::new) // 생성자로 변환
                 .toList();
     }
+
+    // 판매자가 등록한 자신의 상품 조회 - 판매자 페이지에서 이용
+    @Transactional(readOnly = true)
+    public Page<ProductListResponse> getMyProducts(Long sellerId, Pageable pageable) {
+        return productRepository.findBySellerId(sellerId, pageable)
+                .map(ProductListResponse::new);
+    }
 }
