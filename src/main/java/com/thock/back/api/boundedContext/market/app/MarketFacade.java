@@ -7,11 +7,14 @@ import com.thock.back.api.boundedContext.market.in.dto.req.OrderCreateRequest;
 import com.thock.back.api.boundedContext.market.in.dto.res.CartItemListResponse;
 import com.thock.back.api.boundedContext.market.in.dto.res.CartItemResponse;
 import com.thock.back.api.boundedContext.market.in.dto.res.OrderCreateResponse;
+import com.thock.back.api.boundedContext.market.in.dto.res.OrderDetailResponse;
 import com.thock.back.api.shared.market.dto.MarketMemberDto;
 import com.thock.back.api.shared.member.dto.MemberDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +26,7 @@ public class MarketFacade {
     private final MarketCompleteOrderPaymentUseCase marketCompleteOrderPaymentUseCase;
     private final MarketCancelOrderPaymentUseCase marketCancelOrderPaymentUseCase;
     private final CartService cartService;
+    private final OrderService orderService;
 
     @Transactional
     public MarketMember syncMember(MemberDto member) {
@@ -63,4 +67,26 @@ public class MarketFacade {
     public void cancelOrderItem(Long memberId, Long orderId, Long orderItemId) {
         marketCancelOrderPaymentUseCase.cancelOrderItem(memberId, orderId, orderItemId);
     }
+
+
+//    @Transactional
+//    public void clearCart(Long memberId) {
+//        cartService.clearCart(memberId);
+//    }
+//
+//    @Transactional
+//    public void removeCartItem(Long memberId, Long productId) {
+//        cartService.removeCartItem(memberId, productId);
+//    }
+
+    @Transactional(readOnly = true)
+    public List<OrderDetailResponse> getMyOrders(Long memberId) {
+        return orderService.getMyOrders(memberId);
+    }
+
+    @Transactional(readOnly = true)
+    public OrderDetailResponse getOrderDetail(Long memberId, Long orderId) {
+        return orderService.getOrderDetail(memberId, orderId);
+    }
+
 }
