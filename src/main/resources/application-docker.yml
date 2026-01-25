@@ -13,3 +13,5 @@ spring:
       settings:
         web-allow-others: true
 
+server:
+  forward-headers-strategy: framework
