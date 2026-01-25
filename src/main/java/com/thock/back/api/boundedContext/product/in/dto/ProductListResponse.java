@@ -15,7 +15,7 @@ public class ProductListResponse {
     public ProductListResponse(Product product){
         this.id = product.getId();
         this.name = product.getName();
-        this.imageUrl = product.getName();
+        this.imageUrl = product.getImageUrl();
         this.price = product.getPrice();
         this.nickname = "판매자" + " " + product.getSellerId();
     }
