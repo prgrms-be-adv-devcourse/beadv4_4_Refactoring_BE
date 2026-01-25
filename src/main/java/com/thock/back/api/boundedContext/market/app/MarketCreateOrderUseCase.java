@@ -108,17 +108,13 @@ public class MarketCreateOrderUseCase {
         // 7. 주문 저장 (OrderItem도 Casecade로 함께 저장됨)
         Order savedOrder = orderRepository.save(order);
 
-        // 8. 선택한 장바구니 상품만 삭제
-        for (CartItem cartItem : selectedCartItems) {
-            cart.removeItem(cartItem.getProductId());
-        }
 
-        // 9. 예치금 조회 및 pgAmount 계산
+        // 8. 예치금 조회 및 pgAmount 계산
         WalletInfo wallet = marketSupport.getWallet(buyer.getId());
         Long balance = wallet.getBalance();
 
 
-        // 10. 결제 요청 (Order 내부에서 pgAmount 계산 후 조건부 이벤트 발행)
+        // 9. 결제 요청 (Order 내부에서 pgAmount 계산 후 조건부 이벤트 발행)
         // - pgAmount <= 0: MarketOrderPaymentCompletedEvent 발행 (예치금만)
         // - pgAmount > 0: MarketOrderPaymentRequestedEvent 발행 (PG 필요)
         savedOrder.requestPayment(balance);
