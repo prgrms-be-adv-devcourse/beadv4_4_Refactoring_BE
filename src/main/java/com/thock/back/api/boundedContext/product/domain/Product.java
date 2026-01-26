@@ -34,7 +34,7 @@ public class Product extends BaseIdAndTime {
     private Long price;
     private Long salePrice;
     private Integer stock;
-    @Column(columnDefinition = "TEXT")
+    // @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
     @JdbcTypeCode(SqlTypes.JSON)
