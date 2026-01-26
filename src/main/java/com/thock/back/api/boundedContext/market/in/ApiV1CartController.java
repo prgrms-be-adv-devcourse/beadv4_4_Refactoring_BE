@@ -7,6 +7,7 @@ import com.thock.back.api.boundedContext.market.in.dto.res.CartItemResponse;
 import com.thock.back.api.global.security.AuthContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -17,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -63,4 +66,33 @@ public class ApiV1CartController {
         CartItemResponse response = marketFacade.addCartItem(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+
+    @Operation(
+            summary = "장바구니 상품 삭제(단건/다건 통합)",
+            description = "장바구니에서 선택한 상품을 삭제합니다. " +
+                    "단건 삭제: [1], 다건 삭제: [1, 2, 3]",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "삭제할 상품 ID 리스트",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "[1, 2, 3]")
+                    )
+            )
+    )
+    @DeleteMapping("/items")
+    public ResponseEntity<Void> clearCart(@RequestBody List<Long> productIds) throws Exception {
+        Long memberId = AuthContext.memberId();
+
+        // 빈 리스트면 전체 삭제로 간주
+        if (productIds == null || productIds.isEmpty()) {
+            marketFacade.clearCart(memberId);
+        } else {
+            marketFacade.removeCartItems(memberId, productIds);
+        }
+
+        return ResponseEntity.noContent().build();
+    }
+
 }
