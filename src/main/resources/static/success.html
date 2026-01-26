@@ -1,38 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8" />
-    <title>토스 결제 성공 - Success</title>
-    <style>
-        body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 0 16px;
-        }
-        h1 { font-size: 20px; margin-bottom: 8px; }
-        pre {
-            background: #f4f4f4;
-            padding: 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            overflow-x: auto;
-        }
-        .status-ok { color: #087f5b; }
-        .status-error { color: #c92a2a; }
-    </style>
-</head>
-<body>
-<h1>결제 성공 (프론트 기준)</h1>
-<p>토스에서 리다이렉트하면서 넘겨준 파라미터:</p>
-<pre id="params"></pre>
-
-<h2>백엔드 결제 검증 결과(/api/v1/payments/confirm)</h2>
-<p id="confirmStatus">서버로 검증 요청 중...</p>
-<pre id="confirmResponse"></pre>
-
 <script>
-    // URL 쿼리 파라미터 파싱 (paymentKey, orderId, amount)
     const urlParams = new URLSearchParams(window.location.search);
     const paymentKey = urlParams.get("paymentKey");
     const orderId = urlParams.get("orderId");
@@ -44,7 +10,6 @@
         2
     );
 
-    // 백엔드 confirm API 호출
     async function confirmPayment() {
         if (!paymentKey || !orderId || !amount) {
             document.getElementById("confirmStatus").textContent =
@@ -58,12 +23,11 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
-                    // 필요하다면 Authorization 헤더에 JWT 추가
                 },
                 body: JSON.stringify({
-                    paymentKey: paymentKey,
-                    orderId: orderId,
-                    amount: Number(amount)  // 너 DTO의 getPgAmount()에 맞춤
+                    paymentKey,
+                    orderId,
+                    amount: Number(amount)
                 })
             });
 
@@ -73,6 +37,11 @@
                 document.getElementById("confirmStatus").textContent =
                     "✅ 백엔드 결제 검증 성공 (HTTP 200)";
                 document.getElementById("confirmStatus").className = "status-ok";
+
+                // 💡여기서 리다이렉트!
+                setTimeout(() => {
+                    window.location.href = "https://api.thock.com/mypage";
+                }, 1000); // 필요시 딜레이: UX적으로 좋음
             } else {
                 document.getElementById("confirmStatus").textContent =
                     "❌ 백엔드 결제 검증 실패 (HTTP " + res.status + ")";
@@ -90,5 +59,3 @@
 
     confirmPayment();
 </script>
-</body>
-</html>
