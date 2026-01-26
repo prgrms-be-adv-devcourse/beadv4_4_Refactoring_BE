@@ -7,8 +7,6 @@ import com.thock.back.api.boundedContext.market.in.dto.req.CartItemAddRequest;
 import com.thock.back.api.boundedContext.market.in.dto.res.CartItemListResponse;
 import com.thock.back.api.boundedContext.market.in.dto.res.CartItemResponse;
 import com.thock.back.api.boundedContext.market.out.api.dto.ProductInfo;
-import com.thock.back.api.boundedContext.market.out.repository.CartRepository;
-import com.thock.back.api.boundedContext.market.out.repository.MarketMemberRepository;
 import com.thock.back.api.global.exception.CustomException;
 import com.thock.back.api.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -116,7 +114,7 @@ public class CartService {
         MarketMember member = marketSupport.findMemberById(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
         Cart cart = marketSupport.findCartByBuyer(member)
-                .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
 
         // Product 정보 조회 - API Call
         ProductInfo product = marketSupport.getProduct(request.getProductId());
@@ -149,5 +147,29 @@ public class CartService {
                 totalSalePrice,
                 discountAmount
         );
+    }
+
+    @Transactional
+    public void clearCart(Long memberId) {
+        MarketMember member = marketSupport.findMemberById(memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
+
+        Cart cart = marketSupport.findCartByBuyer(member)
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
+
+        cart.clearItems();
+    }
+
+    @Transactional
+    public void removeCartItems(Long memberId, List<Long> productIds) {
+        MarketMember member = marketSupport.findMemberById(memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
+
+        Cart cart = marketSupport.findCartByBuyer(member)
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
+
+        for (Long productId : productIds) {
+            cart.removeItem(productId);
+        }
     }
 }
