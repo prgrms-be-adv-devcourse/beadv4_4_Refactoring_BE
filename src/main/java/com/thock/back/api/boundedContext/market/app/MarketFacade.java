@@ -69,15 +69,15 @@ public class MarketFacade {
     }
 
 
-//    @Transactional
-//    public void clearCart(Long memberId) {
-//        cartService.clearCart(memberId);
-//    }
-//
-//    @Transactional
-//    public void removeCartItem(Long memberId, Long productId) {
-//        cartService.removeCartItem(memberId, productId);
-//    }
+    @Transactional
+    public void clearCart(Long memberId) {
+        cartService.clearCart(memberId);
+    }
+
+    @Transactional
+    public void removeCartItems(Long memberId, List<Long> productIds) {
+        cartService.removeCartItems(memberId, productIds);
+    }
 
     @Transactional(readOnly = true)
     public List<OrderDetailResponse> getMyOrders(Long memberId) {
