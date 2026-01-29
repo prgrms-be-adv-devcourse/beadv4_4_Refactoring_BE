@@ -36,7 +36,7 @@ jobs:
                 'comment': 'documentation',
                 'rename': 'refactoring',
                 'remove': 'refactoring',
-                'hotfix': 'hotfix'
+                'hotfix': 'bug'
               };
             
               if (labelMap[type]) {

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>토스 결제 실패 - Fail</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+        h1 { font-size: 20px; margin-bottom: 8px; color: #c92a2a; }
+        pre {
+            background: #f8f0f0;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+<h1>결제 실패/취소</h1>
+<p>토스에서 전달한 쿼리 파라미터:</p>
+<pre id="params"></pre>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    const message = urlParams.get("message");
+    const orderId = urlParams.get("orderId");
+
+    document.getElementById("params").textContent = JSON.stringify(
+        { code, message, orderId },
+        null,
+        2
+    );
+</script>
+</body>
+</html>
