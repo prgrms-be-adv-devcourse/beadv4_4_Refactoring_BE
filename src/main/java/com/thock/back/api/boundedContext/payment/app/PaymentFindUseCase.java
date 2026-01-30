@@ -31,7 +31,7 @@ public class PaymentFindUseCase {
         Wallet wallet = walletRepository.findByHolderId(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.WALLET_NOT_FOUND));
 
-        if(wallet.getHolder().getState() == MemberState.SUSPENDED){
+        if(wallet.getHolder().getState() == MemberState.INACTIVE){
             throw new CustomException(ErrorCode.WALLET_IS_LOCKED);
         }
 
@@ -50,7 +50,7 @@ public class PaymentFindUseCase {
         Wallet wallet = walletRepository.findByHolderId(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.WALLET_NOT_FOUND));
 
-        if(wallet.getHolder().getState() == MemberState.SUSPENDED){
+        if(wallet.getHolder().getState() == MemberState.INACTIVE){
             throw new CustomException(ErrorCode.WALLET_IS_LOCKED);
         }
 
@@ -67,7 +67,7 @@ public class PaymentFindUseCase {
         Wallet wallet = walletRepository.findByHolderId(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.WALLET_NOT_FOUND));
 
-        if(wallet.getHolder().getState() == MemberState.SUSPENDED){
+        if(wallet.getHolder().getState() == MemberState.INACTIVE){
             throw new CustomException(ErrorCode.WALLET_IS_LOCKED);
         }
 
