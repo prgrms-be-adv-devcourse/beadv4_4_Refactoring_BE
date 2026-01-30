@@ -86,20 +86,13 @@ public class CartService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        // 전체 합계 계산
-        Integer totalItemCount = items.size();
-        Long totalPrice = items.stream().mapToLong(CartItemResponse::getTotalPrice).sum();
-        Long totalSalePrice = items.stream().mapToLong(CartItemResponse::getTotalSalePrice).sum();
-        Long totalDiscountAmount = totalPrice - totalSalePrice;
+        // 전체 합계 계산 : 계산을 req의 정적 팩토리 메서드가 담당함
+//        Integer totalItemCount = items.size();
+//        Long totalPrice = items.stream().mapToLong(CartItemResponse::totalPrice).sum();
+//        Long totalSalePrice = items.stream().mapToLong(CartItemResponse::totalSalePrice).sum();
+//        Long totalDiscountAmount = totalPrice - totalSalePrice;
 
-        return new CartItemListResponse(
-                cart.getId(),
-                items,
-                totalItemCount,
-                totalPrice,
-                totalSalePrice,
-                totalDiscountAmount
-        );
+        return CartItemListResponse.from(cart, items);
     }
 
     /**
@@ -117,36 +110,20 @@ public class CartService {
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
 
         // Product 정보 조회 - API Call
-        ProductInfo product = marketSupport.getProduct(request.getProductId());
+        ProductInfo product = marketSupport.getProduct(request.productId());
         if (product == null) {
             throw new CustomException(ErrorCode.CART_PRODUCT_API_FAILED);
         }
 
         // 재고 확인
-        if (product.getStock() < request.getQuantity()) {
+        if (product.getStock() < request.quantity()) {
              throw new CustomException(ErrorCode.CART_PRODUCT_OUT_OF_STOCK);
         }
 
-        CartItem addedCartItem = cart.addItem(request.getProductId(), request.getQuantity());
+        CartItem addedCartItem = cart.addItem(request.productId(), request.quantity());
 
-        // CartItemResponse 생성 및 반환
-        Long totalPrice = addedCartItem.getQuantity() * product.getPrice();
-        Long totalSalePrice = addedCartItem.getQuantity() * product.getSalePrice();
-        Long discountAmount = totalPrice - totalSalePrice;
 
-        return new CartItemResponse(
-                addedCartItem.getId(),
-                addedCartItem.getQuantity(),
-                product.getId(),
-                product.getName(),
-                product.getImageUrl(),
-                product.getPrice(),
-                product.getSalePrice(),
-                product.getStock(),
-                totalPrice,
-                totalSalePrice,
-                discountAmount
-        );
+        return CartItemResponse.from(addedCartItem, product);
     }
 
     @Transactional
