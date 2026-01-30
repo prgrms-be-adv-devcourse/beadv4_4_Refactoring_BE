@@ -56,7 +56,7 @@ public class PaymentCreateLogUseCase {
                 new PaymentLog(
                         member,
                         payment.getOrderId(),
-                        payment.getStatus(),
+                        _payment.getStatus(),
                         payment.getAmount(),
                         payment.getPgAmount(),
                         _payment)

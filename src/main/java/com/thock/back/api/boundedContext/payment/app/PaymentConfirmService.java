@@ -95,7 +95,6 @@ public class PaymentConfirmService {
                                                 payment.getOrderId(),
                                                 payment.getPaymentKey(),
                                                 payment.getBuyer().getId(),
-                                                payment.getStatus(),
                                                 payment.getPgAmount(),
                                                 payment.getAmount(),
                                                 payment.getCreatedAt());
@@ -169,8 +168,7 @@ public class PaymentConfirmService {
                 new PaymentRefundCompletedEvent(
                         new RefundResponseDto(
                                 payment.getBuyer().getId(),
-                                payment.getOrderId(),
-                                payment.getStatus()
+                                payment.getOrderId()
                         )
                 )
         );
@@ -206,8 +204,7 @@ public class PaymentConfirmService {
                 new PaymentRefundCompletedEvent(
                         new RefundResponseDto(
                                 payment.getBuyer().getId(),
-                                payment.getOrderId(),
-                                payment.getStatus()
+                                payment.getOrderId()
                         )
                 )
         );

@@ -43,7 +43,6 @@ public class Payment extends BaseIdAndTime {
                 getOrderId(),
                 getPaymentKey(),
                 getBuyer().getId(),
-                getStatus(),
                 getPgAmount(),
                 getAmount(),
                 getCreatedAt()
