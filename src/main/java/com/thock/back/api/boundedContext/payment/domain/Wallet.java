@@ -72,9 +72,6 @@ public class Wallet extends BaseIdAndTime {
             throw new CustomException(ErrorCode.WALLET_NOT_WITHDRAW);
         }
 
-        else if(balance == 0) {
-            throw new CustomException(ErrorCode.WALLET_NOT_WITHDRAW);
-        }
 
         else if(!isHolderStateOK(this.holder.getState())){
             throw new CustomException(ErrorCode.WALLET_IS_LOCKED);
