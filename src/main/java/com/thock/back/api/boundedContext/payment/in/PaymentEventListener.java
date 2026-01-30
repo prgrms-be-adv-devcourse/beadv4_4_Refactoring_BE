@@ -6,9 +6,9 @@ import com.thock.back.api.shared.market.event.MarketOrderPaymentRequestCanceledE
 import com.thock.back.api.shared.market.event.MarketOrderPaymentRequestedEvent;
 import com.thock.back.api.shared.member.event.MemberJoinedEvent;
 import com.thock.back.api.shared.member.event.MemberModifiedEvent;
-import com.thock.back.api.shared.payment.event.PaymentAddBalanceLogEvent;
-import com.thock.back.api.shared.payment.event.PaymentAddPaymentLogEvent;
-import com.thock.back.api.shared.payment.event.PaymentAddRevenueLogEvent;
+import com.thock.back.api.boundedContext.payment.out.event.PaymentAddBalanceLogEvent;
+import com.thock.back.api.boundedContext.payment.out.event.PaymentAddPaymentLogEvent;
+import com.thock.back.api.boundedContext.payment.out.event.PaymentAddRevenueLogEvent;
 import com.thock.back.api.shared.settlement.event.SettlementCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

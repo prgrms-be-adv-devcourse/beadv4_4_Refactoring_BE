@@ -44,7 +44,6 @@ public class PaymentCompletedOrderPaymentUseCase {
                 payment.getOrderId(),
                 payment.getPaymentKey(),
                 payment.getBuyer().getId(),
-                payment.getStatus(),
                 payment.getPgAmount(),
                 payment.getAmount(),
                 payment.getCreatedAt());

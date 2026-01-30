@@ -2,13 +2,10 @@ package com.thock.back.api.boundedContext.payment.domain;
 
 import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
 import com.thock.back.api.shared.payment.dto.PaymentDto;
-import com.thock.back.api.shared.payment.event.PaymentAddPaymentLogEvent;
+import com.thock.back.api.boundedContext.payment.out.event.PaymentAddPaymentLogEvent;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static jakarta.persistence.FetchType.LAZY;
 
@@ -46,7 +43,6 @@ public class Payment extends BaseIdAndTime {
                 getOrderId(),
                 getPaymentKey(),
                 getBuyer().getId(),
-                getStatus(),
                 getPgAmount(),
                 getAmount(),
                 getCreatedAt()

@@ -1,9 +1,7 @@
 package com.thock.back.api.boundedContext.payment.app;
 
-import com.thock.back.api.boundedContext.payment.domain.EventType;
-import com.thock.back.api.boundedContext.payment.domain.Payment;
-import com.thock.back.api.boundedContext.payment.domain.PaymentStatus;
-import com.thock.back.api.boundedContext.payment.domain.Wallet;
+import com.thock.back.api.boundedContext.payment.domain.*;
+import com.thock.back.api.boundedContext.payment.out.PaymentMemberRepository;
 import com.thock.back.api.shared.payment.dto.PaymentCancelRequestDto;
 import com.thock.back.api.boundedContext.payment.domain.dto.request.PaymentConfirmRequestDto;
 import com.thock.back.api.boundedContext.payment.out.PaymentRepository;
@@ -31,6 +29,7 @@ import java.util.Map;
 public class PaymentConfirmService {
     private final PaymentRepository paymentRepository;
     private final WalletRepository walletRepository;
+    private final PaymentMemberRepository paymentMemberRepository;
     private final EventPublisher eventPublisher;
     private static final String TOSS_BASE_URL = "https://api.tosspayments.com";
     private static final String CONFIRM_PATH = "/v1/payments/confirm";
@@ -46,7 +45,9 @@ public class PaymentConfirmService {
     public Map<String, Object> confirmPayment(PaymentConfirmRequestDto req) {
         Payment payment = paymentRepository.findByOrderId(req.getOrderId())
                 .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER));
-        Wallet wallet = walletRepository.findByHolderId(payment.getBuyer().getId()).get();
+        PaymentMember member = paymentMemberRepository.getReferenceById(payment.getBuyer().getId());
+        Wallet wallet = walletRepository.findByHolderId(member.getId())
+                .orElseThrow(() -> new CustomException(ErrorCode.WALLET_NOT_FOUND));
         // 상태 체크
         if (payment.getStatus() != PaymentStatus.REQUESTED) {
             throw new CustomException(ErrorCode.PAYMENT_NOT_REQUEST);
@@ -94,7 +95,6 @@ public class PaymentConfirmService {
                                                 payment.getOrderId(),
                                                 payment.getPaymentKey(),
                                                 payment.getBuyer().getId(),
-                                                payment.getStatus(),
                                                 payment.getPgAmount(),
                                                 payment.getAmount(),
                                                 payment.getCreatedAt());
@@ -168,8 +168,7 @@ public class PaymentConfirmService {
                 new PaymentRefundCompletedEvent(
                         new RefundResponseDto(
                                 payment.getBuyer().getId(),
-                                payment.getOrderId(),
-                                payment.getStatus()
+                                payment.getOrderId()
                         )
                 )
         );
@@ -205,8 +204,7 @@ public class PaymentConfirmService {
                 new PaymentRefundCompletedEvent(
                         new RefundResponseDto(
                                 payment.getBuyer().getId(),
-                                payment.getOrderId(),
-                                payment.getStatus()
+                                payment.getOrderId()
                         )
                 )
         );

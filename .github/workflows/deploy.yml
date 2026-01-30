@@ -26,6 +26,7 @@ jobs:
         run: |
           cat > .env << 'EOF'
           TOSS_PAYMENTS_SECRET_KEY=${{ secrets.TOSS_PAYMENTS_SECRET_KEY }}
+          JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
           EOF
 
       - name: Copy .env to EC2
