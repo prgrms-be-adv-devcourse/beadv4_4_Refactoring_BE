@@ -69,7 +69,7 @@ class MemberControllerTest {
         );
 
         given(memberSignUpService.signUp(any(SignUpCommand.class)))
-                .willThrow(new CustomException(ErrorCode.USER_ALREADY_EXISTS));
+                .willThrow(new CustomException(ErrorCode.MEMBER_EMAIL_ALREADY_EXISTS));
 
         // when & then
         mockMvc.perform(post("/api/v1/members/signup")
