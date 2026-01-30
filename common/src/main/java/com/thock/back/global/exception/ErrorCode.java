@@ -26,10 +26,29 @@ public enum ErrorCode {
     PAYMENT_TOSS_CALL_EXCEPTION("PAYMENT-500-2", "토스 결제 승인 호출 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // ===== 인증 =====
+    INVALID_CREDENTIALS("AUTH-401-1", "이메일 또는 비밀번호가 일치하지 않습니다.", HttpStatus.UNAUTHORIZED),
+    MEMBER_WITHDRAWN("AUTH-401-2", "탈퇴한 회원입니다.", HttpStatus.UNAUTHORIZED),
+    MEMBER_INACTIVE("AUTH-401-3", "비활성화된 계정입니다.", HttpStatus.UNAUTHORIZED),
+
+    REFRESH_TOKEN_INVALID("AUTH-401-4", "유효하지 않은 Refresh Token 입니다.", HttpStatus.UNAUTHORIZED), // TODO: 보안을 위해 추후 해당 메세지로 고정
+    REFRESH_TOKEN_REVOKED("AUTH-401-5", "폐기된 Refresh Token 입니다.", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_EXPIRED("AUTH-401-6", "만료된 Refresh Token 입니다.", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_NOT_FOUND("AUTH-404-1", "Refresh Token을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
+    AUTH_CONTEXT_NOT_FOUND("AUTH-401-7", "인증 정보를 찾을 수 없습니다. 로그인이 필요합니다.", HttpStatus.UNAUTHORIZED),
 
     // ===== 회원 =====
-    USER_NOT_FOUND("USER-404-1", "사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-    USER_ALREADY_EXISTS("USER-409-1", "이미 존재하는 사용자입니다.", HttpStatus.CONFLICT),
+    MEMBER_NOT_FOUND("MEMBER-404-1", "회원을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    CREDENTIAL_NOT_FOUND("MEMBER-404-2", "인증 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
+    MEMBER_EMAIL_ALREADY_EXISTS("MEMBER-409-1", "이미 사용 중인 이메일입니다.", HttpStatus.CONFLICT),
+
+    INVALID_ROLE_PROMOTION("MEMBER-400-1", "일반 회원만 판매자로 전환할 수 있습니다.", HttpStatus.BAD_REQUEST),
+    SELLER_PROMOTION_REQUIRED_INFO("MEMBER-400-2", "판매자 전환에는 은행 계좌 정보가 필요합니다.", HttpStatus.BAD_REQUEST),
+
+    INVALID_EMAIL_FORMAT("MEMBER-400-3", "올바른 이메일 형식이 아닙니다.", HttpStatus.BAD_REQUEST),
+    INVALID_PASSWORD_FORMAT("MEMBER-400-4", "비밀번호는 8자 이상, 영문과 숫자를 포함해야 합니다.", HttpStatus.BAD_REQUEST),
+    INVALID_NAME_LENGTH("MEMBER-400-5", "이름은 2-50자 사이여야 합니다.", HttpStatus.BAD_REQUEST),
 
     // ===== 상품 =====
     SELLER_REQUIRED("PRODUCT-400-1", "판매자 ID는 필수입니다", HttpStatus.BAD_REQUEST),
