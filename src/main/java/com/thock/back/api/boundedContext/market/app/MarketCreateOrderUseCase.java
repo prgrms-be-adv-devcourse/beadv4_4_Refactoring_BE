@@ -41,7 +41,7 @@ public class MarketCreateOrderUseCase {
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_ITEM_NOT_FOUND));
 
         // 3. 선택한 CartItem들만 필터링
-        List<Long> selectedCartItemIds = request.getCartItemIds();
+        List<Long> selectedCartItemIds = request.cartItemIds();
 
         if (selectedCartItemIds == null || selectedCartItemIds.isEmpty()) {
             throw new CustomException(ErrorCode.ORDER_NO_ITEMS_SELECTED);
@@ -70,9 +70,9 @@ public class MarketCreateOrderUseCase {
         // 5. Order 생성
         Order order = new Order(
                 buyer,
-                request.getZipCode(),
-                request.getBaseAddress(),
-                request.getDetailAddress()
+                request.zipCode(),
+                request.baseAddress(),
+                request.detailAddress()
         );
 
         // 6. OrderItem 추가 (상품 정보 스냅샷, 변경되면 안됨)

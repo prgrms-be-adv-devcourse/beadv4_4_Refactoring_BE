@@ -29,7 +29,7 @@ public class OrderService {
 
         return orders.stream()
                 .map(OrderDetailResponse::from)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
