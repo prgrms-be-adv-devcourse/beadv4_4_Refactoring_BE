@@ -27,7 +27,7 @@ public class MemberSignUpService {
     public Long signUp(SignUpCommand command) {
 
         if (memberRepository.existsByEmail(command.email())) {
-            throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
+            throw new CustomException(ErrorCode.MEMBER_EMAIL_ALREADY_EXISTS);
         }
 
         // Member 생성

@@ -44,6 +44,10 @@ public class Member extends SourceMember {
         return this.getState() == MemberState.WITHDRAWN;
     }
 
+    public boolean isInActive() {
+        return this.getState() == MemberState.INACTIVE;
+    }
+
     public MemberDto toDto(){
         return new MemberDto(
                 getId(),

@@ -92,4 +92,8 @@ public class JwtTokenProvider {
     public long getAccessTokenExpSeconds() {
         return props.accessTokenExpSeconds();
     }
+
+    public long getRefreshTokenExpSeconds() {
+        return props.refreshTokenExpSeconds();
+    }
 }
