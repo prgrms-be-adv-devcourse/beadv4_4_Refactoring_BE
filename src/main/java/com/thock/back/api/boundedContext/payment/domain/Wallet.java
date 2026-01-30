@@ -116,7 +116,7 @@ public class Wallet extends BaseIdAndTime {
     }
 
     public boolean isHolderStateOK(MemberState memberState) {
-        if(memberState == MemberState.SUSPENDED || memberState == MemberState.WITHDRAWN){
+        if(memberState == MemberState.INACTIVE || memberState == MemberState.WITHDRAWN){
             return false;
         }
         return true;
