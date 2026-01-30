@@ -13,18 +13,18 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class SettlementFacade {
 
-    private final DailySettlementUseCase dailySettlementUseCase;
+//    private final DailySettlementUseCase dailySettlementUseCase;
     private final SettlementMemberSyncUseCase settlementMemberSyncUseCase;
     // 추후: private final SettlementQueryUseCase queryUseCase; (조회용)
 
     /**
      * [스케줄러용] 일일 정산 프로세스 실행
      */
-    public void runDailySettlement(LocalDate date) {
-        log.info("Facade: 일일 정산 시작 요청 - date: {}", date);
-        dailySettlementUseCase.executeProcess(date);
-        log.info("Facade: 일일 정산 종료");
-    }
+//    public void runDailySettlement(LocalDate date) {
+//        log.info("Facade: 일일 정산 시작 요청 - date: {}", date);
+//        dailySettlementUseCase.executeProcess(date);
+//        log.info("Facade: 일일 정산 종료");
+//    }
 
     /**
      * [리스너용] 판매자 정보 동기화

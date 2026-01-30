@@ -11,9 +11,9 @@ public class DailySettlementScheduler {
 
     private final SettlementFacade settlementFacade;
 
-    @Scheduled(cron = "0 0 1 * * *")
-    public void runDailySettlement() {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
-        settlementFacade.runDailySettlement(yesterday);
-    }
+//    @Scheduled(cron = "0 0 1 * * *")
+//    public void runDailySettlement() {
+//        LocalDate yesterday = LocalDate.now().minusDays(1);
+//        settlementFacade.runDailySettlement(yesterday);
+//    }
 }

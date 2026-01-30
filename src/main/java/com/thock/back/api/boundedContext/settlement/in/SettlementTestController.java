@@ -23,7 +23,7 @@ public class SettlementTestController {
             date = LocalDate.now();
         }
 
-        settlementFacade.runDailySettlement(date); // 👈 파사드에게 "오늘 날짜"를 줌
+//        settlementFacade.runDailySettlement(date); // 👈 파사드에게 "오늘 날짜"를 줌
 
         return date + " 일자 정산 배치 강제 실행 완료! H2 Console을 확인하세요.";
     }
