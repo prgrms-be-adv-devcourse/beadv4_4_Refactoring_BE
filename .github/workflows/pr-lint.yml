@@ -46,6 +46,8 @@ jobs:
           echo "✅ PR 제목이 규칙을 만족합니다!"
 
       - name: Validate branch name
+        # main으로 머지하는 PR은 브랜치명 검증 스킵
+        if: github.base_ref != 'main'
         run: |
           BRANCH="${{ github.head_ref }}"
           echo "Branch: $BRANCH"
