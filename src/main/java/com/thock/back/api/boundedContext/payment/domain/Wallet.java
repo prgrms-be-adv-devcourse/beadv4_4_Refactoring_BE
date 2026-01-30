@@ -5,15 +5,11 @@ import com.thock.back.api.global.exception.ErrorCode;
 import com.thock.back.api.global.jpa.entity.BaseIdAndTime;
 import com.thock.back.api.shared.member.domain.MemberState;
 import com.thock.back.api.shared.payment.dto.WalletDto;
-import com.thock.back.api.shared.payment.event.PaymentAddBalanceLogEvent;
-import com.thock.back.api.shared.payment.event.PaymentAddPaymentLogEvent;
-import com.thock.back.api.shared.payment.event.PaymentAddRevenueLogEvent;
+import com.thock.back.api.boundedContext.payment.out.event.PaymentAddBalanceLogEvent;
+import com.thock.back.api.boundedContext.payment.out.event.PaymentAddRevenueLogEvent;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static jakarta.persistence.FetchType.LAZY;
 
