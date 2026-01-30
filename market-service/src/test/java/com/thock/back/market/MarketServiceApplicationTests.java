@@ -1,10 +1,10 @@
-//package com.thock.back.api;
+//package com.thock.back.market;
 //
 //import org.junit.jupiter.api.Test;
 //import org.springframework.boot.test.context.SpringBootTest;
 //
 //@SpringBootTest
-//class ThockBackendApiServerApplicationTests {
+//class MarketServiceApplicationTests {
 //
 //    @Test
 //    void contextLoads() {
