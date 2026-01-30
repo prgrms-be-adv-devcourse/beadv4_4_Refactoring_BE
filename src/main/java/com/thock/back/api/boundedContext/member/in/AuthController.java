@@ -36,12 +36,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) throws Exception {
 
-        LoginResult result = authApplicationService.login(new LoginCommand(request.email(), request.password()));
+        AuthenticationResult result = authApplicationService.login(new LoginCommand(request.email(), request.password()));
 
         return ResponseEntity.ok(new LoginResponse(result.accessToken(), result.refreshToken()));
     }
 
-    @Operation(summary = "Access Token 재발급", description = "Refresh Token을 이용하여 새로운 Access Token을 발급합니다. " + "Refresh Token이 유효하지 않은 경우 재발급에 실패합니다.")
+    @Operation(summary = "토큰 재발급 (Refresh Token Rotation)", description = "Refresh Token을 이용하여 새로운 Access Token과 Refresh Token을 발급합니다. " + "보안 강화를 위해 Refresh Token Rotation 패턴을 적용하여 기존 Refresh Token은 폐기됩니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Access Token 재발급 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TokenRefreshResponse.class))),
             @ApiResponse(responseCode = "401", description = "인증 실패 (Refresh Token 만료 또는 유효하지 않음)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
@@ -50,8 +50,8 @@ public class AuthController {
     })
     @PostMapping("/refresh")
     public ResponseEntity<TokenRefreshResponse> refresh(@RequestBody TokenRefreshRequest request) throws Exception {
-        String accessToken = authApplicationService.refreshAccessToken(request.refreshToken());
-        return ResponseEntity.ok(new TokenRefreshResponse(accessToken));
+        AuthenticationResult result = authApplicationService.refreshAccessToken(request.refreshToken());
+        return ResponseEntity.ok(new TokenRefreshResponse(result.accessToken(), result.refreshToken()));
     }
 }
 

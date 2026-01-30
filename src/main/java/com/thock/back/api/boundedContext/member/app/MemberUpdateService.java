@@ -22,7 +22,7 @@ public class MemberUpdateService {
 
     public void updateMemberRole(Long memberId, String bankCode, String accountNumber, String accountHolder) throws Exception {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
         String memberRole = member.getRole().toString();
 
