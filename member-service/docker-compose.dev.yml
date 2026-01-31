@@ -1,0 +1,24 @@
+# Member 모듈 개발용 - DB만 띄우기
+# 사용법: docker compose -f docker-compose.dev.yml up -d
+# 로컬 Spring Boot 실행 후 localhost:3306으로 연결
+
+services:
+  member-db:
+    image: mysql:8.0
+    container_name: member-db-dev
+    environment:
+      MYSQL_DATABASE: member_db
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Seoul
+    ports:
+      - "3306:3306"
+    volumes:
+      - member-db-dev-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  member-db-dev-data:
