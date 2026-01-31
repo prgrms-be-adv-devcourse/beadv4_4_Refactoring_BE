@@ -14,7 +14,7 @@ spring:
     show-sql: true  # SQL 로그 출력
 
 jwt:
-  secret: ${JWT_SECRET_KEY:}
+  secret: ${JWT_SECRET_KEY:secret:}
   access-token-exp-seconds: 1800 # 30분
   refresh-token-exp-seconds: 1209600 # 14일
   issuer: "thock"
