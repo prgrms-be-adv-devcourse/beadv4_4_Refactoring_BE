@@ -1,0 +1,29 @@
+# Market 모듈 개발용 - DB만 띄우기
+# 사용법: docker compose -f docker-compose.dev.yml up -d
+# 로컬 Spring Boot 실행 후 localhost:3306으로 연결
+#
+# 참고: Market 서비스는 Product, Payment 서비스와 통신합니다.
+# 통합 테스트 시에는 루트의 docker-compose.yml 사용을 권장합니다.
+
+services:
+  market-db:
+    image: mysql:8.0
+    container_name: market-db-dev
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - market-db-dev-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  market-db-dev-data:

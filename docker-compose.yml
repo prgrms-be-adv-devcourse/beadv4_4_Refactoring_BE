@@ -1,0 +1,219 @@
+services:
+  # ==================== MySQL Databases ====================
+  member-db:
+    image: mysql:8.0
+    container_name: member-db
+    environment:
+      MYSQL_DATABASE: ${MEMBER_DB_NAME:-member_db}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      TZ: Asia/Seoul
+    ports:
+      - "3306:3306"
+    volumes:
+      - member-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - thock-network
+
+  product-db:
+    image: mysql:8.0
+    container_name: product-db
+    environment:
+      MYSQL_DATABASE: ${PRODUCT_DB_NAME:-product_db}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      TZ: Asia/Seoul
+    ports:
+      - "3307:3306"
+    volumes:
+      - product-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - thock-network
+
+  market-db:
+    image: mysql:8.0
+    container_name: market-db
+    environment:
+      MYSQL_DATABASE: ${MARKET_DB_NAME:-market_db}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      TZ: Asia/Seoul
+    ports:
+      - "3308:3306"
+    volumes:
+      - market-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - thock-network
+
+  payment-db:
+    image: mysql:8.0
+    container_name: payment-db
+    environment:
+      MYSQL_DATABASE: ${PAYMENT_DB_NAME:-payment_db}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      TZ: Asia/Seoul
+    ports:
+      - "3309:3306"
+    volumes:
+      - payment-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - thock-network
+
+  settlement-db:
+    image: mysql:8.0
+    container_name: settlement-db
+    environment:
+      MYSQL_DATABASE: ${SETTLEMENT_DB_NAME:-settlement_db}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      TZ: Asia/Seoul
+    ports:
+      - "3310:3306"
+    volumes:
+      - settlement-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - thock-network
+
+  # ==================== Application Services ====================
+  member-service:
+    build:
+      context: .
+      dockerfile: member-service/Dockerfile
+    container_name: member-service
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: member-db
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MEMBER_DB_NAME:-member_db}
+      MYSQL_USER: ${MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+    depends_on:
+      member-db:
+        condition: service_healthy
+    networks:
+      - thock-network
+
+  product-service:
+    build:
+      context: .
+      dockerfile: product-service/Dockerfile
+    container_name: product-service
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: product-db
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${PRODUCT_DB_NAME:-product_db}
+      MYSQL_USER: ${MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+    depends_on:
+      product-db:
+        condition: service_healthy
+    networks:
+      - thock-network
+
+  market-service:
+    build:
+      context: .
+      dockerfile: market-service/Dockerfile
+    container_name: market-service
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: market-db
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MARKET_DB_NAME:-market_db}
+      MYSQL_USER: ${MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      PRODUCT_SERVICE_URL: ${PRODUCT_SERVICE_URL:-http://product-service:8081}
+      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL:-http://payment-service:8083}
+    depends_on:
+      market-db:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+    networks:
+      - thock-network
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment-service/Dockerfile
+    container_name: payment-service
+    ports:
+      - "8083:8083"
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: payment-db
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${PAYMENT_DB_NAME:-payment_db}
+      MYSQL_USER: ${MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+    depends_on:
+      payment-db:
+        condition: service_healthy
+    networks:
+      - thock-network
+
+  settlement-service:
+    build:
+      context: .
+      dockerfile: settlement-service/Dockerfile
+    container_name: settlement-service
+    ports:
+      - "8084:8084"
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: settlement-db
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${SETTLEMENT_DB_NAME:-settlement_db}
+      MYSQL_USER: ${MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+    depends_on:
+      settlement-db:
+        condition: service_healthy
+    networks:
+      - thock-network
+
+networks:
+  thock-network:
+    driver: bridge
+
+volumes:
+  member-db-data:
+  product-db-data:
+  market-db-data:
+  payment-db-data:
+  settlement-db-data:

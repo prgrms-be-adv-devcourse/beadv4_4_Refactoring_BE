@@ -1,1 +1,8 @@
 rootProject.name = 'api'
+
+include ':common'
+include ':member-service'
+include ':product-service'
+include ':market-service'
+include ':payment-service'
+include ':settlement-service'

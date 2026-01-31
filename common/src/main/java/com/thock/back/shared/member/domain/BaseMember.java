@@ -1,0 +1,46 @@
+package com.thock.back.shared.member.domain;
+
+import com.thock.back.global.jpa.entity.BaseEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.MappedSuperclass;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@MappedSuperclass
+@Getter
+@Setter
+@NoArgsConstructor
+public abstract class BaseMember extends BaseEntity {
+
+    @Column(name = "bank_code")
+    private String bankCode;
+
+    @Column(name = "account_number")
+    private String accountNumber;
+
+    @Column(name = "account_holder")
+    private String accountHolder;
+    // 모든 상속받는 멤버가 다 가지고있어야하는 필드
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    private String name;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MemberRole role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MemberState state;
+
+    public BaseMember(String email, String name, MemberRole role, MemberState state) {
+        this.email = email;
+        this.name = name;
+        this.role = role;
+        this.state = state;
+    }
+}
