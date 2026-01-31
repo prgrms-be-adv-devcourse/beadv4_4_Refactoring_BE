@@ -1,4 +1,4 @@
-package com.thock.back.api.global.jpa.entity;
+package com.thock.back.global.jpa.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;

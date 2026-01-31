@@ -6,12 +6,14 @@ services:
   payment-db:
     image: mysql:8.0
     container_name: payment-db-dev
+    env_file:
+      - .env
     environment:
-      MYSQL_DATABASE: payment_db
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
       TZ: Asia/Seoul
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - payment-db-dev-data:/var/lib/mysql
     healthcheck:
