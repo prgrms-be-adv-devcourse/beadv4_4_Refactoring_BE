@@ -35,4 +35,10 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Custom ###
 .env
+.env.*
+*.mv.db
+*.trace.db
+.DS_store
