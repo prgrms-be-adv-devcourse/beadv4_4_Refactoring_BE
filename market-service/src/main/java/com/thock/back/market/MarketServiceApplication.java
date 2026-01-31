@@ -8,7 +8,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         "com.thock.back.market",
         "com.thock.back.global"
 })
-@EnableScheduling
 public class MarketServiceApplication {
 
     public static void main(String[] args) {

@@ -12,9 +12,9 @@ import org.springframework.web.client.RestClient;
 public class PaymentWalletApiClient implements PaymentWalletClient {
     private final RestClient restClient;
 
-    public PaymentWalletApiClient(@Value("${custom.global.internalBackUrl}") String internalBackUrl) {
+    public PaymentWalletApiClient(@Value("${custom.global.paymentServiceUrl}") String paymentServiceUrl) {
         this.restClient = RestClient.builder()
-                .baseUrl(internalBackUrl + "/api/v1/payments/internal")
+                .baseUrl(paymentServiceUrl + "/api/v1/payments/internal")
                 .build();
     }
 

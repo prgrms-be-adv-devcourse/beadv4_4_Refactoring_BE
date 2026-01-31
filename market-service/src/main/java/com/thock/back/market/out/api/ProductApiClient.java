@@ -15,9 +15,9 @@ import java.util.List;
 public class ProductApiClient implements ProductClient {
     private final RestClient restClient; // global/config/RestConfig 에서 주입됨
 
-    public ProductApiClient(@Value("${custom.global.internalBackUrl}") String internalBackUrl) {
+    public ProductApiClient(@Value("${custom.global.productServiceUrl}") String productServiceUrl) {
         this.restClient = RestClient.builder()
-                .baseUrl(internalBackUrl + "/api/v1/products/internal")
+                .baseUrl(productServiceUrl + "/api/v1/products/internal")
                 .build();
     }
 
