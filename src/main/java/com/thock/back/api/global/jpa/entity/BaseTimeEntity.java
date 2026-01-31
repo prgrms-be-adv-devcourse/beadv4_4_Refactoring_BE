@@ -1,4 +1,4 @@
-package com.thock.back.api.boundedContext.finance.global.jpa.entity;
+package com.thock.back.api.global.jpa.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @MappedSuperclass
-public abstract class BaseTimeEntity extends BaseCreatedTime{
+public abstract class BaseTimeEntity extends BaseCreatedTime {
 
     @LastModifiedDate
     @Column(name = "updated_at")

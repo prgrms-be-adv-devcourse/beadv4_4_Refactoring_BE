@@ -1,6 +1,6 @@
 package com.thock.back.api.boundedContext.finance.settlement.domain;
 
-import com.thock.back.api.boundedContext.finance.global.jpa.entity.BaseTimeEntity;
+import com.thock.back.api.global.jpa.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
