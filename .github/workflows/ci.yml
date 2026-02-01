@@ -13,9 +13,14 @@ jobs:
         image: mysql:8.0
         ports:
           - 3306:3306
-        env: { MYSQL_ROOT_PASSWORD: test, MYSQL_DATABASE: test_db, MYSQL_USER: test, MYSQL_PASSWORD: test, TZ: Asia/Seoul }
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_db
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test
+          TZ: Asia/Seoul
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD || exit 1"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
