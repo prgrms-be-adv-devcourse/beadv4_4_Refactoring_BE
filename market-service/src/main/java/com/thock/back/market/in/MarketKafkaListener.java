@@ -32,13 +32,13 @@ public class MarketKafkaListener {
         marketFacade.syncMember(event.member());
     }
 
-//
-//    @KafkaListener
-//    @Transactional
-//    public void handle(PaymentCompletedEvent event){
-//        String orderId = event.getPayment().getOrderId();
-//        marketFacade.completeOrderPayment(orderId);
-//    }
+    // 결제 완료가 되었을 때 payment 모듈에서 이벤트를 날리면 이벤트를 받아서 Order의 상태를 변경함
+    @KafkaListener(topics = KafkaTopics.MARKET_ORDER_PAYMENT_COMPLETED, groupId = "market-service")
+    @Transactional
+    public void handle(PaymentCompletedEvent event){
+        String orderId = event.payment().orderId();
+        marketFacade.completeOrderPayment(orderId);
+    }
 
 
 }

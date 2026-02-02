@@ -31,6 +31,7 @@ public class MarketCreateOrderUseCase {
     private final CartRepository cartRepository;
     private final MarketSupport marketSupport; // 조회 전용
 
+    // 주문 생성 - 장바구니 내 선택한 상품들만 주문에 들어감
     public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request) {
         // 1. 회원 조회
         MarketMember buyer = marketMemberRepository.findById(memberId)
@@ -58,7 +59,7 @@ public class MarketCreateOrderUseCase {
         }
 
         // 4. 장바구니에 들어있는 상품 정보 조회 - 스냅샷 저장용
-        List<Long> productsId = cart.getItems().stream()
+        List<Long> productsId = selectedCartItems.stream()
                 .map(CartItem::getProductId)
                 .toList();
         List<ProductInfo> products = marketSupport.getProducts(productsId);
@@ -76,7 +77,7 @@ public class MarketCreateOrderUseCase {
         );
 
         // 6. OrderItem 추가 (상품 정보 스냅샷, 변경되면 안됨)
-        for (CartItem cartItem : cart.getItems()) {
+        for (CartItem cartItem : selectedCartItems) {
             ProductInfo product = productMap.get(cartItem.getProductId());
 
             // 상품 정보가 없는 경우 (삭제된 상품 등)

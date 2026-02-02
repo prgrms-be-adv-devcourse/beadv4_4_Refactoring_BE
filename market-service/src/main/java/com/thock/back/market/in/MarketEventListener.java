@@ -19,35 +19,14 @@ import static org.springframework.transaction.event.TransactionPhase.AFTER_COMMI
 public class MarketEventListener {
     private final MarketFacade marketFacade;
 
-//    @TransactionalEventListener(phase = AFTER_COMMIT)
-//    @Transactional(propagation = REQUIRES_NEW)
-//    public void handle(MemberJoinedEvent event){
-//        marketFacade.syncMember(event.getMember());
-//    }
-//
-//    @TransactionalEventListener(phase = AFTER_COMMIT)
-//    @Transactional(propagation = REQUIRES_NEW)
-//    public void handle(MemberModifiedEvent event){
-//        marketFacade.syncMember(event.getMember());
-//    }
-
     /**
      *  Market Member 생성 시 Cart가 생성됨.
      *  이건 market-service 내부에서 일어나는 작업이므로 Spring Event로 충분함
      */
-
     @TransactionalEventListener(phase = AFTER_COMMIT)
     @Transactional(propagation = REQUIRES_NEW)
     public void handle(MarketMemberCreatedEvent event){
         marketFacade.createCart(event.member());
     }
-
-//    @TransactionalEventListener(phase = AFTER_COMMIT)
-//    @Transactional(propagation = REQUIRES_NEW)
-//    public void handle(PaymentCompletedEvent event){
-//        String orderId = event.getPayment().getOrderId();
-//        marketFacade.completeOrderPayment(orderId);
-//    }
-
 
 }
