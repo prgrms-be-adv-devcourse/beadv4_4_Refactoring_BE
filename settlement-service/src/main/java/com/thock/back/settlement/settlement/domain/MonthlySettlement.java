@@ -45,9 +45,15 @@ public class MonthlySettlement extends BaseTimeEntity {
     @Column(name = "payout_amount", nullable = false, precision = 18, scale = 4)
     private BigDecimal payoutAmount;
 
-    // 정산 상태 (PENDING, PROCESSING, COMPLETED)
+    // 정산 상태 (PENDING, PROCESSING, COMPLETED, FAILED)
     @Column(name = "status", nullable = false, length = 30)
     private String status;
+
+    @Column(name = "retry_count")
+    private int retryCount = 0;
+
+    @Column(name = "error_message", columnDefinition = "TEXT" )
+    private String errorMessage;
 
     // 계좌정보 스냅샷
     // 정산이 확정된 시점의 계좌 정보를 박제해놔야 함.
@@ -102,8 +108,15 @@ public class MonthlySettlement extends BaseTimeEntity {
         this.status = "COMPLETED";
     }
     // 실패 건들은 PENDING으로 남겨 재배치
-    public void failPayout() {
-        this.status = "PENDING";
+    public void failPayout(String errorMessage) {
+        this.retryCount++;
+        this.errorMessage = errorMessage;
+        if(retryCount >= 3){
+            this.status = "FAILED";
+        }
+        else{
+            this.status = "PENDING";
+        }
     }
 
 }
