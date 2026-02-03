@@ -1,14 +1,16 @@
 package com.thock.back.settlement.reconciliation.domain;
 
 import com.thock.back.global.jpa.entity.BaseTimeEntity;
+import com.thock.back.settlement.reconciliation.domain.enums.PaymentMethod;
+import com.thock.back.settlement.reconciliation.domain.enums.SettlementStatus;
+import com.thock.back.settlement.shared.converter.MapToJsonConverter;
+import com.thock.back.settlement.shared.enums.TransactionType;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Entity
 @Table(
@@ -20,8 +22,10 @@ import java.time.LocalDateTime;
         }
 )
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class InternalOrderSnapshot extends BaseTimeEntity { // updated_at 포함됨
+public class SalesLog extends BaseTimeEntity { // updated_at 포함됨
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +39,12 @@ public class InternalOrderSnapshot extends BaseTimeEntity { // updated_at 포함
     @Column(name = "seller_id", nullable = false)
     private Long sellerId;
 
+    @Column(name = "product_id", nullable = false, length = 255)
+    private String productName;
+
+    @Column(name = "product_quantity", nullable = false)
+    private int productQuantity;
+
     // 정가 기준 총 판매액 (할인 전)
     @Column(name = "product_amount", nullable = false, precision = 18, scale = 4)
     private BigDecimal productAmount;
@@ -45,16 +55,19 @@ public class InternalOrderSnapshot extends BaseTimeEntity { // updated_at 포함
     private BigDecimal paymentAmount;
 
     // 결제 수단 (CARD, NAVER_PAY 등)
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", length = 50)
-    private String paymentMethod; // 혹은 별도 Enum 클래스 사용
+    private PaymentMethod paymentMethod; // 혹은 별도 Enum 클래스 사용
 
     // 거래 종류 (PAYMENT: 결제, REFUND: 환불)
+    @Enumerated(EnumType.STRING)
     @Column(name = "transaction_type", nullable = false, length = 30)
-    private String transactionType;
+    private TransactionType transactionType;
 
     // 메타데이터 (JSON)
+    @Convert(converter = MapToJsonConverter.class)
     @Column(name = "metadata", columnDefinition = "TEXT")
-    private String metadata;
+    private Map<String, Object> metadata;
 
     // 주문 스냅샷 찍은 날짜 (주문 발생 시간)
     @Column(name = "snapshot_at", nullable = false)
@@ -67,14 +80,16 @@ public class InternalOrderSnapshot extends BaseTimeEntity { // updated_at 포함
     private Long monthlySettlementId;
 
     // 정산 상태 (WAIT -> READY -> COMPLETED)
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
     @Column(name = "settlement_status", nullable = false, length = 30)
-    private String settlementStatus;
+    private SettlementStatus settlementStatus = SettlementStatus.WAIT;
 
     @Builder
-    public InternalOrderSnapshot(String orderNo, Long sellerId, BigDecimal productAmount,
-                                 BigDecimal paymentAmount, String paymentMethod,
-                                 String transactionType, String metadata,
-                                 LocalDateTime snapshotAt) {
+    public SalesLog(String orderNo, Long sellerId, BigDecimal productAmount,
+                    BigDecimal paymentAmount, PaymentMethod paymentMethod,
+                    TransactionType transactionType, Map<String, Object> metadata,
+                    LocalDateTime snapshotAt) {
         this.orderNo = orderNo;
         this.sellerId = sellerId;
         this.productAmount = productAmount;
@@ -85,19 +100,19 @@ public class InternalOrderSnapshot extends BaseTimeEntity { // updated_at 포함
         this.snapshotAt = snapshotAt;
 
         // 초기 상태 설정
-        this.settlementStatus = "WAIT"; // 기본값: 대기
+        this.settlementStatus = SettlementStatus.WAIT; // 기본값: 대기
     }
 
     // --- 비즈니스 로직 메서드 ---
 
     // 정산 준비 완료 (대사 끝남)
     public void readySettlement() {
-        this.settlementStatus = "READY";
+        this.settlementStatus = SettlementStatus.READY;
     }
 
     // 정산 확정 (월별 정산서에 포함됨)
     public void completeSettlement(Long monthlySettlementId) {
         this.monthlySettlementId = monthlySettlementId;
-        this.settlementStatus = "COMPLETED";
+        this.settlementStatus = SettlementStatus.COMPLETED;
     }
 }

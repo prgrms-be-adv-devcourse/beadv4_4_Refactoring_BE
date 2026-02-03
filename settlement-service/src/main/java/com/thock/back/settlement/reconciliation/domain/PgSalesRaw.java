@@ -1,11 +1,10 @@
 package com.thock.back.settlement.reconciliation.domain;
 
 import com.thock.back.global.jpa.entity.BaseCreatedTime;
+import com.thock.back.settlement.reconciliation.domain.enums.PaymentMethod;
+import com.thock.back.settlement.reconciliation.domain.enums.PgStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -33,15 +32,17 @@ public class PgSalesRaw extends BaseCreatedTime {
     @Column(name = "merchant_uid", nullable = false, length = 100) //varchar(100), 주문 번호를 카드사에서 부르는 명칭
     private String merchantUid;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", length = 50) //varchar(50) or ENUM / POINT, CARD, ETC...
-    private String paymentMethod;
+    private PaymentMethod paymentMethod;
 
     @Column(name = "payment_amount", nullable = false, precision = 18, scale = 4)// DECIMAL(18, 4)
     private BigDecimal paymentAmount;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "pg_status", nullable = false, length = 50)
     //varchar(50) or ENUM  / PAID, CANCELED, FAILED
-    private String pgStatus;
+    private PgStatus pgStatus;
 
     @Column(name = "transacted_at", nullable = false)
     // 엑셀 데이터 속 있는 카드사가 받은 결제 승인 시간
@@ -50,7 +51,7 @@ public class PgSalesRaw extends BaseCreatedTime {
     //createdAt 상속 받아 사용. 관리자가 엑셀 데이터를 입력한 시점
 
     @Builder
-    public PgSalesRaw(String pgKey, String merchantUid, String paymentMethod, BigDecimal paymentAmount, String pgStatus, LocalDateTime transactedAt){
+    public PgSalesRaw(String pgKey, String merchantUid, PaymentMethod paymentMethod, BigDecimal paymentAmount, PgStatus pgStatus, LocalDateTime transactedAt){
         this.pgKey = pgKey;
         this.merchantUid = merchantUid;
         this.paymentMethod = paymentMethod;

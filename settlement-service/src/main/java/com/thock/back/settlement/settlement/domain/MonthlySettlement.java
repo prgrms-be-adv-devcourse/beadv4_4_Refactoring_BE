@@ -1,8 +1,13 @@
 package com.thock.back.settlement.settlement.domain;
 
 import com.thock.back.global.jpa.entity.BaseTimeEntity;
+import com.thock.back.settlement.settlement.domain.enums.MonthlySettlementStatus;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,7 +17,7 @@ import java.time.LocalDateTime;
         name = "finance_settlement_monthly_settlement", // 테이블명 명시
         indexes = {
                 @Index(name = "idx_monthly_seller", columnList = "seller_id"),   // 판매자별 조회 (필수)
-                @Index(name = "idx_monthly_status", columnList = "status"),      // "PENDING" 상태인 것만 배치로 뽑아야 함 (필수)
+                @Index(name = "idx_monthly_monthly_settlement_status", columnList = "monthly_settlement_status"),      // "PENDING" 상태인 것만 배치로 뽑아야 함 (필수)
                 @Index(name = "idx_monthly_target", columnList = "target_date")  // "2026-01" 정산 내역 조회용
         }
 )
@@ -46,8 +51,9 @@ public class MonthlySettlement extends BaseTimeEntity {
     private BigDecimal payoutAmount;
 
     // 정산 상태 (PENDING, PROCESSING, COMPLETED, FAILED)
-    @Column(name = "status", nullable = false, length = 30)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "monthly_settlement_status", nullable = false, length = 30)
+    private MonthlySettlementStatus monthlySettlementStatus;
 
     @Column(name = "retry_count")
     private int retryCount = 0;
@@ -86,9 +92,9 @@ public class MonthlySettlement extends BaseTimeEntity {
         this.targetDate = targetDate;
         this.totalAmount = totalAmount;
         this.feeAmount = feeAmount;
-        // 실 지급액은 생성 시점에 자동 계산 (안전장치)
+        // 실 지급액은 생성 시점에 자동 계산 (미리 넣어놓기)
         this.payoutAmount = totalAmount.subtract(feeAmount);
-        this.status = "PENDING"; // 초기 상태는 무조건 PENDING
+        this.monthlySettlementStatus = MonthlySettlementStatus.PENDING; // 초기 상태는 무조건 PENDING
         this.bankCodeSnapshot = bankCodeSnapshot;
         this.accountNumberSnapshot = accountNumberSnapshot;
         this.accountHolderSnapshot = accountHolderSnapshot;
@@ -100,23 +106,22 @@ public class MonthlySettlement extends BaseTimeEntity {
 
     // 지급 진행 중 (배치 진행중)
     public void startPayout() {
-        this.status = "PROCESSING";
+        this.monthlySettlementStatus = MonthlySettlementStatus.PROCESSING;
     }
 
     // 배치 끝나고, payment 모듈에 알림 후 포인트 지급 완료
     public void successPayout() {
-        this.status = "COMPLETED";
+        this.monthlySettlementStatus = MonthlySettlementStatus.COMPLETED;
     }
     // 실패 건들은 PENDING으로 남겨 재배치
     public void failPayout(String errorMessage) {
         this.retryCount++;
         this.errorMessage = errorMessage;
         if(retryCount >= 3){
-            this.status = "FAILED";
+            this.monthlySettlementStatus = MonthlySettlementStatus.FAILED;
         }
         else{
-            this.status = "PENDING";
+            this.monthlySettlementStatus = MonthlySettlementStatus.PENDING;
         }
     }
-
 }

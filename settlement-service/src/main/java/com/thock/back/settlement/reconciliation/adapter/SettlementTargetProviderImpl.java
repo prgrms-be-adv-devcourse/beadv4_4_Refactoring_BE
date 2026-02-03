@@ -1,6 +1,7 @@
 package com.thock.back.settlement.reconciliation.adapter;
 
-import com.thock.back.settlement.reconciliation.out.InternalOrderSnapshotRepository;
+import com.thock.back.settlement.reconciliation.domain.enums.SettlementStatus;
+import com.thock.back.settlement.reconciliation.out.SalesLogRepository;
 import com.thock.back.settlement.shared.reconciliation.dto.SettlementTargetDto;
 import com.thock.back.settlement.shared.reconciliation.port.SettlementTargetProvider;
 import lombok.RequiredArgsConstructor;
@@ -12,11 +13,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SettlementTargetProviderImpl implements SettlementTargetProvider {
 
-    private final InternalOrderSnapshotRepository internalOrderSnapshotRepository;
+    private final SalesLogRepository salesLogRepository;
 
     @Override
     public List<SettlementTargetDto> getReadySnapshots(Long id, int size) {
-        return internalOrderSnapshotRepository.findAllBySettlementStatus("READY").stream()
+        return salesLogRepository.findAllBySettlementStatus(SettlementStatus.READY).stream()
                 .map(entity -> new SettlementTargetDto(
                         entity.getId(),
                         entity.getSellerId(),

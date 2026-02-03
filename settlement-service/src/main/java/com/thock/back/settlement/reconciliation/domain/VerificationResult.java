@@ -1,6 +1,7 @@
 package com.thock.back.settlement.reconciliation.domain;
 
 import com.thock.back.global.jpa.entity.BaseCreatedTime;
+import com.thock.back.settlement.reconciliation.domain.enums.ReconciliationStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -15,7 +16,7 @@ import java.time.LocalDate;
         name = "finance_reconciliation_verification_result", // 대사 결과 테이블
         indexes = {
                 @Index(name = "idx_verify_base_date", columnList = "base_date"), // "어제 날짜 결과 줘" (필수)
-                @Index(name = "idx_verify_status", columnList = "status"),       // "MISMATCH만 가져와" (필수)
+                @Index(name = "idx_verify_reconcilation_status", columnList = "reconciliation_status"),       // "MISMATCH만 가져와" (필수)
                 @Index(name = "idx_verify_order_no", columnList = "order_no")    // "이 주문 결과 어때?"
         }
 )
@@ -42,8 +43,9 @@ public class VerificationResult extends BaseCreatedTime {
 
     // 대사 상태 (String, 길이 30 제한)
     // 값 예시: "MATCH", "MISMATCH", / "PG_MISSING", "INTERNAL_MISSING" 이건 일단 보류
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
-    private String status;
+    private ReconciliationStatus reconciliationStatus;
 
     // 차액 (PG금액 - 우리금액)
     // 0이면 정상, 양수/음수면 불일치. 정밀한 돈 계산을 위해 Decimal(18,4)
@@ -58,11 +60,11 @@ public class VerificationResult extends BaseCreatedTime {
     // createdAt. 결과 생성 시간 (대사 시작 시간) 상속받아 사용
 
     @Builder
-    public VerificationResult(LocalDate baseDate, String orderNo, String pgKey, String status, BigDecimal diffAmount, String errorMessage){
+    public VerificationResult(LocalDate baseDate, String orderNo, String pgKey, ReconciliationStatus reconciliationStatus, BigDecimal diffAmount, String errorMessage){
         this.baseDate = baseDate;
         this.orderNo = orderNo;
         this.pgKey = pgKey;
-        this.status = status;
+        this.reconciliationStatus = reconciliationStatus;
         this.diffAmount = diffAmount != null ? diffAmount : BigDecimal.ZERO;
         this.errorMessage = errorMessage;
     }
