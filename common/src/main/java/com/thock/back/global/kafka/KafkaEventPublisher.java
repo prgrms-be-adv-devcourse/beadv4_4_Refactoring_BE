@@ -2,9 +2,11 @@ package com.thock.back.global.kafka;
 
 
 import com.thock.back.shared.market.event.MarketOrderPaymentCompletedEvent;
+import com.thock.back.shared.market.event.MarketOrderPaymentRequestCanceledEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestedEvent;
 import com.thock.back.shared.member.event.MemberJoinedEvent;
 import com.thock.back.shared.member.event.MemberModifiedEvent;
+import com.thock.back.shared.settlement.event.SettlementCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -37,6 +39,10 @@ public class KafkaEventPublisher {
             return KafkaTopics.MARKET_ORDER_PAYMENT_REQUESTED;
         } else if (event instanceof MarketOrderPaymentCompletedEvent) {
             return KafkaTopics.MARKET_ORDER_PAYMENT_COMPLETED;
+        } else if (event instanceof MarketOrderPaymentRequestCanceledEvent) {
+            return KafkaTopics.MARKET_ORDER_PAYMENT_REQUEST_CANCELED;
+        } else if (event instanceof SettlementCompletedEvent) {
+            return KafkaTopics.SETTLEMENT_COMPLETED;
         }
         return null;
     }
