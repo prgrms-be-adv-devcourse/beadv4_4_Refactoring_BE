@@ -4,12 +4,6 @@ import com.thock.back.payment.app.PaymentFacade;
 import com.thock.back.payment.out.event.PaymentAddBalanceLogEvent;
 import com.thock.back.payment.out.event.PaymentAddPaymentLogEvent;
 import com.thock.back.payment.out.event.PaymentAddRevenueLogEvent;
-import com.thock.back.shared.market.event.MarketOrderPaymentCompletedEvent;
-import com.thock.back.shared.market.event.MarketOrderPaymentRequestCanceledEvent;
-import com.thock.back.shared.market.event.MarketOrderPaymentRequestedEvent;
-import com.thock.back.shared.member.event.MemberJoinedEvent;
-import com.thock.back.shared.member.event.MemberModifiedEvent;
-import com.thock.back.shared.settlement.event.SettlementCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,31 +16,6 @@ import static org.springframework.transaction.event.TransactionPhase.AFTER_COMMI
 @RequiredArgsConstructor
 public class PaymentEventListener {
     private final PaymentFacade paymentFacade;
-
-    @TransactionalEventListener(phase = AFTER_COMMIT)
-    @Transactional(propagation = REQUIRES_NEW)
-    public void handle(MemberJoinedEvent event) {
-        paymentFacade.syncMember(event.member());
-    }
-
-    @TransactionalEventListener(phase = AFTER_COMMIT)
-    @Transactional(propagation = REQUIRES_NEW)
-    public void handle(MemberModifiedEvent event) {
-        paymentFacade.syncMember(event.member());
-    }
-
-
-    @TransactionalEventListener(phase = AFTER_COMMIT)
-    @Transactional(propagation = REQUIRES_NEW)
-    public void handle(MarketOrderPaymentRequestedEvent event) {
-        paymentFacade.requestedOrderPayment(event.order(), event.pgAmount());
-    }
-
-    @TransactionalEventListener(phase = AFTER_COMMIT)
-    @Transactional(propagation = REQUIRES_NEW)
-    public void handle(MarketOrderPaymentCompletedEvent event) {
-        paymentFacade.completedOrderPayment(event.order());
-    }
 
     @TransactionalEventListener(phase = AFTER_COMMIT)
     @Transactional(propagation = REQUIRES_NEW)
@@ -64,17 +33,5 @@ public class PaymentEventListener {
     @Transactional(propagation = REQUIRES_NEW)
     public void handle(PaymentAddPaymentLogEvent event) {
         paymentFacade.addPaymentLog(event.payment());
-    }
-
-    @TransactionalEventListener(phase = AFTER_COMMIT)
-    @Transactional(propagation = REQUIRES_NEW)
-    public void handle(MarketOrderPaymentRequestCanceledEvent event) {
-        paymentFacade.canceledPayment(event.dto());
-    }
-
-    @TransactionalEventListener(phase = AFTER_COMMIT)
-    @Transactional(propagation = REQUIRES_NEW)
-    public void handle(SettlementCompletedEvent event) {
-        paymentFacade.completeSettlementPayment(event.memberID(), event.amount());
     }
 }
