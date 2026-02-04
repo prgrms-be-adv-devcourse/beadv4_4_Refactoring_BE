@@ -18,7 +18,6 @@ jobs:
           MYSQL_DATABASE: test_db
           MYSQL_USER: test
           MYSQL_PASSWORD: test
-          TZ: Asia/Seoul
         options: >-
           --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
           --health-interval=10s
@@ -29,38 +28,32 @@ jobs:
       JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: "temurin"
-          java-version: "17"
-          cache: "gradle"
+          distribution: temurin
+          java-version: 17
+          cache: gradle
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+      - name: Build & Test (all modules)
+        run: |
+          chmod +x ./gradlew
+          ./gradlew test -Dspring.profiles.active=test
+          ./gradlew build -x test
 
-      - name: Run test
-        run: ./gradlew test -Dspring.profiles.active=test
+      # 🔑 Docker Hub 로그인
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build project
-        run: ./gradlew build -x test
-
-#       TODO CI에서는 빌드 & 테스트만 진행, push 코드는 CD 스크립트로 이관, sang234, team08-app 변수로 빼두기
-#       build 두 번 되고 있음.
-#      - name: Build Docker Image (amd64)
-#        run: docker build --platform linux/amd64 -t team08-app:ci .
-#
-#      - name: Login to Docker Hub
-#        uses: docker/login-action@v3
-#        with:
-#          username: ${{ secrets.DOCKERHUB_USERNAME }}
-#          password: ${{ secrets.DOCKERHUB_TOKEN }}
-#
-#      - name: Build and Push Docker Image (amd64)
-#        run: |
-#          docker build --platform linux/amd64 -t sang234/team08-app:latest .
-#          docker push sang234/team08-app:latest
-
+      # 🚀 member-service 이미지 빌드 & push
+      - name: Build & Push member-service image
+        run: |
+          docker build \
+            -f member-service/Dockerfile \
+            -t sang234/member-service:latest .
+          docker push sang234/member-service:latest

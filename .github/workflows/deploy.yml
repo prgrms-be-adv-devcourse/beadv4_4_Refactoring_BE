@@ -14,19 +14,16 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Add known hosts (with debug)
+      - name: Add known hosts
         run: |
-          echo "Testing connection to host..."
-          nc -zv ${{ secrets.EC2_HOST }} 22 -w 5 || echo "Port 22 not reachable"
-          echo "Scanning SSH host key..."
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Create .env file locally
+      - name: Create .env
         run: |
           cat > .env << 'EOF'
-          TOSS_PAYMENTS_SECRET_KEY=${{ secrets.TOSS_PAYMENTS_SECRET_KEY }}
           JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+          TOSS_PAYMENTS_SECRET_KEY=${{ secrets.TOSS_PAYMENTS_SECRET_KEY }}
           EOF
 
       - name: Copy .env to EC2
@@ -34,11 +31,11 @@ jobs:
           scp .env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/deploy/.env
           rm .env
 
-      - name: Deploy to EC2
+      - name: Deploy member-service
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             cd ~/deploy
             chmod 600 .env
-            docker compose pull
-            docker compose up -d
+            docker compose pull member-service
+            docker compose up -d member-service
           EOF
