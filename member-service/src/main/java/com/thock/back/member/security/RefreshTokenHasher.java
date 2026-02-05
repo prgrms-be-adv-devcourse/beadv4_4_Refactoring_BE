@@ -1,5 +1,6 @@
-package com.thock.back.global.security;
+package com.thock.back.member.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
