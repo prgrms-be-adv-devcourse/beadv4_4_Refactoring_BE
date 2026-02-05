@@ -13,7 +13,6 @@ import java.util.Optional;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     Optional<RefreshToken> findByTokenHash(String tokenHash);
-    List<RefreshToken> findAllByMemberIdAndRevokedAtIsNull(Long memberId);
 
     @Modifying
     @Query("UPDATE RefreshToken rt SET rt.revokedAt = :revokedAt WHERE rt.memberId = :memberId AND rt.revokedAt IS NULL")
