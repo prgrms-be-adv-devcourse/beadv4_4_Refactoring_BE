@@ -26,7 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtValidator jwtValidator;
 
     @Override
     protected void doFilterInternal(
@@ -37,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = resolveBearerToken(request);
 
-        // ===== 1. 토큰 존재 여부 로그 =====
+        // 토큰 존재 여부 로그
         if (token != null) {
             log.info("[JWT] Token exists. path={}, tokenPrefix={}",
                     request.getRequestURI(),
@@ -47,13 +47,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            // ===== 2. 토큰 검증 =====
-            if (token != null && jwtTokenProvider.validate(token)) {
+            // 토큰 검증
+            if (token != null && jwtValidator.validate(token)) {
                 log.info("[JWT] Token is VALID. path={}", request.getRequestURI());
 
-                Long memberId = jwtTokenProvider.extractMemberId(token);
-                MemberRole role = jwtTokenProvider.extractRole(token);
-                MemberState state = jwtTokenProvider.extractState(token);
+                Long memberId = jwtValidator.extractMemberId(token);
+                MemberRole role = jwtValidator.extractRole(token);
+                MemberState state = jwtValidator.extractState(token);
 
                 AuthMember principal = new AuthMember(memberId, role, state);
 
@@ -66,12 +66,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } else if (token != null) {
-                // ===== 3. 토큰이 있는데 검증 실패한 경우 =====
+                // 토큰이 있는데 검증 실패한 경우
                 log.warn("[JWT] Token is INVALID. path={}", request.getRequestURI());
                 SecurityContextHolder.clearContext(); // 익명 사용자로 통과
             }
         } catch (Exception e) {
-            // ===== 4. 파싱/검증 중 예외 =====
+            // 파싱/검증 중 예외
             log.error("[JWT] Token validation exception. path={}", request.getRequestURI(), e);
             SecurityContextHolder.clearContext(); // 403 만들지 말고 익명으로 처리
         }
