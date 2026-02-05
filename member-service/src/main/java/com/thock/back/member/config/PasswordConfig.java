@@ -1,4 +1,4 @@
-package com.thock.back.global.config;
+package com.thock.back.member.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
