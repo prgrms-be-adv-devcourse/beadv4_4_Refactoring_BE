@@ -1,4 +1,4 @@
-package com.thock.back.member.infrastructure;
+package com.thock.back.member.infrastructure.token;
 
 import com.thock.back.member.domain.entity.Member;
 import com.thock.back.member.domain.entity.RefreshToken;
