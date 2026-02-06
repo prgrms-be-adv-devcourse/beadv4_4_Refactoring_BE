@@ -1,163 +1,105 @@
 package com.thock.back.member.app;
 
-
-import com.thock.back.global.exception.CustomException;
-import com.thock.back.global.exception.ErrorCode;
-import com.thock.back.member.security.JwtTokenProvider;
+import com.thock.back.member.domain.service.MemberAuthenticator;
+import com.thock.back.member.domain.service.RefreshTokenValidator;
+import com.thock.back.member.domain.vo.TokenPair;
+import com.thock.back.member.domain.vo.ValidatedRefreshToken;
+import com.thock.back.member.infrastructure.history.LoginHistoryRecorder;
+import com.thock.back.member.infrastructure.token.TokenIssuer;
 import com.thock.back.member.domain.command.LoginCommand;
-import com.thock.back.member.domain.entity.Credential;
-import com.thock.back.member.domain.entity.LoginHistory;
 import com.thock.back.member.domain.entity.Member;
-import com.thock.back.member.domain.entity.RefreshToken;
 import com.thock.back.member.in.dto.AuthenticationResult;
-import com.thock.back.member.out.CredentialRepository;
-import com.thock.back.member.out.LoginHistoryRepository;
 import com.thock.back.member.out.MemberRepository;
 import com.thock.back.member.out.RefreshTokenRepository;
-import com.thock.back.member.security.RefreshTokenHasher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+/**
+ * 인증 관련 Application Service (Orchestration Layer)
+ * 책임:
+ * - 도메인 서비스와 인프라 서비스를 조정
+ * - 트랜잭션 경계 관리
+ * - 워크플로우 정의
+ * 변경 사항:
+ * - 복잡한 로직을 Domain/Infrastructure Service로 위임
+ * - 얇은 조정 계층(Thin Orchestration Layer)으로 변경
+ **/
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthApplicationService {
 
-    private final MemberRepository memberRepository;
-    private final CredentialRepository credentialRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final LoginHistoryRepository loginHistoryRepository;
+    // Domain Services
+    private final MemberAuthenticator memberAuthenticator;
+    private final RefreshTokenValidator refreshTokenValidator;
 
-    private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final RefreshTokenHasher refreshTokenHasher;
+    // Infrastructure Services
+    private final TokenIssuer tokenIssuer;
+    private final LoginHistoryRecorder loginHistoryRecorder;
+
+    // Repositories
+    private final MemberRepository memberRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+
+    /**
+     * 로그인 처리
+     * 워크플로우:
+     * 1. 회원 인증 (Domain Service)
+     * 2. 로그인 성공 처리 (Domain Entity)
+     * 3. 토큰 발급 (Infrastructure Service)
+     * 4. 로그인 이력 기록 (Infrastructure Service, 비동기)
+     * @param command = 로그인 커맨드
+     * @return 인증 결과 (AccessToken + RefreshToken)
+     **/
 
     @Transactional
     public AuthenticationResult login(LoginCommand command) {
-        // Member 조회
-        Member member = memberRepository.findByEmail(command.email())
-                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
+        // 1. 회원 인증
+        Member member = memberAuthenticator.authenticate(command);
 
-        // 탈퇴/비활성 계정 제한이 있다면 여기서 컷
-        if (member.isWithdrawn()) {
-            throw new CustomException(ErrorCode.MEMBER_WITHDRAWN);
-        }
-
-        // Credential 조회 + 비밀번호 검증
-        Credential credential = credentialRepository.findByMemberId(member.getId())
-                .orElseThrow(() -> new CustomException(ErrorCode.CREDENTIAL_NOT_FOUND));
-
-        boolean passwordMatches = passwordEncoder.matches(command.password(), credential.getPasswordHash());
-        if (!passwordMatches) {
-            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
-        }
-
-        // 로그인 성공 처리
+        // 2. 로그인 성공 처리
         member.recordLogin();
         memberRepository.save(member);
 
-        // JWT 토큰 발급
-        String accessToken = jwtTokenProvider.createAccessToken(
-                member.getId(),
-                member.getRole(),
-                member.getState()
-        );
+        // 3. 토큰 발급
+        TokenPair tokens = tokenIssuer.issueTokens(member);
 
-        // 기존 RefreshToken 폐기
-        refreshTokenRepository.revokeAllByMemberId(member.getId(), LocalDateTime.now());
+        // 로그인 이력 저장 (비동기)
+        loginHistoryRecorder.recordSuccess(member.getId());
 
-        // 새 RefreshToken 발급 & 저장 (해시 적용)
-        String refreshTokenValue = jwtTokenProvider.createRefreshToken(member.getId());
+        log.info("[AUTH] Login successful. memberId={}, email={}",
+                member.getId(), member.getEmail());
 
-        // 평문을 SHA-256 해시로 변환
-        String tokenHash = refreshTokenHasher.hash(refreshTokenValue);
-
-        RefreshToken refreshToken = RefreshToken.issue(
-                member.getId(),
-                tokenHash,
-                LocalDateTime.now().plusSeconds(jwtTokenProvider.getRefreshTokenExpSeconds())
-        );
-
-        refreshTokenRepository.save(refreshToken);
-
-        // 로그인 이력 저장
-        loginHistoryRepository.save(LoginHistory.success(member.getId()));
-
-        return AuthenticationResult.of(accessToken, refreshTokenValue);
+        return AuthenticationResult.of(tokens.accessToken(), tokens.refreshToken());
     }
 
+    /**
+     * RefreshToken을 이용한 토큰 재발급 (Refresh Token Rotation)
+     * 워크플로우:
+     * 1. RefreshToken 검증 (Domain Service)
+     * 2. 기존 RefreshToken 폐기
+     * 3. 새 토큰 쌍 발급 (Infrastructure Service)
+     * @param refreshTokenValue = 평문 RefreshToken
+     * @return 인증 결과 (새로운 AccessToken + RefreshToken)
+     **/
     @Transactional
     public AuthenticationResult refreshAccessToken(String refreshTokenValue) {
+        // 1. RefreshToken 검증
+        ValidatedRefreshToken validated = refreshTokenValidator.validate(refreshTokenValue);
 
-        // 평문을 SHA-256 해시로 변환
-        String tokenHash = refreshTokenHasher.hash(refreshTokenValue);
+        // 2. 기존 RefreshToken 폐기 (Refresh Token Rotation)
+        validated.token().revoke();
+        refreshTokenRepository.save(validated.token());
 
-        // RefreshToken 조회
-        RefreshToken token = refreshTokenRepository.findByTokenHash(tokenHash)
-                .orElseThrow(() -> {
-                    log.warn("[SECURITY] Refresh token not found in BD: hash={}",
-                            tokenHash.substring(0, 10) + "...");
-                    return new CustomException(ErrorCode.REFRESH_TOKEN_NOT_FOUND);
-                });
+        // 3. 새 토큰 쌍 발급
+        TokenPair tokens = tokenIssuer.issueTokens(validated.member());
 
-        // RefreshToken 검증
-        if (token.isRevoked()) {
-            log.warn("[SECURITY] Revoke refresh token access attempt: member={}, revokedAt={}",
-                    token.getMemberId(), token.getRevokedAt());
-            throw new CustomException(ErrorCode.REFRESH_TOKEN_REVOKED);
-        }
+        log.info("[AUTH] AccessToken refreshed. memberId={}",
+                validated.member().getId());
 
-        if (token.isExpired()) {
-            throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED);
-        }
-
-        if (!jwtTokenProvider.validate(refreshTokenValue)) {
-            log.warn("[SECURITY] Invalid RefreshToken JWT signature");
-            throw new CustomException(ErrorCode.REFRESH_TOKEN_INVALID);
-        }
-
-        Long jwtMemberId = jwtTokenProvider.extractMemberId(refreshTokenValue);
-
-        if (!token.getMemberId().equals(jwtMemberId)) {
-            log.warn("[SECURITY] RefreshToken memberId mismatch: DB={}, JWT={}",
-                    token.getMemberId(), jwtMemberId);
-            throw new CustomException(ErrorCode.REFRESH_TOKEN_INVALID);
-        }
-
-        Member member = memberRepository.findById(token.getMemberId())
-                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
-
-        // 계정 상태 검증
-        if (member.isWithdrawn()) {
-            log.warn("[SECURITY] Withdrawn member tried to refresh token. memberId={}", member.getId());
-            throw new CustomException(ErrorCode.MEMBER_WITHDRAWN);
-        }
-
-        if (member.isInActive()) {
-            throw new CustomException(ErrorCode.MEMBER_INACTIVE);
-        }
-
-        // 기존 RefreshToken 폐기 (Refresh Token Rotation)
-        token.revoke();
-        refreshTokenRepository.save(token);
-
-        // 새로운 토큰 세트 발급
-        String newAccessToken = jwtTokenProvider.createAccessToken(token.getMemberId(), member.getRole(), member.getState());
-        String newRefreshTokenValue = jwtTokenProvider.createRefreshToken(token.getMemberId());
-        String newTokenHash = refreshTokenHasher.hash(newRefreshTokenValue);
-
-        RefreshToken newRefreshToken = RefreshToken.issue(
-                token.getMemberId(),
-                newTokenHash,
-                LocalDateTime.now().plusSeconds(jwtTokenProvider.getRefreshTokenExpSeconds())
-        );
-        refreshTokenRepository.save(newRefreshToken);
-
-        return AuthenticationResult.of(newAccessToken, newRefreshTokenValue);
+        return AuthenticationResult.of(tokens.accessToken(), tokens.refreshToken());
     }
 }
