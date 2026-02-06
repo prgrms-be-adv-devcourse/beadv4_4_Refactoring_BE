@@ -47,12 +47,11 @@ public enum ErrorCode {
     MEMBER_EMAIL_ALREADY_EXISTS("MEMBER-409-1", "이미 사용 중인 이메일입니다.", HttpStatus.CONFLICT),
 
     INVALID_ROLE_PROMOTION("MEMBER-400-1", "일반 회원만 판매자로 전환할 수 있습니다.", HttpStatus.BAD_REQUEST),
-    SELLER_PROMOTION_REQUIRED_INFO("MEMBER-400-2", "판매자 전환에는 은행 계좌 정보가 필요합니다.", HttpStatus.BAD_REQUEST),
-
     INVALID_EMAIL_FORMAT("MEMBER-400-3", "올바른 이메일 형식이 아닙니다.", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD_FORMAT("MEMBER-400-4", "비밀번호는 8자 이상, 영문과 숫자를 포함해야 합니다.", HttpStatus.BAD_REQUEST),
     INVALID_NAME_LENGTH("MEMBER-400-5", "이름은 2-50자 사이여야 합니다.", HttpStatus.BAD_REQUEST),
 
+    MISSING_BANKING_INFORMATION("MEMBER-400-6", "은행 계좌 정보가 누락되었습니다.", HttpStatus.BAD_REQUEST),
     // ===== 상품 =====
     SELLER_REQUIRED("PRODUCT-400-1", "판매자 ID는 필수입니다", HttpStatus.BAD_REQUEST),
     PRODUCT_NAME_REQUIRED("PRODUCT-400-2", "상품명은 필수입니다.", HttpStatus.BAD_REQUEST),
