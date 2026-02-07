@@ -2,14 +2,13 @@ package com.thock.back.market.app;
 
 import com.thock.back.shared.market.dto.MarketMemberDto;
 import com.thock.back.shared.member.dto.MemberDto;
-import com.thock.back.market.domain.Cart;
-import com.thock.back.market.domain.MarketMember;
 import com.thock.back.market.in.dto.req.CartItemAddRequest;
 import com.thock.back.market.in.dto.req.OrderCreateRequest;
 import com.thock.back.market.in.dto.res.CartItemListResponse;
 import com.thock.back.market.in.dto.res.CartItemResponse;
 import com.thock.back.market.in.dto.res.OrderCreateResponse;
 import com.thock.back.market.in.dto.res.OrderDetailResponse;
+import com.thock.back.shared.market.domain.CancelReasonType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,13 +28,13 @@ public class MarketFacade {
     private final OrderService orderService;
 
     @Transactional
-    public MarketMember syncMember(MemberDto member) {
-        return marketSyncMemberUseCase.syncMember(member);
+    public void syncMember(MemberDto member) {
+        marketSyncMemberUseCase.syncMember(member);
     }
 
     @Transactional
-    public Cart createCart(MarketMemberDto buyer) {
-        return marketCreateCartUseCase.createCart(buyer);
+    public void createCart(MarketMemberDto buyer) {
+        marketCreateCartUseCase.createCart(buyer);
     }
 
     @Transactional(readOnly = true)
@@ -59,13 +58,13 @@ public class MarketFacade {
     }
 
     @Transactional
-    public void cancelOrder(Long memberId, Long orderId) {
-        marketCancelOrderPaymentUseCase.cancelOrder(memberId, orderId);
+    public void cancelOrder(Long memberId, Long orderId, CancelReasonType cancelReasonType, String cancelReasonDetail) {
+        marketCancelOrderPaymentUseCase.cancelOrder(memberId, orderId, cancelReasonType, cancelReasonDetail);
     }
 
     @Transactional
-    public void cancelOrderItem(Long memberId, Long orderId, Long orderItemId) {
-        marketCancelOrderPaymentUseCase.cancelOrderItem(memberId, orderId, orderItemId);
+    public void cancelOrderItems(Long memberId, Long orderId, List<Long> orderItemIds, CancelReasonType cancelReasonType, String cancelReasonDetail) {
+        marketCancelOrderPaymentUseCase.cancelOrderItems(memberId, orderId, orderItemIds, cancelReasonType, cancelReasonDetail);
     }
 
 

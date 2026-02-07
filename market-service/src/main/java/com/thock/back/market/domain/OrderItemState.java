@@ -19,8 +19,8 @@ public enum OrderItemState {
     CONFIRMED("구매 확정"),
 
     // 취소/환불
-    CANCELLED("취소됨"),
-    REFUND_REQUESTED("환불 요청"),
+    CANCELLED("취소됨"), // 배송 전 : 주문 취소하면 반품 불필요 / 즉시 환불
+    REFUND_REQUESTED("환불 요청"),  // 배송 후 : 반품을 필요, 반품 확인 후 환불
     REFUNDED("환불 완료");
 
     private final String description;
@@ -45,7 +45,14 @@ public enum OrderItemState {
     }
 
     /**
-     * 환불 요청 가능한 상태인지 확인
+     * 환불 완료로 변경 가능한 상태 (배송 전 / 배송 후)
+     */
+    public boolean canCompleteRefund(){
+        return this == CANCELLED || this == REFUND_REQUESTED;
+    }
+
+    /**
+     * 배송 후 환불 요청 가능한 상태인지 확인
      */
     public boolean isRefundable() {
         return this == DELIVERED ||

@@ -6,6 +6,7 @@ import com.thock.back.market.app.MarketFacade;
 import com.thock.back.shared.member.event.MemberJoinedEvent;
 import com.thock.back.shared.member.event.MemberModifiedEvent;
 import com.thock.back.shared.payment.event.PaymentCompletedEvent;
+import com.thock.back.shared.payment.event.PaymentRefundCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -21,14 +22,16 @@ public class MarketKafkaListener {
     @KafkaListener(topics = KafkaTopics.MEMBER_JOINED, groupId = "market-service")
     @Transactional
     public void handle(MemberJoinedEvent event){
-        log.info("Received MemberJoinedEvent via Kafka: memberId={}", event.member().id());
+        Long memberId = event.member().id();
+        log.info("Received MemberJoinedEvent via Kafka: memberId={}", memberId);
         marketFacade.syncMember(event.member());
     }
 
     @KafkaListener(topics = KafkaTopics.MEMBER_MODIFIED, groupId = "market-service")
     @Transactional
     public void handle(MemberModifiedEvent event){
-        log.info("Received MemberModifiedEvent via Kafka: memberId={}", event.member().id());
+        Long memberId = event.member().id();
+        log.info("Received MemberModifiedEvent via Kafka: memberId={}", memberId);
         marketFacade.syncMember(event.member());
     }
 
@@ -37,7 +40,18 @@ public class MarketKafkaListener {
     @Transactional
     public void handle(PaymentCompletedEvent event){
         String orderId = event.payment().orderId();
+        log.info("Received MemberModifiedEvent via Kafka: orderId={}", orderId);
         marketFacade.completeOrderPayment(orderId);
+    }
+
+    // TODO
+    @KafkaListener(topics = KafkaTopics.PAYMENT_REFUND_COMPLETED, groupId = "market-service")
+    @Transactional
+    public void handle(PaymentRefundCompletedEvent event){
+        Long memberId = event.dto().memberId();
+        String orderId = event.dto().orderId();
+        log.info("Received PaymentRefundCompletedEvent via Kafka: memberId = {}, orderId={}", memberId, orderId);
+//        marketFacade.completeRefund(orderId);
     }
 
 

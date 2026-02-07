@@ -3,6 +3,7 @@ package com.thock.back.market.domain;
 import com.thock.back.global.exception.CustomException;
 import com.thock.back.global.exception.ErrorCode;
 import com.thock.back.global.jpa.entity.BaseIdAndTime;
+import com.thock.back.shared.market.domain.CancelReasonType;
 import com.thock.back.shared.market.dto.OrderDto;
 import com.thock.back.shared.market.event.MarketOrderPaymentCompletedEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestCanceledEvent;
@@ -153,55 +154,69 @@ public class Order extends BaseIdAndTime {
     }
 
     /**
-     * 결제 전 취소
+     * 주문 전체 취소 1. 결제 요청 중 취소
+     * PG 결제창 띄워놓고 사용자가 취소하거나 결제 안 하고 나간 경우
      */
-    public void cancelRequestPayment() {
+    public void cancelRequestPayment(CancelReasonType cancelReasonType, String cancelReasonDetail) {
         if (!isPaymentInProgress()) {
-            throw new CustomException(ErrorCode.ORDER_INVALID_STATE);
+            throw new CustomException(ErrorCode.ORDER_CANNOT_CANCEL);
         }
+
+        // 모든 OrderItem 취소
+        this.items.forEach(item -> item.cancel(cancelReasonType, cancelReasonDetail));
 
         this.requestPaymentDate = null;
         this.state = OrderState.CANCELLED;
         this.cancelDate = LocalDateTime.now();
 
-        log.info("❌ 결제 요청 취소: orderId={}, orderNumber={}", getId(), orderNumber);
+        log.info("❌ 결제 요청 취소: orderId={}, orderNumber={}, reason={}", getId(), orderNumber, cancelReasonType);
 
         // Payment 모듈에 취소 알림 (환불 불필요)
+        String cancelReason = cancelReasonType == CancelReasonType.ETC && cancelReasonDetail != null
+                ? String.format("%s: %s", cancelReasonType.getDescription(), cancelReasonDetail)
+                : cancelReasonType.getDescription();
+
         PaymentCancelRequestDto cancelDto = new PaymentCancelRequestDto(
                 this.orderNumber,
-                "사용자 요청에 의한 결제 취소",
-                0L  // 결제하지 않았으니 0원
+                String.format("결제 요청 취소 (사유: %s)", cancelReason),
+                0L // 결제 하지 않았으니 0원
         );
+
         publishEvent(new MarketOrderPaymentRequestCanceledEvent(cancelDto));
     }
 
     /**
-     * 주문 전체 취소
+     * 주문 전체 취소 2. PG 결제창에서 결제까지 완료 한 경우
      */
-    public void cancel() {
+    public void cancel(CancelReasonType cancelReasonType, String cancelReasonDetail) {
         if (!this.state.isCancellable()) {
             throw new CustomException(ErrorCode.ORDER_CANNOT_CANCEL);
         }
 
         OrderState previousState = this.state;
+        // 배송 전까지는 즉시 환불 가능
         boolean needsRefund = previousState == OrderState.PAYMENT_COMPLETED ||
                 previousState == OrderState.PREPARING;
 
         // 모든 OrderItem 취소
-        this.items.forEach(OrderItem::cancel);
+        this.items.forEach(item -> item.cancel(cancelReasonType, cancelReasonDetail));
 
         this.state = OrderState.CANCELLED;
         this.cancelDate = LocalDateTime.now();
 
-        log.info("🚫 주문 전체 취소: orderId={}, orderNumber={}, previousState={}, cancelDate={}",
-                getId(), orderNumber, previousState, cancelDate);
+        log.info("🚫 주문 전체 취소: orderId={}, orderNumber={}, previousState={}, reason={}",
+                getId(), orderNumber, previousState, cancelReasonType);
 
         if (needsRefund) {
             log.info("💸 환불 필요: orderId={}, refundAmount={}", getId(), totalSalePrice);
 
+            String cancelReason = cancelReasonType == CancelReasonType.ETC && cancelReasonDetail != null
+                    ? String.format("%s: %s", cancelReasonType.getDescription(), cancelReasonDetail)
+                    : cancelReasonType.getDescription();
+
             PaymentCancelRequestDto cancelDto = new PaymentCancelRequestDto(
                     this.orderNumber,
-                    "사용자 요청에 의한 주문 취소 (전액 환불)",
+                    String.format("주문 전체 취소 (사유: %s)", cancelReason),
                     null  // 전액 환불
             );
             publishEvent(new MarketOrderPaymentRequestCanceledEvent(cancelDto));
@@ -209,38 +224,72 @@ public class Order extends BaseIdAndTime {
     }
 
     /**
-     * 특정 상품만 취소 (부분 취소)
+     * 부분 취소
      */
-    public void cancelItem(Long orderItemId) {
-        OrderItem orderItem = items.stream()
-                .filter(item -> item.getId().equals(orderItemId))
-                .findFirst() // 애초에 orderItemId 는 1개 (unique)
-                .orElseThrow(() -> new CustomException(ErrorCode.ORDER_ITEM_NOT_FOUND));
+    public void cancelItems(List<Long> orderItemIds, CancelReasonType cancelReasonType, String cancelReasonDetail) {
+        // 1. 취소할 아이템들 조회 및 검증
+        // TODO : id가 unique이긴 하지만 findFirst가 뭔가 조금 어색함
+        List<OrderItem> orderItems = orderItemIds.stream()
+                .map(id -> items.stream()
+                        .filter(item -> item.getId().equals(id))
+                        .findFirst()
+                        .orElseThrow(() -> new CustomException(ErrorCode.ORDER_ITEM_NOT_FOUND)))
+                .toList();
 
-        // 취소 가능 상태가 아니라면
-        if (!orderItem.getState().isCancellable()) {
-            throw new CustomException(ErrorCode.ORDER_CANNOT_CANCEL);
-        }
+        // 2. 취소 가능 상태 확인
+        orderItems.forEach(item -> {
+            if (!item.getState().isCancellable()) {
+                throw new CustomException(ErrorCode.ORDER_CANNOT_CANCEL);
+            }
+        });
 
-        Long refundAmount = orderItem.getTotalSalePrice();
+        // 3. 총 환불 금액 계산
+        Long totalRefundAmount = orderItems.stream()
+                .mapToLong(OrderItem::getTotalSalePrice)
+                .sum();
 
-        orderItem.cancel();
+        // 4. 각 아이템 취소 처리
+        orderItems.forEach(item -> item.cancel(cancelReasonType, cancelReasonDetail));
         updateStateFromItems();
 
-        log.info("🚫 상품 부분 취소: orderId={}, orderItemId={}, productName={}",
-                getId(), orderItemId, orderItem.getProductName());
+        log.info("🚫 상품 부분 취소: orderId={}, count={}, reason={}",
+                getId(), orderItemIds.size(), cancelReasonType);
 
-        // 결제 완료 후에만 부분 환불 이벤트 발행
+        // 5. 결제 완료 후에만 환불 이벤트 (한 번만 발행)
         if (this.isPaid()) {
+            // ETC인 경우에만 사용자가 취소 사유 직접 입력 가능(선택)
+            String cancelReason = cancelReasonType == CancelReasonType.ETC && cancelReasonDetail != null
+                    ? String.format("%s: %s", cancelReasonType.getDescription(), cancelReasonDetail)
+                    : cancelReasonType.getDescription();
+
             PaymentCancelRequestDto cancelDto = new PaymentCancelRequestDto(
                     this.orderNumber,
-                    String.format("주문 상품 부분 취소 (상품명: %s)", orderItem.getProductName()),
-                    refundAmount  // 부분 환불 금액
+                    String.format("주문 상품 부분 취소 (%d개, 사유: %s)", orderItems.size(), cancelReason),
+                    totalRefundAmount
             );
             publishEvent(new MarketOrderPaymentRequestCanceledEvent(cancelDto));
 
-            log.info("💸 부분 환불 요청: orderId={}, refundAmount={}", getId(), refundAmount);
+            log.info("💸 부분 환불 요청: orderId={}, refundAmount={}", getId(), totalRefundAmount);
         }
+    }
+
+    /**
+     * 환불 완료 처리 (Payment 모듈에서 환불 완료 이벤트 수신 시)
+     */
+    public void completeRefund(){
+        // 취소 또는 부분취소 상태에서만 환불 완료 가능
+        if (this.state != OrderState.CANCELLED && this.state != OrderState.PARTIALLY_CANCELLED) {
+            throw new CustomException(ErrorCode.ORDER_CANNOT_REFUND);
+        }
+
+        // 취소된 OrderItem들만 환불 완료로 변경
+        this.items.stream()
+                .filter(item -> item.getState().canCompleteRefund())
+                .forEach(OrderItem::completeRefund);
+
+        this.state = OrderState.REFUNDED;
+
+        log.info(" 환불 완료: orderId={}, orderNumber={}", getId(), getOrderNumber());
     }
 
     /**

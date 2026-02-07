@@ -6,6 +6,7 @@ import com.thock.back.shared.market.event.MarketOrderPaymentRequestCanceledEvent
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestedEvent;
 import com.thock.back.shared.member.event.MemberJoinedEvent;
 import com.thock.back.shared.member.event.MemberModifiedEvent;
+import com.thock.back.shared.payment.event.PaymentRefundCompletedEvent;
 import com.thock.back.shared.settlement.event.SettlementCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +44,10 @@ public class KafkaEventPublisher {
             return KafkaTopics.MARKET_ORDER_PAYMENT_REQUEST_CANCELED;
         } else if (event instanceof SettlementCompletedEvent) {
             return KafkaTopics.SETTLEMENT_COMPLETED;
+        } else if (event instanceof PaymentRefundCompletedEvent) {
+            return KafkaTopics.PAYMENT_REFUND_COMPLETED;
         }
+
         return null;
     }
     /** TODO

@@ -16,11 +16,11 @@ public class MarketCreateCartUseCase {
     private final CartRepository cartRepository;
 
     @Transactional
-    public Cart createCart(MarketMemberDto buyer) {
+    public void createCart(MarketMemberDto buyer) {
         MarketMember _buyer = marketMemberRepository.getReferenceById(buyer.id());
 
         Cart cart = new Cart(_buyer);
 
-        return cartRepository.save(cart);
+        cartRepository.save(cart);
     }
 }

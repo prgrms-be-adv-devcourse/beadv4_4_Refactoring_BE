@@ -3,6 +3,7 @@ package com.thock.back.market.domain;
 import com.thock.back.global.exception.CustomException;
 import com.thock.back.global.exception.ErrorCode;
 import com.thock.back.global.jpa.entity.BaseIdAndTime;
+import com.thock.back.shared.market.domain.CancelReasonType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,6 +46,11 @@ public class OrderItem extends BaseIdAndTime {
     private Long discountAmount;
     private Long payoutAmount;      // 판매자 정산 금액
     private Long feeAmount;         // 플랫폼 수수료
+
+    // 취소 사유
+    @Enumerated(EnumType.STRING)
+    private CancelReasonType cancelReasonType;
+    private String cancelReasonDetail;
 
     public OrderItem(Order order, Long sellerId, Long productId, String productName,
                      String productImageUrl, Long price, Long salePrice,
@@ -106,11 +112,20 @@ public class OrderItem extends BaseIdAndTime {
         this.state = OrderItemState.CONFIRMED;
     }
 
-    public void cancel() {
+    public void cancel(CancelReasonType cancelReasonType, String cancelReasonDetail) {
         if (!this.state.isCancellable()) {
             throw new CustomException(ErrorCode.ORDER_CANNOT_CANCEL);
         }
         this.state = OrderItemState.CANCELLED;
+        this.cancelReasonType = cancelReasonType;
+        this.cancelReasonDetail = cancelReasonDetail;
+    }
+
+    public void completeRefund(){
+        if(!this.state.canCompleteRefund()) {
+            throw new CustomException(ErrorCode.ORDER_CANNOT_REFUND);
+        }
+        this.state = OrderItemState.REFUNDED;
     }
 
 }
