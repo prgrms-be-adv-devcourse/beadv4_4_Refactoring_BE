@@ -16,7 +16,7 @@ public class MarketSyncMemberUseCase {
     private final EventPublisher eventPublisher;
 
     @Transactional
-    public MarketMember syncMember(MemberDto member) {
+    public void syncMember(MemberDto member) {
         // 기존 회원인지 판단
         boolean isNew = !marketMemberRepository.existsById(member.id());
 
@@ -38,6 +38,5 @@ public class MarketSyncMemberUseCase {
                     new MarketMemberCreatedEvent(_member.toDto())
             );
         }
-        return _member;
     }
 }

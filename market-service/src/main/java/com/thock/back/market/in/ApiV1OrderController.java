@@ -3,17 +3,21 @@ package com.thock.back.market.in;
 
 import com.thock.back.global.security.AuthContext;
 import com.thock.back.market.app.MarketFacade;
+import com.thock.back.market.in.dto.req.OrderCancelRequest;
 import com.thock.back.market.in.dto.req.OrderCreateRequest;
+import com.thock.back.market.in.dto.req.OrderItemsCancelRequest;
 import com.thock.back.market.in.dto.res.OrderCreateResponse;
 import com.thock.back.market.in.dto.res.OrderDetailResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
@@ -23,6 +27,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/api/v1/orders")
 @Tag(name = "order-controller", description = "주문 관련 API")
 public class ApiV1OrderController {
@@ -37,8 +42,9 @@ public class ApiV1OrderController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
     @GetMapping
-    public ResponseEntity<List<OrderDetailResponse>> getMyOrders() throws Exception {
+    public ResponseEntity<List<OrderDetailResponse>> getMyOrders() {
         Long memberId = AuthContext.memberId();
+        log.info("Market Order API : getMyOrders / memberId = {}", memberId);
         List<OrderDetailResponse> orders = marketFacade.getMyOrders(memberId);
         return ResponseEntity.ok(orders);
     }
@@ -53,8 +59,9 @@ public class ApiV1OrderController {
             @ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
     })
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable Long orderId) throws Exception {
+    public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable Long orderId) {
         Long memberId = AuthContext.memberId();
+        log.info("Market Order API : getOrderDetail / memberId = {}", memberId);
         OrderDetailResponse order = marketFacade.getOrderDetail(memberId, orderId);
         return ResponseEntity.ok(order);
     }
@@ -72,8 +79,9 @@ public class ApiV1OrderController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 (상품 정보 조회 실패 등)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
-    public ResponseEntity<OrderCreateResponse> createOrder(@Valid @RequestBody OrderCreateRequest request) throws Exception {
+    public ResponseEntity<OrderCreateResponse> createOrder(@Valid @RequestBody OrderCreateRequest request) {
         Long memberId = AuthContext.memberId();
+        log.info("Market Order API : createOrder / memberId = {}", memberId);
         OrderCreateResponse response = marketFacade.createOrder(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -91,16 +99,26 @@ public class ApiV1OrderController {
             @ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
     })
     @PostMapping("/{orderId}/cancel")
-    public ResponseEntity<Void> calcelOrder(@PathVariable Long orderId) throws Exception {
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId,
+                                            @RequestBody OrderCancelRequest request) {
         Long memberId = AuthContext.memberId();
-        marketFacade.cancelOrder(memberId,orderId);
+        log.info("Market Order API : cancelOrder / memberId = {}, orderId = {}, request = {}", memberId, orderId, request);
+        marketFacade.cancelOrder(memberId,orderId, request.cancelReasonType(), request.cancelReasonDetail());
         return ResponseEntity.noContent().build();
     }
 
     @Operation(
             summary = "주문 상품 부분 취소",
-            description = "주문 내 특정 상품만 취소합니다. " +
-                    "결제 완료된 경우 해당 상품 금액만큼 부분 환불됩니다."
+            description = "주문 내 선택한 상품들을 취소합니다. " +
+                    "단건 취소: [1], 다건 취소: [1, 2, 3], 결제 완료된 경우 해당 상품 금액만큼 부분 환불됩니다.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "삭제할 상품 ID 리스트",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "[1, 2, 3]")
+                    )
+            )
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "주문 상품 부분 취소 성공"),
@@ -108,13 +126,20 @@ public class ApiV1OrderController {
             @ApiResponse(responseCode = "403", description = "본인의 주문이 아님"),
             @ApiResponse(responseCode = "404", description = "주문 또는 상품을 찾을 수 없음")
     })
-    @PostMapping("/{orderId}/items/{orderItemId}/cancel")
+    @PostMapping("/{orderId}/items/cancel")
     public ResponseEntity<Void> cancelOrderItem(
             @PathVariable Long orderId,
-            @PathVariable Long orderItemId
-    ) throws Exception {
+            @RequestBody OrderItemsCancelRequest request
+            ) {
         Long memberId = AuthContext.memberId();
-        marketFacade.cancelOrderItem(memberId, orderId, orderItemId);
+        log.info("Market Order API : cancelOrderItem / memberId = {}, orderId = {}, request = {}", memberId, orderId, request);
+        marketFacade.cancelOrderItems(
+                memberId,
+                orderId,
+                request.orderItemIds(),
+                request.cancelReasonType(),
+                request.cancelReasonDetail()
+        );
         return ResponseEntity.noContent().build();
     }
 }

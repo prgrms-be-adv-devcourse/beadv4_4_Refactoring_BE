@@ -3,10 +3,8 @@ package com.thock.back.market.in;
 
 import com.thock.back.market.app.MarketFacade;
 import com.thock.back.shared.market.event.MarketMemberCreatedEvent;
-import com.thock.back.shared.member.event.MemberJoinedEvent;
-import com.thock.back.shared.member.event.MemberModifiedEvent;
-import com.thock.back.shared.payment.event.PaymentCompletedEvent;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -15,6 +13,7 @@ import static org.springframework.transaction.annotation.Propagation.REQUIRES_NE
 import static org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class MarketEventListener {
     private final MarketFacade marketFacade;
@@ -26,6 +25,7 @@ public class MarketEventListener {
     @TransactionalEventListener(phase = AFTER_COMMIT)
     @Transactional(propagation = REQUIRES_NEW)
     public void handle(MarketMemberCreatedEvent event){
+        log.info("Received MarketMemberCreatedEvent via Spring Event: memberId={}", event.member().id());
         marketFacade.createCart(event.member());
     }
 

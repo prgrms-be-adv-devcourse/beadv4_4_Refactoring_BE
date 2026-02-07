@@ -1,6 +1,7 @@
 package com.thock.back.market.domain;
 
 import com.thock.back.global.exception.CustomException;
+import com.thock.back.shared.market.domain.CancelReasonType;
 import com.thock.back.shared.member.domain.MemberRole;
 import com.thock.back.shared.member.domain.MemberState;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -74,18 +76,18 @@ class OrderTest {
     }
 
     @Nested
-    @DisplayName("cancelItem 부분 취소 테스트")
-    class CancelItemTest {
+    @DisplayName("cancelItems 부분 취소 테스트")
+    class CancelItemsTest {
 
         @Test
         @DisplayName("결제 전 상태에서 부분 취소가 성공한다")
-        void cancelItem_beforePayment_success() throws Exception {
+        void cancelItems_beforePayment_success() throws Exception {
             // given
             OrderItem item = addItemToOrder(order, 1L);
             assertThat(item.getState()).isEqualTo(OrderItemState.PENDING_PAYMENT);
 
             // when
-            order.cancelItem(1L);
+            order.cancelItems(List.of(1L), CancelReasonType.CHANGE_OF_MIND, null);
 
             // then
             assertThat(item.getState()).isEqualTo(OrderItemState.CANCELLED);
@@ -93,18 +95,18 @@ class OrderTest {
 
         @Test
         @DisplayName("존재하지 않는 아이템 취소 시 예외가 발생한다")
-        void cancelItem_notFound_throwsException() throws Exception {
+        void cancelItems_notFound_throwsException() throws Exception {
             // given
             addItemToOrder(order, 1L);
 
             // when & then
-            assertThatThrownBy(() -> order.cancelItem(999L))
+            assertThatThrownBy(() -> order.cancelItems(List.of(999L), CancelReasonType.CHANGE_OF_MIND, null))
                     .isInstanceOf(CustomException.class);
         }
 
         @Test
         @DisplayName("취소 불가능한 상태(SHIPPING)에서 취소 시 예외가 발생한다")
-        void cancelItem_shippingState_throwsException() throws Exception {
+        void cancelItems_shippingState_throwsException() throws Exception {
             // given
             OrderItem item = addItemToOrder(order, 1L);
 
@@ -114,7 +116,7 @@ class OrderTest {
             stateField.set(item, OrderItemState.SHIPPING);
 
             // when & then
-            assertThatThrownBy(() -> order.cancelItem(1L))
+            assertThatThrownBy(() -> order.cancelItems(List.of(1L), CancelReasonType.CHANGE_OF_MIND, null))
                     .isInstanceOf(CustomException.class);
         }
     }
@@ -131,7 +133,7 @@ class OrderTest {
             OrderItem item2 = addItemToOrder(order, 2L);
 
             // item1만 취소
-            order.cancelItem(1L);
+            order.cancelItems(List.of(1L), CancelReasonType.CHANGE_OF_MIND, null);
 
             // then
             assertThat(item1.getState()).isEqualTo(OrderItemState.CANCELLED);
@@ -146,9 +148,8 @@ class OrderTest {
             addItemToOrder(order, 1L);
             addItemToOrder(order, 2L);
 
-            // when - 모든 아이템 취소
-            order.cancelItem(1L);
-            order.cancelItem(2L);
+            // when - 모든 아이템 한 번에 취소
+            order.cancelItems(List.of(1L, 2L), CancelReasonType.CHANGE_OF_MIND, null);
 
             // then
             assertThat(order.getState()).isEqualTo(OrderState.CANCELLED);

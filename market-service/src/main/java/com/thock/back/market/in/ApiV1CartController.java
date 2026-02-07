@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
@@ -24,6 +25,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/api/v1/carts")
 @Tag(name = "cart-controller" , description = "장바구니 관련 API")
 public class ApiV1CartController {
@@ -42,6 +44,7 @@ public class ApiV1CartController {
     @GetMapping
     public ResponseEntity<CartItemListResponse> getCartItems() throws Exception {
         Long memberId = AuthContext.memberId();
+        log.info("Market Cart API : getCartItems / memberId = {}", memberId);
         CartItemListResponse response = marketFacade.getCartItems(memberId);
         return ResponseEntity.ok(response);
     }
@@ -64,6 +67,7 @@ public class ApiV1CartController {
     @PostMapping("/items")
     public ResponseEntity<CartItemResponse> addCartItem(@Valid @RequestBody CartItemAddRequest request) throws Exception {
         Long memberId = AuthContext.memberId();
+        log.info("Market Cart API : addCartItem / memberId = {}", memberId);
         CartItemResponse response = marketFacade.addCartItem(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -85,6 +89,7 @@ public class ApiV1CartController {
     @DeleteMapping("/items")
     public ResponseEntity<Void> clearCart(@RequestBody List<Long> productIds) throws Exception {
         Long memberId = AuthContext.memberId();
+        log.info("Market Cart API : clearCart / memberId = {}, productIdConunt = {}, productIds = {}", memberId, productIds.size(), productIds);
 
         // 빈 리스트면 전체 삭제로 간주
         if (productIds == null || productIds.isEmpty()) {
