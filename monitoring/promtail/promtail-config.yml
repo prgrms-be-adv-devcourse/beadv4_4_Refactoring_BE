@@ -1,0 +1,348 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # ==================== Member Service ====================
+  - job_name: member-app
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: member-service
+          service: member
+          log_type: app
+          __path__: /var/log/apps/member/app*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            logger: logger_name
+            message: message
+            thread: thread_name
+            timestamp: "@timestamp"
+      - labels:
+          level:
+          logger:
+
+  - job_name: member-api
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: member-service
+          service: member
+          log_type: api
+          __path__: /var/log/apps/member/api*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            logger: logger_name
+            message: message
+      - labels:
+          level:
+
+  - job_name: member-kafka-event
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: member-service
+          service: member
+          log_type: kafka-event
+          __path__: /var/log/apps/member/kafka-event*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  - job_name: member-spring-event
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: member-service
+          service: member
+          log_type: spring-event
+          __path__: /var/log/apps/member/spring-event*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  # ==================== Product Service ====================
+  - job_name: product-app
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: product-service
+          service: product
+          log_type: app
+          __path__: /var/log/apps/product/app*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            logger: logger_name
+            message: message
+      - labels:
+          level:
+          logger:
+
+  - job_name: product-api
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: product-service
+          service: product
+          log_type: api
+          __path__: /var/log/apps/product/api*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  - job_name: product-kafka-event
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: product-service
+          service: product
+          log_type: kafka-event
+          __path__: /var/log/apps/product/kafka-event*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  - job_name: product-spring-event
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: product-service
+          service: product
+          log_type: spring-event
+          __path__: /var/log/apps/product/spring-event*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  # ==================== Market Service ====================
+  - job_name: market-app
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: market-service
+          service: market
+          log_type: app
+          __path__: /var/log/apps/market/app*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            logger: logger_name
+            message: message
+      - labels:
+          level:
+          logger:
+
+  - job_name: market-api
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: market-service
+          service: market
+          log_type: api
+          __path__: /var/log/apps/market/api*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  - job_name: market-kafka-event
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: market-service
+          service: market
+          log_type: kafka-event
+          __path__: /var/log/apps/market/kafka-event*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  - job_name: market-spring-event
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: market-service
+          service: market
+          log_type: spring-event
+          __path__: /var/log/apps/market/spring-event*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  # ==================== Payment Service ====================
+  - job_name: payment-app
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: payment-service
+          service: payment
+          log_type: app
+          __path__: /var/log/apps/payment/app*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            logger: logger_name
+            message: message
+      - labels:
+          level:
+          logger:
+
+  - job_name: payment-api
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: payment-service
+          service: payment
+          log_type: api
+          __path__: /var/log/apps/payment/api*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  - job_name: payment-kafka-event
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: payment-service
+          service: payment
+          log_type: kafka-event
+          __path__: /var/log/apps/payment/kafka-event*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  - job_name: payment-spring-event
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: payment-service
+          service: payment
+          log_type: spring-event
+          __path__: /var/log/apps/payment/spring-event*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  # ==================== Settlement Service ====================
+  - job_name: settlement-app
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: settlement-service
+          service: settlement
+          log_type: app
+          __path__: /var/log/apps/settlement/app*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            logger: logger_name
+            message: message
+      - labels:
+          level:
+          logger:
+
+  - job_name: settlement-api
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: settlement-service
+          service: settlement
+          log_type: api
+          __path__: /var/log/apps/settlement/api*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  - job_name: settlement-kafka-event
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: settlement-service
+          service: settlement
+          log_type: kafka-event
+          __path__: /var/log/apps/settlement/kafka-event*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:
+
+  - job_name: settlement-spring-event
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: settlement-service
+          service: settlement
+          log_type: spring-event
+          __path__: /var/log/apps/settlement/spring-event*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+      - labels:
+          level:

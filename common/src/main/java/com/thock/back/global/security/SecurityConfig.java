@@ -44,6 +44,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/h2-console/**",
+                                "/actuator/**",
 
                                 // 인증/회원가입
                                 "/api/v1/auth/**",
