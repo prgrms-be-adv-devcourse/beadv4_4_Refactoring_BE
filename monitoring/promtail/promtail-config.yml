@@ -24,8 +24,6 @@ scrape_configs:
             level: level
             logger: logger_name
             message: message
-            thread: thread_name
-            timestamp: "@timestamp"
       - labels:
           level:
           logger:
