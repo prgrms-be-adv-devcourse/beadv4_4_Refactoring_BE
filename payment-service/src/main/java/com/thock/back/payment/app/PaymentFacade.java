@@ -59,6 +59,7 @@ public class PaymentFacade {
         Long pgAmount = paymentRepository.findByOrderId(dto.orderId()).get().getPgAmount();
         if(pgAmount > 0) { // 토스페이먼츠 결제
             this.canceledOrderTossPayment(dto);
+            return;
         }
         this.canceledOrderPayment(dto);
     }
