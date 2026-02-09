@@ -13,7 +13,81 @@ MSA 아키텍처 기반의 이커머스 플랫폼입니다.
 
 ## 2. 전체 아키텍처 (Architecture)
 ![전체 아키텍처](./images/arch.png)
-## 3. 팀원 및 담당 역할 (Team Members)
+
+## 3. ERD
+
+## 💾 Core Domain Design (Database)
+
+### 1. 도메인 구조 (Domain Structure)
+> **Finance Module Separation:**
+> 정산(`Settlement`)과 대사(`Reconciliation`)의 책임을 명확히 분리하기 위해 테이블을 그룹화했습니다.
+> - **Reconciliation:** 외부 PG사 데이터와 내부 데이터의 비교/검증 담당
+> - **Settlement:** 검증된 데이터를 바탕으로 실제 지급/정산 담당
+
+![Core ERD](./images/erd_core.png)
+*(위 다이어그램은 주요 도메인 간의 관계를 시각화한 것입니다.)*
+
+### 대사 모듈(Reconciliation)
+
+<table width="100%">
+  <tr>
+    <th align="center" width="33%">PG Raw Data</th>
+    <th align="center" width="33%">Sales Log</th>
+    <th align="center" width="33%">Verification Result</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="./images/pg_sales_raw.png" width="100%" alt="PG Raw Data">
+    </td>
+    <td align="center">
+      <img src="./images/sales_log.png" width="100%" alt="Sales Log">
+    </td>
+    <td align="center">
+      <img src="./images/verification_result.png" width="100%" alt="Verification Result">
+    </td>
+  </tr>
+  <tr>
+    <td align="center">PG사 결제 저장 테이블<br>(외부 데이터)</td>
+    <td align="center">내부 주문/매출<br>(내부 데이터)</td>
+    <td align="center"><b>대사 결과 및 상태</b><br>(매칭/불일치 기록)</td>
+  </tr>
+</table>
+
+
+### 정산 모듈(Settlement)
+
+
+<br> <h3>💸 정산 프로세스 (Settlement Process)</h3>
+<table width="100%">
+  <tr>
+    <th align="center" width="50%">Daily Settlement</th>
+    <th align="center" width="50%">Monthly Settlement</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="./images/daily_settlement.png" width="100%" alt="Daily Settlement">
+    </td>
+    <td align="center">
+      <img src="./images/monthly_settlement.png" width="100%" alt="Monthly Settlement">
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>일별 정산 (Daily)</b><br>
+
+    </td>
+    <td align="center">
+      <b>월별 정산 (Monthly)</b><br>
+      매월 1일 최종 확정<br>
+      (수수료 차감 및 지급액 산정)
+    </td>
+  </tr>
+</table>
+
+
+
+
+## 4. 팀원 및 담당 역할 (Team Members)
 | 이름  |   담당 모듈    | 주요 역할                            |
 |:---:|:----------:|:---------------------------------|
 | 노승억 | Settlement | 정산/대사 시스템 설계, 데이터 정합성 검증 로직 구현   |
@@ -21,7 +95,7 @@ MSA 아키텍처 기반의 이커머스 플랫폼입니다.
 | 이현종 |  Product   | 회원 지갑 관리 및 PG사 연동 로직 구현          |
 | 양상훈 |   Order    | 주문 처리 및 장바구니 로직 구현               |
 
-## 4. 기술적 도전 및 고도화 계획
+## 5. 기술적 도전 및 고도화 계획
 
 ### 데이터 정합성 보장을 위한 대사 시스템
 > **Problem:** 분산 환경(MSA)에서 PG사 결제 내역과 내부 주문 데이터 간 불일치 발생 위험
