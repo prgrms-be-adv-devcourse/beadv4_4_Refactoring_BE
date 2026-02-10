@@ -14,11 +14,11 @@ import java.util.Map;
 
 @Entity
 @Table(
-        name = "finance_reconciliation_internal_order_snapshot",
+        name = "sales_log",
         indexes = {
-                @Index(name = "idx_snapshot_order_no", columnList = "order_no"), // 주문번호 조회용
-                @Index(name = "idx_snapshot_seller", columnList = "seller_id"),    // 판매자별 조회용
-                @Index(name = "idx_snapshot_status", columnList = "settlement_status") // 정산 상태별(WAIT/READY) 조회용
+                @Index(name = "idx_sales_log_order_no", columnList = "order_no"), // 주문번호 조회용
+                @Index(name = "idx_sales_log_seller", columnList = "seller_id"),    // 판매자별 조회용
+                @Index(name = "idx_sales_log_status", columnList = "reconciliation_status") // 정산 상태별(WAIT/READY) 조회용
         }
 )
 @Getter
