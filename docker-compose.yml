@@ -1,4 +1,36 @@
 services:
+  # ==================== API Gateway (외부 진입점) ====================
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"  # 외부 노출 (유일한 외부 접근점)
+    env_file:
+      - .env
+    environment:
+      TZ: Asia/Seoul
+      JAVA_OPTS: -Duser.timezone=Asia/Seoul
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      LOG_PATH: /app/logs
+    volumes:
+      - ./logs/gateway:/app/logs
+    depends_on:
+      member-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      market-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+      settlement-service:
+        condition: service_started
+    networks:
+      - public
+      - internal
+
   # ==================== Kafka ====================
   redpanda:
     image: redpandadata/redpanda:v24.1.1
@@ -17,7 +49,7 @@ services:
       - "9092:9092"
       - "29092:29092"
     networks:
-      - thock-network
+      - internal
 
   redpanda-console:
     image: redpandadata/console:v2.5.2
@@ -29,9 +61,9 @@ services:
     environment:
       KAFKA_BROKERS: redpanda:29092
     networks:
-      - thock-network
+      - internal
 
-  # ==================== MySQL Database (Single Container) ====================
+  # ==================== MySQL Database ====================
   mysql:
     image: mysql:8.0
     container_name: thock-mysql
@@ -39,7 +71,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       TZ: Asia/Seoul
     ports:
-      - "3307:3306"
+      - "3307:3306"  # 개발 편의를 위해 외부 노출 (프로덕션에서는 제거 권장)
     volumes:
       - mysql-data:/var/lib/mysql
       - ./docker/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
@@ -49,16 +81,18 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - thock-network
+      - internal
 
-  # ==================== Application Services ====================
+  # ==================== Application Services (내부망만) ====================
+
   member-service:
     build:
       context: .
       dockerfile: member-service/Dockerfile
     container_name: member-service
-    ports:
-      - "8080:8080"
+    expose:
+      - "8081"  # 내부 네트워크에만 노출
+    # ports 제거! (외부 접근 차단)
     env_file:
       - .env
     environment:
@@ -79,15 +113,16 @@ services:
       redpanda:
         condition: service_started
     networks:
-      - thock-network
+      - internal
 
   product-service:
     build:
       context: .
       dockerfile: product-service/Dockerfile
     container_name: product-service
-    ports:
-      - "8081:8081"
+    expose:
+      - "8082"  # 8081 → 8082 (포트 변경)
+    # ports 제거!
     env_file:
       - .env
     environment:
@@ -108,15 +143,16 @@ services:
       redpanda:
         condition: service_started
     networks:
-      - thock-network
+      - internal
 
   market-service:
     build:
       context: .
       dockerfile: market-service/Dockerfile
     container_name: market-service
-    ports:
-      - "8082:8082"
+    expose:
+      - "8083"  # 8082 → 8083
+    # ports 제거!
     env_file:
       - .env
     environment:
@@ -127,8 +163,8 @@ services:
       MYSQL_DATABASE: market_db
       MYSQL_USER: market_user
       MYSQL_PASSWORD: market_pass
-      PRODUCT_SERVICE_URL: ${PRODUCT_SERVICE_URL:-http://product-service:8081}
-      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL:-http://payment-service:8083}
+      PRODUCT_SERVICE_URL: http://product-service:8082  # 포트 업데이트
+      PAYMENT_SERVICE_URL: http://payment-service:8084  # 포트 업데이트
       KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
       LOG_PATH: /app/logs
     volumes:
@@ -143,15 +179,16 @@ services:
       redpanda:
         condition: service_started
     networks:
-      - thock-network
+      - internal
 
   payment-service:
     build:
       context: .
       dockerfile: payment-service/Dockerfile
     container_name: payment-service
-    ports:
-      - "8083:8083"
+    expose:
+      - "8084"  # 8083 → 8084
+    # ports 제거!
     env_file:
       - .env
     environment:
@@ -172,15 +209,16 @@ services:
       redpanda:
         condition: service_started
     networks:
-      - thock-network
+      - internal
 
   settlement-service:
     build:
       context: .
       dockerfile: settlement-service/Dockerfile
     container_name: settlement-service
-    ports:
-      - "8084:8084"
+    expose:
+      - "8085"  # 8084 → 8085
+    # ports 제거!
     env_file:
       - .env
     environment:
@@ -201,9 +239,9 @@ services:
       redpanda:
         condition: service_started
     networks:
-      - thock-network
+      - internal
 
-  # ==================== Monitoring Stack (Grafana + Loki + Prometheus) ====================
+  # ==================== Monitoring Stack ====================
   loki:
     image: grafana/loki:2.9.4
     container_name: loki
@@ -217,7 +255,7 @@ services:
       - loki-data:/tmp/loki
     command: -config.file=/etc/loki/local-config.yaml
     networks:
-      - thock-network
+      - internal
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
       interval: 10s
@@ -234,7 +272,7 @@ services:
       - ./logs:/var/log/apps:ro
     command: -config.file=/etc/promtail/config.yml
     networks:
-      - thock-network
+      - internal
     depends_on:
       loki:
         condition: service_healthy
@@ -254,7 +292,7 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
     networks:
-      - thock-network
+      - internal
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 10s
@@ -275,16 +313,25 @@ services:
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
       - grafana-data:/var/lib/grafana
     networks:
-      - thock-network
+      - internal
     depends_on:
       prometheus:
         condition: service_healthy
       loki:
         condition: service_healthy
 
+# ==================== Networks ====================
 networks:
-  thock-network:
+  public:
     driver: bridge
+    # Gateway만 연결 (외부 통신)
+
+  internal:
+    driver: bridge
+    # 모든 서비스 연결 (내부 통신)
+    # driver_opts:
+    #   com.docker.network.bridge.enable_icc: "true"
+    #   com.docker.network.bridge.enable_ip_masquerade: "true"
 
 volumes:
   mysql-data:

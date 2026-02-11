@@ -10,5 +10,5 @@ RUN chmod +x gradlew && ./gradlew :payment-service:bootJar -x test --no-daemon
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=builder /app/payment-service/build/libs/*.jar app.jar
-EXPOSE 8083
+EXPOSE 8084
 ENTRYPOINT ["java", "-jar", "app.jar"]

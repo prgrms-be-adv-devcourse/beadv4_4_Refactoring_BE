@@ -1,7 +1,8 @@
 package com.thock.back.market.in;
 
 
-import com.thock.back.global.security.AuthContext;
+import com.thock.back.global.security.AuthUser;
+import com.thock.back.global.security.AuthenticatedUser;
 import com.thock.back.market.app.MarketFacade;
 import com.thock.back.market.in.dto.req.CartItemAddRequest;
 import com.thock.back.market.in.dto.res.CartItemListResponse;
@@ -42,8 +43,8 @@ public class ApiV1CartController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 (상품 정보 조회 실패 등)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping
-    public ResponseEntity<CartItemListResponse> getCartItems() throws Exception {
-        Long memberId = AuthContext.memberId();
+    public ResponseEntity<CartItemListResponse> getCartItems(@AuthUser AuthenticatedUser user) {
+        Long memberId = user.memberId();
         log.info("Market Cart API : getCartItems / memberId = {}", memberId);
         CartItemListResponse response = marketFacade.getCartItems(memberId);
         return ResponseEntity.ok(response);
@@ -65,8 +66,10 @@ public class ApiV1CartController {
      * 추후 상품의 옵션이 있는 경우도 고려하여 request에 함께 넣어서 보냄
      */
     @PostMapping("/items")
-    public ResponseEntity<CartItemResponse> addCartItem(@Valid @RequestBody CartItemAddRequest request) throws Exception {
-        Long memberId = AuthContext.memberId();
+    public ResponseEntity<CartItemResponse> addCartItem(
+            @AuthUser AuthenticatedUser user,
+            @Valid @RequestBody CartItemAddRequest request) {
+        Long memberId = user.memberId();
         log.info("Market Cart API : addCartItem / memberId = {}", memberId);
         CartItemResponse response = marketFacade.addCartItem(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -87,8 +90,10 @@ public class ApiV1CartController {
             )
     )
     @DeleteMapping("/items")
-    public ResponseEntity<Void> clearCart(@RequestBody List<Long> productIds) throws Exception {
-        Long memberId = AuthContext.memberId();
+    public ResponseEntity<Void> clearCart(
+            @AuthUser AuthenticatedUser user,
+            @RequestBody List<Long> productIds) {
+        Long memberId = user.memberId();
         log.info("Market Cart API : clearCart / memberId = {}, productIdConunt = {}, productIds = {}", memberId, productIds.size(), productIds);
 
         // 빈 리스트면 전체 삭제로 간주

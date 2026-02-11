@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8083
 
 spring:
   application:
@@ -23,8 +23,8 @@ spring:
 
 custom:
   global:
-    productServiceUrl: ${PRODUCT_SERVICE_URL:http://localhost:8081}
-    paymentServiceUrl: ${PAYMENT_SERVICE_URL:http://localhost:8083}
+    productServiceUrl: ${PRODUCT_SERVICE_URL:http://localhost:8082}
+    paymentServiceUrl: ${PAYMENT_SERVICE_URL:http://localhost:8084}
   market:
     product:
       payoutRate: 80

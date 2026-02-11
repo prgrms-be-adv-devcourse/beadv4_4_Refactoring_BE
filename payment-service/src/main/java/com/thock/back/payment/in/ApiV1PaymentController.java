@@ -1,6 +1,7 @@
 package com.thock.back.payment.in;
 
-import com.thock.back.global.security.AuthContext;
+import com.thock.back.global.security.AuthUser;
+import com.thock.back.global.security.AuthenticatedUser;
 import com.thock.back.payment.app.PaymentConfirmService;
 import com.thock.back.payment.app.PaymentFacade;
 import com.thock.back.payment.domain.dto.request.PaymentConfirmRequestDto;
@@ -53,8 +54,8 @@ public class ApiV1PaymentController {
             @ApiResponse(responseCode = "WALLET-404-2", description = "이 지갑은 현재 정지 된 상태입니다.")
     })
     @GetMapping("/balanceLog")
-    public ResponseEntity<WalletLogResponseDto> getWalletLog() throws Exception {
-        Long memberId = AuthContext.memberId();
+    public ResponseEntity<WalletLogResponseDto> getWalletLog(@AuthUser AuthenticatedUser user) throws Exception {
+        Long memberId = user.memberId();
         log.info("Payment API : getWalletLog / memberId = {}", memberId);
         return ResponseEntity.ok().body(paymentFacade.getWalletLog(memberId));
     }
@@ -69,8 +70,8 @@ public class ApiV1PaymentController {
             @ApiResponse(responseCode = "WALLET-404-2", description = "이 지갑은 현재 정지 된 상태입니다.")
     })
     @GetMapping("/paymentLog")
-    public ResponseEntity<PaymentLogResponseDto> getPaymentLog() throws Exception {
-        Long memberId = AuthContext.memberId();
+    public ResponseEntity<PaymentLogResponseDto> getPaymentLog(@AuthUser AuthenticatedUser user) throws Exception {
+        Long memberId = user.memberId();
         log.info("Payment API : getPaymentLog / memberId = {}", memberId);
         return ResponseEntity.ok().body(paymentFacade.getPaymentLog(memberId));
     }
@@ -85,8 +86,8 @@ public class ApiV1PaymentController {
             @ApiResponse(responseCode = "WALLET-404-2", description = "이 지갑은 현재 정지 된 상태입니다.")
     })
     @GetMapping("/revenueLog")
-    public ResponseEntity<RevenueLogResponseDto> getRevenueLog() throws Exception {
-        Long memberId = AuthContext.memberId();
+    public ResponseEntity<RevenueLogResponseDto> getRevenueLog(@AuthUser AuthenticatedUser user) throws Exception {
+        Long memberId = user.memberId();
         log.info("Payment API : getRevenueLog / memberId = {}", memberId);
         return ResponseEntity.ok().body(paymentFacade.getRevenueLog(memberId));
     }

@@ -4,7 +4,8 @@ package com.thock.back.member.in;
 import com.thock.back.global.exception.CustomException;
 import com.thock.back.global.exception.ErrorCode;
 import com.thock.back.global.exception.ErrorResponse;
-import com.thock.back.global.security.AuthContext;
+import com.thock.back.global.security.AuthUser;
+import com.thock.back.global.security.AuthenticatedUser;
 import com.thock.back.member.app.MemberSignUpService;
 import com.thock.back.member.app.MemberPromoteService;
 import com.thock.back.member.domain.command.PromoteToSellerCommand;
@@ -51,10 +52,10 @@ public class MemberController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<MemberInfoResponse> getMyInfo() {
+    public ResponseEntity<MemberInfoResponse> getMyInfo(@AuthUser AuthenticatedUser user) {
 
-        Long memberId = AuthContext.memberId();
-        MemberRole role = AuthContext.role();
+        Long memberId = user.memberId();
+        MemberRole role = user.role();
 
         return ResponseEntity.ok(new MemberInfoResponse(memberId, role));
 
@@ -62,9 +63,10 @@ public class MemberController {
 
     @PatchMapping("/role")
     public ResponseEntity<?> updateRole(
+            @AuthUser AuthenticatedUser user,
             @RequestBody UpdateRoleRequest request) {
 
-        Long memberId = AuthContext.memberId();
+        Long memberId = user.memberId();
 
         if (memberId == null) {
             throw new CustomException(ErrorCode.AUTH_CONTEXT_NOT_FOUND);

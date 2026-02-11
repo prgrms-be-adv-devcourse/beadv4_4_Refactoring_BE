@@ -1,0 +1,123 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  profiles:
+    active: local
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+    gateway:
+      # CORS 설정
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:3001"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+      # 라우트 정의
+      routes:
+        # 1. Member Service (회원, 인증)
+        - id: member-service-auth
+          uri: http://member-service:8081
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - name: GatewayJwt
+              args:
+                excludePaths:
+                  - /api/v1/auth/login
+                  - /api/v1/auth/refresh
+
+        - id: member-service-members
+          uri: http://member-service:8081
+          predicates:
+            - Path=/api/v1/members/**
+          filters:
+            - name: GatewayJwt
+              args:
+                excludePaths:
+                  - /api/v1/members/signup
+
+        # 2. Product Service (상품)
+        - id: product-service
+          uri: http://product-service:8082
+          predicates:
+            - Path=/api/v1/products/**
+          filters:
+            - name: GatewayJwt
+              args:
+                # 상품 조회는 인증 불필요, 등록/수정/삭제는 인증 필요
+                excludePaths:
+                  - /api/v1/products
+                  - /api/v1/products/*
+                  - /api/v1/products/search
+
+        # 3. Market Service (장바구니, 주문)
+        - id: market-service
+          uri: http://market-service:8083
+          predicates:
+            - Path=/api/v1/carts/**,/api/v1/orders/**
+          filters:
+            - name: GatewayJwt
+
+        # 4. Payment Service (결제, 지갑)
+        - id: payment-service
+          uri: http://payment-service:8084
+          predicates:
+            - Path=/api/v1/payments/**
+          filters:
+            - name: GatewayJwt
+              args:
+                excludePaths:
+                  - /api/v1/payments/confirm/toss
+
+        # 5. Settlement Service (정산)
+        - id: settlement-service
+          uri: http://settlement-service:8085
+          predicates:
+            - Path=/api/v1/settlements/**
+          filters:
+            - name: GatewayJwt
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET_KEY:thock-2026-backend-authentication-jwt-secret-key-very-very-long-256bit}
+  access-token-exp-seconds: 1800
+  refresh-token-exp-seconds: 1209600
+  issuer: "thock"
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    com.thock.back.gateway: DEBUG
+    reactor.netty: INFO

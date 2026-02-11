@@ -1,0 +1,71 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.1'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.thock.back'
+version = '0.0.1-SNAPSHOT'
+description = 'api-gateway'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // common 모듈 (JwtValidator 사용)
+    // Spring Web, Security 제외 (Gateway는 Reactive)
+    implementation(project(':common')) {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-web'
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-security'
+        exclude group: 'org.springdoc', module: 'springdoc-openapi-starter-webmvc-ui'
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-batch'
+    }
+
+    // Spring Cloud Gateway (includes WebFlux)
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
+
+    // Reactive Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // .env 파일 로드
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // JWT (from common)
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Actuator (헬스체크)
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Prometheus metrics
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:2024.0.0"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

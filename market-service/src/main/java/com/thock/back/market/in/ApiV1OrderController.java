@@ -1,7 +1,8 @@
 package com.thock.back.market.in;
 
 
-import com.thock.back.global.security.AuthContext;
+import com.thock.back.global.security.AuthUser;
+import com.thock.back.global.security.AuthenticatedUser;
 import com.thock.back.market.app.MarketFacade;
 import com.thock.back.market.in.dto.req.OrderCancelRequest;
 import com.thock.back.market.in.dto.req.OrderCreateRequest;
@@ -42,8 +43,8 @@ public class ApiV1OrderController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
     @GetMapping
-    public ResponseEntity<List<OrderDetailResponse>> getMyOrders() {
-        Long memberId = AuthContext.memberId();
+    public ResponseEntity<List<OrderDetailResponse>> getMyOrders(@AuthUser AuthenticatedUser user) {
+        Long memberId = user.memberId();
         log.info("Market Order API : getMyOrders / memberId = {}", memberId);
         List<OrderDetailResponse> orders = marketFacade.getMyOrders(memberId);
         return ResponseEntity.ok(orders);
@@ -59,8 +60,10 @@ public class ApiV1OrderController {
             @ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
     })
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable Long orderId) {
-        Long memberId = AuthContext.memberId();
+    public ResponseEntity<OrderDetailResponse> getOrderDetail(
+            @AuthUser AuthenticatedUser user,
+            @PathVariable Long orderId) {
+        Long memberId = user.memberId();
         log.info("Market Order API : getOrderDetail / memberId = {}", memberId);
         OrderDetailResponse order = marketFacade.getOrderDetail(memberId, orderId);
         return ResponseEntity.ok(order);
@@ -79,8 +82,10 @@ public class ApiV1OrderController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 (상품 정보 조회 실패 등)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
-    public ResponseEntity<OrderCreateResponse> createOrder(@Valid @RequestBody OrderCreateRequest request) {
-        Long memberId = AuthContext.memberId();
+    public ResponseEntity<OrderCreateResponse> createOrder(
+            @AuthUser AuthenticatedUser user,
+            @Valid @RequestBody OrderCreateRequest request) {
+        Long memberId = user.memberId();
         log.info("Market Order API : createOrder / memberId = {}", memberId);
         OrderCreateResponse response = marketFacade.createOrder(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -99,9 +104,11 @@ public class ApiV1OrderController {
             @ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
     })
     @PostMapping("/{orderId}/cancel")
-    public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId,
-                                            @RequestBody OrderCancelRequest request) {
-        Long memberId = AuthContext.memberId();
+    public ResponseEntity<Void> cancelOrder(
+            @AuthUser AuthenticatedUser user,
+            @PathVariable Long orderId,
+            @RequestBody OrderCancelRequest request) {
+        Long memberId = user.memberId();
         log.info("Market Order API : cancelOrder / memberId = {}, orderId = {}, request = {}", memberId, orderId, request);
         marketFacade.cancelOrder(memberId,orderId, request.cancelReasonType(), request.cancelReasonDetail());
         return ResponseEntity.noContent().build();
@@ -128,10 +135,11 @@ public class ApiV1OrderController {
     })
     @PostMapping("/{orderId}/items/cancel")
     public ResponseEntity<Void> cancelOrderItem(
+            @AuthUser AuthenticatedUser user,
             @PathVariable Long orderId,
             @RequestBody OrderItemsCancelRequest request
             ) {
-        Long memberId = AuthContext.memberId();
+        Long memberId = user.memberId();
         log.info("Market Order API : cancelOrderItem / memberId = {}, orderId = {}, request = {}", memberId, orderId, request);
         marketFacade.cancelOrderItems(
                 memberId,
