@@ -87,12 +87,6 @@ public class CartService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        // 전체 합계 계산 : 계산을 req의 정적 팩토리 메서드가 담당함
-//        Integer totalItemCount = items.size();
-//        Long totalPrice = items.stream().mapToLong(CartItemResponse::totalPrice).sum();
-//        Long totalSalePrice = items.stream().mapToLong(CartItemResponse::totalSalePrice).sum();
-//        Long totalDiscountAmount = totalPrice - totalSalePrice;
-
         return CartItemListResponse.from(cart, items);
     }
 
