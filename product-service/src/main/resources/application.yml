@@ -38,3 +38,11 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+
+# SpringDoc (Swagger) 설정
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: false  # Gateway에서만 UI 제공

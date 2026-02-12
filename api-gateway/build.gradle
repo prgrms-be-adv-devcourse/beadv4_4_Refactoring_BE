@@ -54,6 +54,12 @@ dependencies {
     // Prometheus metrics
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
+    // Swagger (WebFlux UI)
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.9'
+
+    // SpringDoc Gateway 지원
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-api:2.8.9'
+
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'

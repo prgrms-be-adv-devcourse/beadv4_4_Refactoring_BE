@@ -29,12 +29,18 @@ public class SwaggerConfig {
         // JWT 토큰을 위한 보안 스키마 이름 정의
         final String securitySchemeName = "bearerAuth";
 
+        // API Gateway를 통한 접근 설정
+        io.swagger.v3.oas.models.servers.Server server = new io.swagger.v3.oas.models.servers.Server();
+        server.setUrl("http://localhost:8080");
+        server.setDescription("API Gateway");
+
         return new OpenAPI()
                 .info(new Info()
                         .title("Thock API Docs")
                         .version("v1.0.0")
                         .description("Thock 프로젝트용 Swagger 문서입니다.")
-//                )
+                )
+                .addServersItem(server);
 //                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
 //                .components(new Components()
 //                        .addSecuritySchemes(securitySchemeName,
@@ -44,7 +50,6 @@ public class SwaggerConfig {
 //                                        .scheme("bearer")
 //                                        .bearerFormat("JWT")
 //                        )
-                );
     }
 
     // 드롭다운

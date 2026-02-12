@@ -1,5 +1,9 @@
 server:
   port: 8080
+  # Netty 서버 설정 (HTTP 헤더 크기 제한 증가)
+  netty:
+    max-initial-line-length: 16KB
+    max-header-size: 64KB
 
 spring:
   application:
@@ -12,26 +16,44 @@ spring:
     compatibility-verifier:
       enabled: false
     gateway:
-      # CORS 설정
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOrigins:
-              - "http://localhost:3000"
-              - "http://localhost:3001"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - PATCH
-              - OPTIONS
-            allowedHeaders: "*"
-            allowCredentials: true
-            maxAge: 3600
-
       # 라우트 정의
       routes:
+        # 각 서비스의 API Docs 엔드포인트
+        - id: member-service-api-docs
+          uri: http://member-service:8081
+          predicates:
+            - Path=/member-service/v3/api-docs
+          filters:
+            - RewritePath=/member-service/v3/api-docs, /v3/api-docs
+
+        - id: product-service-api-docs
+          uri: http://product-service:8082
+          predicates:
+            - Path=/product-service/v3/api-docs
+          filters:
+            - RewritePath=/product-service/v3/api-docs, /v3/api-docs
+
+        - id: market-service-api-docs
+          uri: http://market-service:8083
+          predicates:
+            - Path=/market-service/v3/api-docs
+          filters:
+            - RewritePath=/market-service/v3/api-docs, /v3/api-docs
+
+        - id: payment-service-api-docs
+          uri: http://payment-service:8084
+          predicates:
+            - Path=/payment-service/v3/api-docs
+          filters:
+            - RewritePath=/payment-service/v3/api-docs, /v3/api-docs
+
+        - id: settlement-service-api-docs
+          uri: http://settlement-service:8085
+          predicates:
+            - Path=/settlement-service/v3/api-docs
+          filters:
+            - RewritePath=/settlement-service/v3/api-docs, /v3/api-docs
+
         # 1. Member Service (회원, 인증)
         - id: member-service-auth
           uri: http://member-service:8081
@@ -121,3 +143,30 @@ logging:
     org.springframework.cloud.gateway: INFO
     com.thock.back.gateway: DEBUG
     reactor.netty: INFO
+
+# SpringDoc (Swagger) 설정
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    urls:
+      - name: "Member Service"
+        url: /member-service/v3/api-docs
+      - name: "Product Service"
+        url: /product-service/v3/api-docs
+      - name: "Market Service"
+        url: /market-service/v3/api-docs
+      - name: "Payment Service"
+        url: /payment-service/v3/api-docs
+      - name: "Settlement Service"
+        url: /settlement-service/v3/api-docs
+    display-request-duration: true
+    operations-sorter: alpha
+    disable-swagger-default-url: true
+    urls-primary-name: "Member Service"
+  # Gateway 전용 설정
+  show-actuator: false
+  use-management-port: false
