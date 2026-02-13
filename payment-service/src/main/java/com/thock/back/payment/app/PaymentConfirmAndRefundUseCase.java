@@ -352,7 +352,7 @@ public class PaymentConfirmAndRefundUseCase {
         }
 
         // 1. 0원 / 음수 방지
-        if (req.amount() < 0) {
+        if (req.amount() <= 0) {
             log.error("환불 금액이 유효하지 않습니다 - orderId={}, amount={}", req.orderId(), req.amount());
             throw new CustomException(ErrorCode.INVALID_REFUND_AMOUNT);
         }
@@ -407,7 +407,6 @@ public class PaymentConfirmAndRefundUseCase {
                     log.error("결제 조회 실패 - orderId={}", orderId);
                     return new CustomException(ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER);
                 });
-
         payment.updatePaymentStatus(PaymentStatus.CANCELED);
         paymentRepository.save(payment);
         payment.createPaymentLogEvent();

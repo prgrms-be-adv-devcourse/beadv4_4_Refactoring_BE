@@ -48,9 +48,7 @@ public class KafkaEventPublisher {
             return KafkaTopics.SETTLEMENT_COMPLETED;
         } else if (event instanceof PaymentRefundCompletedEvent) {
             return KafkaTopics.PAYMENT_REFUND_COMPLETED;
-        } else if (event instanceof PaymentCompletedEvent) {
-            return KafkaTopics.MARKET_ORDER_PAYMENT_COMPLETED;
-        } else if (event instanceof MarketOrderBeforePaymentCanceledEvent){
+        } else if (event instanceof MarketOrderBeforePaymentCanceledEvent) {
             return KafkaTopics.MARKET_ORDER_BEFORE_PAYMENT_REQUEST_CANCELED;
         }
 
