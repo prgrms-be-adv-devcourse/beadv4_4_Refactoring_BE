@@ -809,4 +809,32 @@ class PaymentConfirmAndRefundUseCaseTest {
                 .isInstanceOf(CustomException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_REFUND_AMOUNT);
     }
+
+    // ==================== cancelBeforePayment 테스트 ====================
+
+    @Test
+    @DisplayName("결제 전 취소 성공")
+    void cancelBeforePayment_Success() {
+        // given
+        when(paymentRepository.findByOrderId("ORDER_001")).thenReturn(Optional.of(testPayment));
+
+        // when
+        paymentConfirmAndRefundUseCase.cancelBeforePayment("ORDER_001");
+
+        // then
+        assertThat(testPayment.getStatus()).isEqualTo(PaymentStatus.CANCELED);
+        verify(paymentRepository).save(testPayment);
+    }
+
+    @Test
+    @DisplayName("결제 전 취소 실패 - 주문번호 없음")
+    void cancelBeforePayment_OrderNotFound() {
+        // given
+        when(paymentRepository.findByOrderId("INVALID_ORDER")).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> paymentConfirmAndRefundUseCase.cancelBeforePayment("INVALID_ORDER"))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER);
+    }
 }

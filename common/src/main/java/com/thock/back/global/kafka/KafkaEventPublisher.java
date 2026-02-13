@@ -1,6 +1,7 @@
 package com.thock.back.global.kafka;
 
 
+import com.thock.back.shared.market.event.MarketOrderBeforePaymentCanceledEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentCompletedEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestCanceledEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestedEvent;
@@ -46,6 +47,8 @@ public class KafkaEventPublisher {
             return KafkaTopics.SETTLEMENT_COMPLETED;
         } else if (event instanceof PaymentRefundCompletedEvent) {
             return KafkaTopics.PAYMENT_REFUND_COMPLETED;
+        } else if (event instanceof MarketOrderBeforePaymentCanceledEvent) {
+            return KafkaTopics.MARKET_ORDER_BEFORE_PAYMENT_REQUEST_CANCELED;
         }
 
         return null;

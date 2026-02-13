@@ -2,6 +2,7 @@ package com.thock.back.payment.in;
 
 import com.thock.back.global.kafka.KafkaTopics;
 import com.thock.back.payment.app.PaymentFacade;
+import com.thock.back.shared.market.event.MarketOrderBeforePaymentCanceledEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentCompletedEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestCanceledEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestedEvent;
@@ -60,5 +61,12 @@ public class PaymentKafkaListener {
     public void handle(SettlementCompletedEvent event) {
         log.info("Received SettlementCompletedEvent via Kafka: memberId={}, amount={}", event.memberID(), event.amount());
         paymentFacade.completeSettlementPayment(event.memberID(), event.amount());
+    }
+
+    @KafkaListener(topics = KafkaTopics.MARKET_ORDER_BEFORE_PAYMENT_REQUEST_CANCELED, groupId = "payment-service")
+    @Transactional
+    public void handle(MarketOrderBeforePaymentCanceledEvent event) {
+        log.info("Received MarketOrderBeforePaymentCanceledEvent via Kafka: orderId={}", event.dto().orderId());
+        paymentFacade.canceledBeforePayment(event.dto().orderId());
     }
 }
