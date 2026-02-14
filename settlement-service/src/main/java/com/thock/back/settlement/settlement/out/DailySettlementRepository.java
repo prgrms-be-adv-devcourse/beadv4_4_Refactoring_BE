@@ -7,10 +7,11 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface DailySettlementRepository extends JpaRepository<DailySettlement, Long> {
-    List<DailySettlement> findBySellerIdAndTargetDateBetween(
-            Long sellerId, LocalDate startDate, LocalDate endDate
-    );
-    List<DailySettlement> findAllByTargetDateBetween(LocalDate startDate, LocalDate endDate);
 
+    //일별 판매 상세 목록
+    List<DailySettlement> findBySellerIdAndTargetDate(Long sellerId, LocalDate targetDate);
+
+    //일별 판매
+    List<DailySettlement> findAllByTargetDateBetween(LocalDate startDate, LocalDate endDate);
 
 }

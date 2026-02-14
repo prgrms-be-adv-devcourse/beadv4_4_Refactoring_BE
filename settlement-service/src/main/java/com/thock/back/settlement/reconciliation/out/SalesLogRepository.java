@@ -20,6 +20,7 @@ public interface SalesLogRepository extends JpaRepository<SalesLog, Long> {
             Long productId,
             TransactionType transactionType
     );
+    List<SalesLog> findAllBySnapshotAtBetween(LocalDateTime start, LocalDateTime end);
     List<SalesLog> findByOrderNoAndTransactionType(String orderNo, TransactionType transactionType);
     List<SalesLog> findAllBySnapshotAtBetweenAndReconciliationStatus(LocalDateTime start, LocalDateTime end, ReconciliationStatus status);
 

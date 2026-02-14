@@ -118,5 +118,14 @@ public class DailySettlement {
             // 저장하기 전에 TSID를 생성해서 넣음
             this.id = TsidCreator.getTsid().toLong();
         }
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void touchUpdatedAt() {
+        this.updatedAt = LocalDateTime.now();
     }
 }
