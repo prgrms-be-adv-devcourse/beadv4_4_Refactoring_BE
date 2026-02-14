@@ -1,13 +1,17 @@
+# member-service/src/main/resources/application.yml
+# ============================================
+# 공통 설정 (모든 환경에서 동일)
+# ============================================
 server:
   port: 8081
 
 spring:
   application:
     name: member-service
+
   jackson:
     time-zone: Asia/Seoul
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -15,23 +19,15 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-  datasource:
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3307}/${MYSQL_DATABASE:member_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: ${MYSQL_USER:root}
-    password: ${MYSQL_PASSWORD:root}
-    driver-class-name: com.mysql.cj.jdbc.Driver
 
-custom:
-  global:
-    internalBackUrl: http://localhost:8080
-
+# JWT 설정 (공통)
 jwt:
   secret: ${JWT_SECRET_KEY:thock-2026-backend-authentication-jwt-secret-key-very-very-long-256bit}
   access-token-exp-seconds: 1800
   refresh-token-exp-seconds: 1209600
   issuer: "thock"
 
-# Actuator & Prometheus
+# Actuator & Prometheus (공통)
 management:
   endpoints:
     web:
@@ -44,11 +40,10 @@ management:
     tags:
       application: ${spring.application.name}
 
-# SpringDoc (Swagger) 설정
+# SpringDoc (공통)
 springdoc:
   api-docs:
     enabled: true
     path: /v3/api-docs
   swagger-ui:
-    enabled: false  # Gateway에서만 UI 제공
-
+    enabled: false  # Gateway에서만 제공

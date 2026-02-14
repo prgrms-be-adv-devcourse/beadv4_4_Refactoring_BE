@@ -1,0 +1,27 @@
+# 설명: Docker Compose로 실행할 때 사용하는 설정
+# member-service/src/main/resources/application-docker.yml
+# ============================================
+# Docker 환경 (Docker Compose 실행)
+# ============================================
+spring:
+  # Docker 내부 Kafka (서비스 이름으로 접근)
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+  # Docker 내부 MySQL (서비스 이름으로 접근)
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+# Custom 설정
+custom:
+  global:
+    # Docker 내부에서는 서비스 이름으로 통신
+    internalBackUrl: http://api-gateway:8080
+
+# 핵심 포인트:
+#  - Kafka: redpanda:29092 (Docker 내부 포트)
+#  - MySQL: mysql:3306 (Docker 내부 포트)
+#  - Gateway: api-gateway:8080 (Docker 서비스 이름)

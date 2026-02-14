@@ -1,0 +1,39 @@
+# 설명: EC2 운영 환경에서 사용하는 설정
+# member-service/src/main/resources/application-prod.yml
+# ============================================
+# Production 환경 (AWS EC2 배포)
+# ============================================
+spring:
+  # Production Kafka (환경 변수로 주입)
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:redpanda:29092}
+
+  # Production MySQL (환경 변수로 주입 - 향후 RDS로 변경 가능)
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:member_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USER:member_user}
+    password: ${MYSQL_PASSWORD:member_pass}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # Production JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Production에서는 자동 스키마 생성 비활성화
+    show-sql: false       # SQL 로그 끄기
+
+# Custom 설정
+custom:
+  global:
+    # Production에서는 실제 도메인 사용
+    internalBackUrl: https://api.thock.site
+
+# Logging (운영 환경)
+logging:
+  level:
+    root: INFO
+    com.thock.back: INFO
+
+# 핵심 포인트:
+#  - ddl-auto: validate - 운영에서는 스키마 자동 변경 금지
+#  - show-sql: false - SQL 로그 비활성화
+#  - Gateway URL: https://api.thock.site (실제 도메인)
