@@ -1,0 +1,26 @@
+spring:
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+# 다른 서비스 URL (Production)
+custom:
+  global:
+    productServiceUrl: ${PRODUCT_SERVICE_URL}
+    paymentServiceUrl: ${PAYMENT_SERVICE_URL}
+
+logging:
+  level:
+    root: INFO
+    com.thock.back: INFO

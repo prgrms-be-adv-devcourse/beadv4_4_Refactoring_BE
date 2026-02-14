@@ -1,0 +1,16 @@
+spring:
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  datasource:
+    url: jdbc:mysql://localhost:3307/thock_market_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+# 다른 서비스 URL (Local 환경)
+custom:
+  global:
+    productServiceUrl: http://localhost:8082
+    paymentServiceUrl: http://localhost:8084
