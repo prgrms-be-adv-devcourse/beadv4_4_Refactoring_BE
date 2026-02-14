@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
+// 고정 수수료 정책 및 수수료 계산 객체화
 @Component
 public class FixedRateSettlementFeePolicy implements SettlementFeePolicy {
 
