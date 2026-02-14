@@ -2,6 +2,8 @@ package com.thock.back.settlement.settlement.domain;
 
 import com.github.f4b6a3.tsid.TsidCreator;
 import com.thock.back.settlement.reconciliation.app.port.SettlementCandidate;
+import com.thock.back.settlement.shared.money.Money;
+import com.thock.back.settlement.shared.money.MoneyAttributeConverter;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -34,10 +36,11 @@ public class DailySettlementItem {
     private int finalQuantity; // 상계 처리 후 최종 수량 (+, - 가능)
 
     @Column(nullable = false)
-    private Long finalAmount; // 상계 처리 후 최종 금액 (+, - 가능)
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money finalAmount; // 상계 처리 후 최종 금액 (+, - 가능)
 
     @Builder
-    public DailySettlementItem(Long productId, String productName, int finalQuantity, Long finalAmount) {
+    public DailySettlementItem(Long productId, String productName, int finalQuantity, Money finalAmount) {
         this.productId = productId;
         this.productName = productName;
         this.finalQuantity = finalQuantity;
@@ -69,7 +72,7 @@ public class DailySettlementItem {
                 .productId(productId)
                 .productName(productName)
                 .finalQuantity(totalQuantity)
-                .finalAmount(totalAmount)
+                .finalAmount(Money.of(totalAmount))
                 .build();
     }
     @PrePersist

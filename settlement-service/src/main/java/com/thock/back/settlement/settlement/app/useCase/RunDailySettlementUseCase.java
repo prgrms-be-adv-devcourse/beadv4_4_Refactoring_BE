@@ -6,13 +6,13 @@ import com.thock.back.settlement.reconciliation.domain.SalesLog;
 import com.thock.back.settlement.reconciliation.out.SalesLogRepository;
 import com.thock.back.settlement.settlement.domain.DailySettlement;
 import com.thock.back.settlement.settlement.domain.DailySettlementItem;
+import com.thock.back.settlement.settlement.domain.SettlementFeePolicy;
 import com.thock.back.settlement.settlement.out.DailySettlementRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +33,7 @@ public class RunDailySettlementUseCase {
     private final GetSettlementCandidatesUseCase getSettlementCandidatesUseCase;
     private final SalesLogRepository salesLogRepository;
     private final DailySettlementRepository dailySettlementRepository;
-    // 수수료율 상수로 고정
-    private static final BigDecimal FEE_RATE = BigDecimal.valueOf(0.2);
+    private final SettlementFeePolicy settlementFeePolicy;
 
     @Transactional
     public void execute(LocalDate targetDate) {
@@ -64,7 +63,7 @@ public class RunDailySettlementUseCase {
             processSettlementItems(settlement, sellerItems);
 
             // 3-3. 금액 계산
-            settlement.calculateTotalAmount(FEE_RATE);
+            settlement.calculateTotalAmount(settlementFeePolicy);
 
             // 4. DB 저장
             DailySettlement savedSettlement = dailySettlementRepository.save(settlement);
@@ -101,7 +100,7 @@ public class RunDailySettlementUseCase {
         // 상품별로 그루핑된 데이터들을 저장하여 세부내역서 생성. 이 때, 결제/환불로 0원처리 된 것들은 제외.
         for (List<SettlementCandidate> productLogs : itemsByProduct.values()) {
             DailySettlementItem item = DailySettlementItem.from(productLogs);
-            if (item.getFinalQuantity() == 0 && item.getFinalAmount() == 0) {
+            if (item.getFinalQuantity() == 0 && item.getFinalAmount().isZero()) {
                 continue;
             }
             settlement.addItem(item);

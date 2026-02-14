@@ -12,6 +12,7 @@ import com.thock.back.settlement.reconciliation.in.dto.ReconciliationMismatchLog
 import com.thock.back.settlement.reconciliation.out.PgSalesRawRepository;
 import com.thock.back.settlement.reconciliation.out.SalesLogRepository;
 import com.thock.back.settlement.shared.enums.TransactionType;
+import com.thock.back.settlement.shared.money.Money;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -56,7 +57,7 @@ public class RunReconciliationUseCase {
         Map<String, Long> pgSumMap = pgList.stream()
                 .collect(Collectors.groupingBy(
                         pg -> pg.getMerchantUid() + "_" + pg.getPgStatus().name(),
-                        Collectors.summingLong(PgSalesRaw::getPaymentAmount)
+                        Collectors.summingLong(pg -> pg.getPaymentAmount().amount())
                 ));
 
         int successCount = 0;
@@ -87,12 +88,12 @@ public class RunReconciliationUseCase {
                         .filter(p -> p.getMerchantUid().equals(merchantUid) && p.getPgStatus() == pgStatus)
                         .findFirst().orElse(null);
 
-                saveMismatchLog(job, samplePg, null, 0L, MismatchType.PG_ONLY, "주문서 누락");
+                saveMismatchLog(job, samplePg, null, Money.zero(), MismatchType.PG_ONLY, "주문서 누락");
                 mismatchCount++;
                 continue;
             }
 
-            long dbSum = internalLogs.stream().mapToLong(SalesLog::getPaymentAmount).sum();
+            long dbSum = internalLogs.stream().mapToLong(log -> log.getPaymentAmount().amount()).sum();
 
             if (pgTotalAmount == Math.abs(dbSum)) {
                 internalLogs.forEach(SalesLog::matchReconciliation);
@@ -104,7 +105,7 @@ public class RunReconciliationUseCase {
                         .findFirst().orElse(null);
 
                 // [수정 2 핵심] 첫 번째 항목의 금액이 아닌, 합산된 금액(dbSum)을 파라미터로 넘김
-                saveMismatchLog(job, samplePg, internalLogs.get(0), dbSum, MismatchType.AMOUNT_DIFF, "금액 불일치");
+                saveMismatchLog(job, samplePg, internalLogs.get(0), Money.of(dbSum), MismatchType.AMOUNT_DIFF, "금액 불일치");
                 mismatchCount++;
             }
         }
@@ -136,11 +137,11 @@ public class RunReconciliationUseCase {
     }
 
     private void saveMismatchLog(ReconciliationJob job, PgSalesRaw pg, SalesLog internal,
-                                 Long calculatedInternalAmount, MismatchType type, String reason) {
+                                 Money calculatedInternalAmount, MismatchType type, String reason) {
 
         String orderNo = (pg != null) ? pg.getMerchantUid() : internal.getOrderNo();
         String pgKey = (pg != null) ? pg.getPgKey() : null;
-        Long pgAmount = (pg != null && pg.getPaymentAmount() != null) ? pg.getPaymentAmount() : 0L;
+        Money pgAmount = (pg != null && pg.getPaymentAmount() != null) ? pg.getPaymentAmount() : Money.zero();
 
         ReconciliationMismatchLog log = ReconciliationMismatchLog.builder()
                 .job(job)
@@ -154,4 +155,3 @@ public class RunReconciliationUseCase {
         mismatchLogRepository.save(log);
     }
 }
-

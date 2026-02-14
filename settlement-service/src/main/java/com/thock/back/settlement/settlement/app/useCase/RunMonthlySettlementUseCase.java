@@ -2,6 +2,7 @@ package com.thock.back.settlement.settlement.app.useCase;
 
 import com.thock.back.settlement.settlement.domain.DailySettlement;
 import com.thock.back.settlement.settlement.domain.MonthlySettlement;
+import com.thock.back.settlement.shared.money.Money;
 import com.thock.back.settlement.settlement.out.DailySettlementRepository;
 import com.thock.back.settlement.settlement.out.MonthlySettlementRepository;
 import lombok.RequiredArgsConstructor;
@@ -52,18 +53,18 @@ public class RunMonthlySettlementUseCase {
 
             // 4-1. 합계 계산 (Sum)
             long totalCount = dailyItems.size(); // 일별 정산 건수
-            long totalPayment = dailyItems.stream().mapToLong(DailySettlement::getPaymentAmount).sum();
-            long totalFee = dailyItems.stream().mapToLong(DailySettlement::getFeeAmount).sum();
-            long totalPayout = dailyItems.stream().mapToLong(DailySettlement::getSettlementAmount).sum();
+            long totalPayment = dailyItems.stream().mapToLong(d -> d.getPaymentAmount().amount()).sum();
+            long totalFee = dailyItems.stream().mapToLong(d -> d.getFeeAmount().amount()).sum();
+            long totalPayout = dailyItems.stream().mapToLong(d -> d.getSettlementAmount().amount()).sum();
 
             // 4-2. 월별 정산서 엔티티 생성
             MonthlySettlement monthlySettlement = MonthlySettlement.builder()
                     .sellerId(sellerId)
                     .targetYearMonth(targetMonth.format(DateTimeFormatter.ofPattern("yyyyMM")))
                     .totalCount(totalCount)
-                    .totalPaymentAmount(totalPayment)
-                    .totalFeeAmount(totalFee)
-                    .totalPayoutAmount(totalPayout)
+                    .totalPaymentAmount(Money.of(totalPayment))
+                    .totalFeeAmount(Money.of(totalFee))
+                    .totalPayoutAmount(Money.of(totalPayout))
                     .build();
 
             // 5. 저장

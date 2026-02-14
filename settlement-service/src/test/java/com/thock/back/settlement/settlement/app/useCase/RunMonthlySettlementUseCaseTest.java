@@ -3,6 +3,7 @@ package com.thock.back.settlement.settlement.app.useCase;
 import com.thock.back.settlement.settlement.domain.DailySettlement;
 import com.thock.back.settlement.settlement.domain.MonthlySettlement;
 import com.thock.back.settlement.settlement.domain.enums.MonthlySettlementStatus;
+import com.thock.back.settlement.shared.money.Money;
 import com.thock.back.settlement.settlement.out.DailySettlementRepository;
 import com.thock.back.settlement.settlement.out.MonthlySettlementRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -73,9 +74,9 @@ class RunMonthlySettlementUseCaseTest {
 
         assertThat(settlementA.getTargetYearMonth()).isEqualTo("202602");
         assertThat(settlementA.getTotalCount()).isEqualTo(2L); // 2건
-        assertThat(settlementA.getTotalPaymentAmount()).isEqualTo(30000L); // 10000 + 20000
-        assertThat(settlementA.getTotalFeeAmount()).isEqualTo(6000L);      // 2000 + 4000
-        assertThat(settlementA.getTotalPayoutAmount()).isEqualTo(24000L);  // 8000 + 16000
+        assertThat(settlementA.getTotalPaymentAmount().amount()).isEqualTo(30000L); // 10000 + 20000
+        assertThat(settlementA.getTotalFeeAmount().amount()).isEqualTo(6000L);      // 2000 + 4000
+        assertThat(settlementA.getTotalPayoutAmount().amount()).isEqualTo(24000L);  // 8000 + 16000
         assertThat(settlementA.getStatus()).isEqualTo(MonthlySettlementStatus.PENDING);
 
         // 3. 판매자 B (ID: 200) 검증
@@ -83,7 +84,7 @@ class RunMonthlySettlementUseCaseTest {
                 .filter(s -> s.getSellerId().equals(200L))
                 .findFirst().orElseThrow();
 
-        assertThat(settlementB.getTotalPayoutAmount()).isEqualTo(40000L);
+        assertThat(settlementB.getTotalPayoutAmount().amount()).isEqualTo(40000L);
     }
 
     @Test
@@ -106,9 +107,9 @@ class RunMonthlySettlementUseCaseTest {
         return DailySettlement.builder()
                 .sellerId(sellerId)
                 .targetDate(LocalDate.now()) // 날짜는 중요하지 않음 (기간 내 조회되었다고 가정)
-                .paymentAmount(payment)
-                .feeAmount(fee)
-                .settlementAmount(settlement)
+                .paymentAmount(Money.of(payment))
+                .feeAmount(Money.of(fee))
+                .settlementAmount(Money.of(settlement))
                 .build();
     }
 }

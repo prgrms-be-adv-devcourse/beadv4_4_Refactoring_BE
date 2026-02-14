@@ -1,5 +1,4 @@
 package com.thock.back.settlement.settlement.app.service;
-
 import com.thock.back.settlement.settlement.domain.DailySettlement;
 import com.thock.back.settlement.settlement.domain.DailySettlementItem;
 import com.thock.back.settlement.settlement.domain.MonthlySettlement;
@@ -37,9 +36,9 @@ public class SettlementQueryService {
                         row.getSellerId(),
                         row.getTargetYearMonth(),
                         row.getTotalCount(),
-                        row.getTotalPaymentAmount(),
-                        row.getTotalFeeAmount(),
-                        row.getTotalPayoutAmount(),
+                        row.getTotalPaymentAmount() == null ? null : row.getTotalPaymentAmount().amount(),
+                        row.getTotalFeeAmount() == null ? null : row.getTotalFeeAmount().amount(),
+                        row.getTotalPayoutAmount() == null ? null : row.getTotalPayoutAmount().amount(),
                         row.getStatus().name(),
                         row.getCreatedAt(),
                         row.getCompletedAt()
@@ -65,7 +64,7 @@ public class SettlementQueryService {
                 item.getProductId(),
                 item.getProductName(),
                 item.getFinalQuantity(),
-                item.getFinalAmount(),
+                item.getFinalAmount().amount(),
                 settlement.getStatus().name()
         );
     }

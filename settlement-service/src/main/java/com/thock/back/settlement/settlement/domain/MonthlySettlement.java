@@ -1,6 +1,8 @@
 package com.thock.back.settlement.settlement.domain;
 
 import com.github.f4b6a3.tsid.TsidCreator;
+import com.thock.back.settlement.shared.money.Money;
+import com.thock.back.settlement.shared.money.MoneyAttributeConverter;
 import com.thock.back.settlement.settlement.domain.enums.MonthlySettlementStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,13 +32,16 @@ public class MonthlySettlement {
     private Long totalCount;
 
     @Column(name = "total_payment_amount")
-    private Long totalPaymentAmount;
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money totalPaymentAmount;
 
     @Column(name = "total_fee_amount")
-    private Long totalFeeAmount;
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money totalFeeAmount;
 
     @Column(name = "total_payout_amount")
-    private Long totalPayoutAmount;
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money totalPayoutAmount;
 
     // 상태 및 운영 관련 컬럼
     @Enumerated(EnumType.STRING)
@@ -65,7 +70,7 @@ public class MonthlySettlement {
 
     @Builder
     public MonthlySettlement(Long sellerId, String targetYearMonth, Long totalCount,
-                             Long totalPaymentAmount, Long totalFeeAmount, Long totalPayoutAmount) {
+                             Money totalPaymentAmount, Money totalFeeAmount, Money totalPayoutAmount) {
         this.sellerId = sellerId;
         this.targetYearMonth = targetYearMonth;
         this.totalCount = totalCount;

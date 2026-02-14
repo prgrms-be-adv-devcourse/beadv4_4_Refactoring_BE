@@ -1,15 +1,17 @@
 package com.thock.back.settlement.settlement.domain;
 
 import com.github.f4b6a3.tsid.TsidCreator;
+import com.thock.back.settlement.shared.money.Money;
+import com.thock.back.settlement.shared.money.MoneyAttributeConverter;
 import com.thock.back.settlement.settlement.domain.enums.DailySettlementStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -29,13 +31,16 @@ public class DailySettlement {
     private LocalDate targetDate; // 정산 기준일 (언제 발생한 매출인가)
 
     @Column(nullable = false)
-    private Long paymentAmount; // 결제 원금 (상계 처리된 아이템들의 총합)
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money paymentAmount; // 결제 원금 (상계 처리된 아이템들의 총합)
 
     @Column(nullable = false)
-    private Long feeAmount; // 차감 수수료 (예: 원금 * 0.2)
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money feeAmount; // 차감 수수료 (예: 원금 * 0.2)
 
     @Column(nullable = false)
-    private Long settlementAmount; // 정산 확정 금액 (실 지급액)
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money settlementAmount; // 정산 확정 금액 (실 지급액)
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
@@ -58,19 +63,19 @@ public class DailySettlement {
     }
 
     // ----------- 비즈니스메소드 ----------
-    public void calculateTotalAmount(BigDecimal feeRate){
-        long totalAmounts = 0L;
+    public void calculateTotalAmount(SettlementFeePolicy feePolicy){
+        Objects.requireNonNull(feePolicy, "feePolicy must not be null");
+        Money totalAmounts = Money.zero();
         // 해당 정산서의 총 판매액을 계산
         for(DailySettlementItem item : this.items){
-            totalAmounts += item.getFinalAmount();
+            totalAmounts = totalAmounts.plus(item.getFinalAmount());
         }
 
         // 수수료 계산
-        BigDecimal feeDecimal = BigDecimal.valueOf(totalAmounts).multiply(feeRate);
-        long fee = feeDecimal.longValue();
+        Money fee = feePolicy.calculateFee(totalAmounts);
 
         // 가정산 금액 계산
-        long dailyPayout = totalAmounts - fee;
+        Money dailyPayout = totalAmounts.minus(fee);
 
         // 이 객체 데이터 업데이트
         this.updateAmounts(totalAmounts, fee, dailyPayout);
@@ -81,7 +86,7 @@ public class DailySettlement {
     // -------------- 생성자 --------------
 
     @Builder
-    public DailySettlement(Long sellerId, LocalDate targetDate, Long paymentAmount, Long feeAmount, Long settlementAmount) {
+    public DailySettlement(Long sellerId, LocalDate targetDate, Money paymentAmount, Money feeAmount, Money settlementAmount) {
         this.sellerId = sellerId;
         this.targetDate = targetDate;
         this.paymentAmount = paymentAmount;
@@ -97,15 +102,15 @@ public class DailySettlement {
         return DailySettlement.builder()
                 .sellerId(sellerId)
                 .targetDate(targetDate)
-                .paymentAmount(0L)
-                .feeAmount(0L)
-                .settlementAmount(0L)
+                .paymentAmount(Money.zero())
+                .feeAmount(Money.zero())
+                .settlementAmount(Money.zero())
                 .status(DailySettlementStatus.PENDING)
                 .build();
     }
 
 
-    public void updateAmounts(Long paymentAmount, Long feeAmount, Long settlementAmount){
+    public void updateAmounts(Money paymentAmount, Money feeAmount, Money settlementAmount){
         this.paymentAmount = paymentAmount;
         this.feeAmount = feeAmount;
         this.status = DailySettlementStatus.COMPLETED;

@@ -6,6 +6,8 @@ import com.thock.back.settlement.reconciliation.domain.enums.PaymentMethod;
 import com.thock.back.settlement.reconciliation.domain.enums.ReconciliationStatus;
 import com.thock.back.settlement.shared.converter.MapToJsonConverter;
 import com.thock.back.settlement.shared.enums.TransactionType;
+import com.thock.back.settlement.shared.money.Money;
+import com.thock.back.settlement.shared.money.MoneyAttributeConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -49,12 +51,14 @@ public class SalesLog extends BaseTimeEntity { // updated_at 포함됨
 
     // 정가 기준 총 판매액 (할인 전)
     @Column(name = "product_price", nullable = false)
-    private Long productPrice;
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money productPrice;
 
     // 실제 결제 금액 (최종 정산 대상 금액)
     // 환불일 경우 마이너스가 들어올 수 있음
     @Column(name = "payment_amount", nullable = false)
-    private Long paymentAmount;
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money paymentAmount;
 
     // 결제 수단 (CARD, NAVER_PAY 등)
     @Enumerated(EnumType.STRING)
@@ -92,8 +96,8 @@ public class SalesLog extends BaseTimeEntity { // updated_at 포함됨
 
     // 생성자 필드
     @Builder
-    public SalesLog(String orderNo, Long sellerId, Long productId, Long productPrice,
-                    Long paymentAmount, PaymentMethod paymentMethod,
+    public SalesLog(String orderNo, Long sellerId, Long productId, Money productPrice,
+                    Money paymentAmount, PaymentMethod paymentMethod,
                     TransactionType transactionType, Map<String, Object> metadata,
                     LocalDateTime snapshotAt) {
         this.orderNo = orderNo;
