@@ -122,4 +122,9 @@ public class PaymentFacade {
     public Map<String, Object> confirmPayment(PaymentConfirmRequestDto request) {
         return paymentConfirmAndRefundUseCase.confirmPayment(request);
     }
+
+    @Transactional
+    public void canceledBeforePayment(String orderId) {
+        paymentConfirmAndRefundUseCase.cancelBeforePayment(orderId);
+    }
 }

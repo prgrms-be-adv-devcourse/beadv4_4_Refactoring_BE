@@ -27,7 +27,7 @@ custom:
   payment:
     toss:
       payments:
-        secretKey: ${TOSS_SECRET_KEY:}
+        secretKey: ${TOSS_PAYMENTS_SECRET_KEY:${TOSS_SECRET_KEY:}}
 
 jwt:
   secret: ${JWT_SECRET_KEY:}

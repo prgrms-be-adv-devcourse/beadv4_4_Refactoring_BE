@@ -399,6 +399,16 @@ public class PaymentConfirmAndRefundUseCase {
                     )
             );
         }
+    }
 
+    public void cancelBeforePayment(String orderId) {
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> {
+                    log.error("결제 조회 실패 - orderId={}", orderId);
+                    return new CustomException(ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER);
+                });
+        payment.updatePaymentStatus(PaymentStatus.CANCELED);
+        paymentRepository.save(payment);
+        payment.createPaymentLogEvent();
     }
 }

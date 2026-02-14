@@ -1,6 +1,7 @@
 package com.thock.back.product.in;
 
-import com.thock.back.global.security.context.AuthMember;
+import com.thock.back.global.security.AuthUser;
+import com.thock.back.global.security.AuthenticatedUser;
 import com.thock.back.product.app.ProductService;
 import com.thock.back.product.domain.Category;
 import com.thock.back.product.in.dto.ProductCreateRequest;
@@ -43,12 +44,12 @@ public class ApiV1ProductController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청 (필수 값 누락, 가격 0원 이하 등)"),
             @ApiResponse(responseCode = "403", description = "권한 없음 (판매자만 등록 가능)")
     })
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<Long> create(
             @RequestBody @Valid ProductCreateRequest request,
-            @AuthenticationPrincipal AuthMember authMember
+            @AuthUser AuthenticatedUser user
     ) {
-        Long productId = productService.productCreate(request, authMember.memberId(), authMember.role());
+        Long productId = productService.productCreate(request, user.memberId(), user.role());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(productId);
     }
@@ -93,10 +94,10 @@ public class ApiV1ProductController {
     public ResponseEntity<Long> update(
             @PathVariable Long id,
             @RequestBody @Valid ProductUpdateRequest request,
-            @AuthenticationPrincipal AuthMember authMember // 👈 인증 객체 주입
+            @AuthUser AuthenticatedUser user // 👈 인증 객체 주입
     ) {
         // 서비스에 필요한 정보만 쏙쏙 골라 전달
-        Long productId = productService.productUpdate(id, request, authMember.memberId(), authMember.role());
+        Long productId = productService.productUpdate(id, request, user.memberId(), user.role());
 
         return ResponseEntity.ok(productId);
     }
@@ -111,9 +112,9 @@ public class ApiV1ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
-            @AuthenticationPrincipal AuthMember authMember // 👈 인증 객체 주입
+            @AuthUser AuthenticatedUser user // 👈 인증 객체 주입
     ) {
-        productService.productDelete(id, authMember.memberId(), authMember.role());
+        productService.productDelete(id, user.memberId(), user.role());
 
         return ResponseEntity.noContent().build();
     }
@@ -167,12 +168,12 @@ public class ApiV1ProductController {
     })
     @GetMapping("/me")
     public ResponseEntity<Page<ProductListResponse>> getMyProducts(
-            @AuthenticationPrincipal AuthMember authMember,
+            @AuthUser AuthenticatedUser user,
             // 프론트가 ?page=1&size=10 처럼 보내면 알아서 Pageable 객체로 만들어줌
             // 기본값: 0페이지(첫페이지), 10개씩, 최신순(id 내림차순)
             @ParameterObject @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable)
     {
-        Page<ProductListResponse> response = productService.getMyProducts(authMember.memberId(), pageable);
+        Page<ProductListResponse> response = productService.getMyProducts(user.memberId(), pageable);
         return ResponseEntity.ok(response);
     }
 

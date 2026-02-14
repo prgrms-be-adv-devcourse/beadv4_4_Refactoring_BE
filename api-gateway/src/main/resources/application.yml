@@ -87,8 +87,9 @@ spring:
                 # 상품 조회는 인증 불필요, 등록/수정/삭제는 인증 필요
                 excludePaths:
                   - /api/v1/products
-                  - /api/v1/products/*
                   - /api/v1/products/search
+                excludeGetPaths:
+                  - /api/v1/products/*
 
         # 3. Market Service (장바구니, 주문)
         - id: market-service

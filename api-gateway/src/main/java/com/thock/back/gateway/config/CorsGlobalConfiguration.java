@@ -19,7 +19,8 @@ public class CorsGlobalConfiguration {
         corsConfig.setAllowedOrigins(Arrays.asList(
                 "http://localhost:8080",  // API Gateway & Swagger UI
                 "http://localhost:3000",  // Frontend Dev Server
-                "http://localhost:3001"   // Frontend Alt Port
+                "http://localhost:3001",   // Frontend Alt Port
+                "http://localhost:5173"
         ));
 
         // 허용할 HTTP 메서드

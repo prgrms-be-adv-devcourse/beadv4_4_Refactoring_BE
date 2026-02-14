@@ -7,8 +7,10 @@ import com.thock.back.payment.domain.PaymentLog;
 import com.thock.back.payment.domain.RevenueLog;
 import com.thock.back.payment.domain.Wallet;
 import com.thock.back.payment.domain.WalletLog;
+import com.thock.back.payment.domain.dto.response.PaymentLogItemDto;
 import com.thock.back.payment.domain.dto.response.PaymentLogResponseDto;
 import com.thock.back.payment.domain.dto.response.RevenueLogResponseDto;
+import com.thock.back.payment.domain.dto.response.WalletLogItemDto;
 import com.thock.back.payment.domain.dto.response.WalletLogResponseDto;
 import com.thock.back.payment.out.*;
 import com.thock.back.shared.member.domain.MemberState;
@@ -18,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -67,12 +70,21 @@ public class PaymentFindUseCase {
         }
 
         List<WalletLog> logs = walletLogRepository.findByWalletId(wallet.getId());
+        List<WalletLogItemDto> walletLogs = logs.stream()
+                .map(logItem -> new WalletLogItemDto(
+                        logItem.getId(),
+                        logItem.getEventType(),
+                        logItem.getAmount(),
+                        logItem.getBalance(),
+                        logItem.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
 
         log.info("지갑 로그 조회 완료 - memberId={}, logCount={}", memberId, logs.size());
         return new WalletLogResponseDto(
                 memberId,
                 wallet.getId(),
-                logs
+                walletLogs
         );
     }
 
@@ -100,11 +112,22 @@ public class PaymentFindUseCase {
 
     public PaymentLogResponseDto getPaymentLog(Long memberId) {
         List<PaymentLog> logs = paymentLogRepository.findByBuyerId(memberId);
+        List<PaymentLogItemDto> paymentLogs = logs.stream()
+                .map(logItem -> new PaymentLogItemDto(
+                        logItem.getId(),
+                        logItem.getOrderId(),
+                        logItem.getPaymentStatus(),
+                        logItem.getAmount(),
+                        logItem.getPgAmount(),
+                        logItem.getRefundedAmount(),
+                        logItem.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
 
         log.info("결제 로그 조회 완료 - memberId={}, logCount={}", memberId, logs.size());
         return new PaymentLogResponseDto(
                 memberId,
-                logs
+                paymentLogs
         );
     }
 }

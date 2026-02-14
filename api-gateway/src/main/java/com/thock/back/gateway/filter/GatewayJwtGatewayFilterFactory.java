@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -30,6 +31,7 @@ public class GatewayJwtGatewayFilterFactory extends AbstractGatewayFilterFactory
 
     public static class Config {
         private List<String> excludePaths;
+        private List<String> excludeGetPaths;
 
         public List<String> getExcludePaths() {
             return excludePaths;
@@ -37,6 +39,14 @@ public class GatewayJwtGatewayFilterFactory extends AbstractGatewayFilterFactory
 
         public void setExcludePaths(List<String> excludePaths) {
             this.excludePaths = excludePaths;
+        }
+
+        public List<String> getExcludeGetPaths() {
+            return excludeGetPaths;
+        }
+
+        public void setExcludeGetPaths(List<String> excludeGetPaths) {
+            this.excludeGetPaths = excludeGetPaths;
         }
     }
 
@@ -51,6 +61,21 @@ public class GatewayJwtGatewayFilterFactory extends AbstractGatewayFilterFactory
                 for (String excludePath : config.getExcludePaths()) {
                     if (pathMatcher.match(excludePath, path)) {
                         log.info("[Gateway] Auth skipped for path: {}", path);
+                        return chain.filter(exchange);
+                    }
+                }
+            }
+
+            // 1-1. GET 전용 인증 제외 경로 체크 (읽기 API만 공개)
+            if (request.getMethod() == HttpMethod.GET && config.getExcludeGetPaths() != null) {
+                for (String excludePath : config.getExcludeGetPaths()) {
+                    if (pathMatcher.match(excludePath, path)) {
+                        // "/api/v1/products/me" is a protected GET endpoint and must carry auth headers.
+                         if (pathMatcher.match("/api/v1/products/me", path)) {
+                            break;
+                          }
+
+                        log.info("[Gateway] Auth skipped for GET path: {}", path);
                         return chain.filter(exchange);
                     }
                 }

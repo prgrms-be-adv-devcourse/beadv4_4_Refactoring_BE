@@ -46,7 +46,7 @@
       },
       "targets": [
         {
-          "expr": "sum(count_over_time({service=\"payment\", log_type=\"service-info\"}[$__range]))",
+          "expr": "sum(count_over_time({service=~\"$service\", log_type=\"service-info\", level=~\"$level\", logger=~\"$logger\"} |~ \"$search\"[$__range]))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -94,7 +94,7 @@
       },
       "targets": [
         {
-          "expr": "sum(count_over_time({service=\"payment\", log_type=\"service-error\"}[$__range]))",
+          "expr": "sum(count_over_time({service=~\"$service\", log_type=\"service-error\", level=~\"$level\", logger=~\"$logger\"} |~ \"$search\"[$__range]))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -139,7 +139,7 @@
       },
       "targets": [
         {
-          "expr": "sum(count_over_time({service=\"payment\", log_type=\"service-info\"} |~ \"환불 완료\"[$__range]))",
+          "expr": "sum(count_over_time({service=~\"$service\", log_type=\"service-info\", level=~\"$level\", logger=~\"$logger\"} |~ \"환불 완료\" |~ \"$search\"[$__range]))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -186,7 +186,7 @@
       },
       "targets": [
         {
-          "expr": "sum(count_over_time({service=\"payment\", log_type=\"service-error\"} |~ \"환불|취소\"[$__range]))",
+          "expr": "sum(count_over_time({service=~\"$service\", log_type=\"service-error\", level=~\"$level\", logger=~\"$logger\"} |~ \"환불|취소\" |~ \"$search\"[$__range]))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -230,7 +230,7 @@
       },
       "targets": [
         {
-          "expr": "sum(count_over_time({service=\"payment\", log_type=~\"service-info|service-error\"}[1m])) by (log_type)",
+          "expr": "sum(count_over_time({service=~\"$service\", log_type=~\"$log_type\", level=~\"$level\", logger=~\"$logger\"} |~ \"$search\"[1m])) by (log_type)",
           "legendFormat": "{{log_type}}",
           "refId": "A"
         }
@@ -265,7 +265,7 @@
       },
       "targets": [
         {
-          "expr": "sum(count_over_time({service=\"payment\", log_type=~\"service-info|service-error\"}[1m])) by (logger)",
+          "expr": "topk(10, sum(count_over_time({service=~\"$service\", log_type=~\"$log_type\", level=~\"$level\", logger=~\"$logger\"} |~ \"$search\"[1m])) by (logger))",
           "legendFormat": "{{logger}}",
           "refId": "A"
         }
@@ -292,7 +292,7 @@
       },
       "targets": [
         {
-          "expr": "{service=\"payment\", log_type=\"service-info\"} |~ \"$search\"",
+          "expr": "{service=~\"$service\", log_type=\"service-info\", level=~\"$level\", logger=~\"$logger\"} |~ \"$search\"",
           "refId": "A"
         }
       ],
@@ -318,7 +318,7 @@
       },
       "targets": [
         {
-          "expr": "{service=\"payment\", log_type=\"service-error\"} |~ \"$search\"",
+          "expr": "{service=~\"$service\", log_type=\"service-error\", level=~\"$level\", logger=~\"$logger\"} |~ \"$search\"",
           "refId": "A"
         }
       ],
@@ -344,7 +344,7 @@
       },
       "targets": [
         {
-          "expr": "{service=\"payment\", log_type=\"service-info\"} |~ \"토스.*완료|검증 완료\"",
+          "expr": "{service=~\"$service\", log_type=\"service-info\", level=~\"$level\", logger=~\"$logger\"} |~ \"토스.*완료|검증 완료\" |~ \"$search\"",
           "refId": "A"
         }
       ],
@@ -370,7 +370,7 @@
       },
       "targets": [
         {
-          "expr": "{service=\"payment\", log_type=\"service-error\"} |~ \"토스|결제 확인 실패|결제 취소 실패\"",
+          "expr": "{service=~\"$service\", log_type=\"service-error\", level=~\"$level\", logger=~\"$logger\"} |~ \"토스|결제 확인 실패|결제 취소 실패\" |~ \"$search\"",
           "refId": "A"
         }
       ],
@@ -384,6 +384,106 @@
   "tags": ["payment", "service", "logs", "loki"],
   "templating": {
     "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": ["payment"],
+          "value": ["payment"]
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "P8E80F9AEF21F6940"
+        },
+        "definition": "label_values(service)",
+        "hide": 0,
+        "includeAll": true,
+        "allValue": ".*",
+        "label": "Service",
+        "multi": true,
+        "name": "service",
+        "options": [],
+        "query": "label_values(service)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "P8E80F9AEF21F6940"
+        },
+        "definition": "label_values({service=~\"$service\"}, log_type)",
+        "hide": 0,
+        "includeAll": true,
+        "allValue": ".*",
+        "label": "Log Type",
+        "multi": true,
+        "name": "log_type",
+        "options": [],
+        "query": "label_values({service=~\"$service\"}, log_type)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "P8E80F9AEF21F6940"
+        },
+        "definition": "label_values({service=~\"$service\", log_type=~\"$log_type\"}, level)",
+        "hide": 0,
+        "includeAll": true,
+        "allValue": ".*",
+        "label": "Level",
+        "multi": true,
+        "name": "level",
+        "options": [],
+        "query": "label_values({service=~\"$service\", log_type=~\"$log_type\"}, level)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "P8E80F9AEF21F6940"
+        },
+        "definition": "label_values({service=~\"$service\", log_type=~\"$log_type\"}, logger)",
+        "hide": 0,
+        "includeAll": true,
+        "allValue": ".*",
+        "label": "Logger",
+        "multi": true,
+        "name": "logger",
+        "options": [],
+        "query": "label_values({service=~\"$service\", log_type=~\"$log_type\"}, logger)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
       {
         "current": {
           "selected": false,
@@ -408,6 +508,6 @@
   "timezone": "Asia/Seoul",
   "title": "Payment Service Dashboard",
   "uid": "payment-service-dashboard",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
