@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         "com.thock.back.global"
 })
 @EnableJpaAuditing
+@EnableScheduling
 public class MarketServiceApplication {
 
     public static void main(String[] args) {

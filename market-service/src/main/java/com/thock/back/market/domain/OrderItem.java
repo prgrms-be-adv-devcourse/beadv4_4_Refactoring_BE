@@ -4,9 +4,14 @@ import com.thock.back.global.exception.CustomException;
 import com.thock.back.global.exception.ErrorCode;
 import com.thock.back.global.jpa.entity.BaseIdAndTime;
 import com.thock.back.shared.market.domain.CancelReasonType;
+import com.thock.back.shared.settlement.dto.SettlementOrderItemDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 import static jakarta.persistence.FetchType.LAZY;
 @Entity
@@ -139,4 +144,30 @@ public class OrderItem extends BaseIdAndTime {
         this.state = OrderItemState.CONFIRMED;
     }
 
+    /**
+     * Settlement 정산용 DTO 변환
+     * @param eventType 정산 이벤트 타입
+     */
+    public SettlementOrderItemDto toSettlementDto(SettlementEventType eventType) {
+        Map<String, Object> metadata = new HashMap<>();
+
+        // 환불/취소인 경우 사유 담기
+        if (this.cancelReasonType != null) {
+            metadata.put("cancelReasonType", this.cancelReasonType.name());
+            metadata.put("cancelReasonDetail", this.cancelReasonDetail);
+        }
+
+        return new SettlementOrderItemDto(
+                this.order.getOrderNumber(),
+                this.sellerId,
+                this.productId,
+                this.productName,
+                this.quantity,
+                this.salePrice,
+                this.totalSalePrice,
+                eventType.getValue(),
+                metadata,
+                LocalDateTime.now()
+        );
+    }
 }

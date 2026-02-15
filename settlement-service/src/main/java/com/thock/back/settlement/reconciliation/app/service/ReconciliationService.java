@@ -23,7 +23,7 @@ public class ReconciliationService {
                         log.getProductId(),
                         log.getProductName(),
                         log.getProductQuantity(),
-                        log.getPaymentAmount(),
+                        log.getPaymentAmount().amount(),
                         log.getOrderNo()
                 ))
                 .toList();

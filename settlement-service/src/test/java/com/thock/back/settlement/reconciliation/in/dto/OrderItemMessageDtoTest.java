@@ -23,7 +23,7 @@ class OrderItemMessageDtoTest {
         // then: 양수 그대로 들어가는지 검증
         assertThat(entity.getTransactionType()).isEqualTo(TransactionType.PAYMENT);
         assertThat(entity.getProductQuantity()).isEqualTo(3);
-        assertThat(entity.getPaymentAmount()).isEqualTo(15000L);
+        assertThat(entity.getPaymentAmount().amount()).isEqualTo(15000L);
     }
 
     @Test
@@ -38,7 +38,7 @@ class OrderItemMessageDtoTest {
         // then: 강제로 음수(-) 처리되었는지 검증!! (핵심)
         assertThat(entity.getTransactionType()).isEqualTo(TransactionType.REFUND);
         assertThat(entity.getProductQuantity()).isEqualTo(-1);
-        assertThat(entity.getPaymentAmount()).isEqualTo(-5000L);
+        assertThat(entity.getPaymentAmount().amount()).isEqualTo(-5000L);
     }
 
     // 테스트용 DTO 생성 편의 메서드

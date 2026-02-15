@@ -5,10 +5,14 @@ import com.thock.back.global.exception.ErrorCode;
 import com.thock.back.global.jpa.entity.BaseIdAndTime;
 import com.thock.back.shared.market.domain.CancelReasonType;
 import com.thock.back.shared.market.dto.OrderDto;
+import com.thock.back.shared.market.event.MarketOrderBeforePaymentCanceledEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentCompletedEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestCanceledEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestedEvent;
+import com.thock.back.shared.market.event.MarketOrderSettlementEvent;
+import com.thock.back.shared.payment.dto.BeforePaymentCancelRequestDto;
 import com.thock.back.shared.payment.dto.PaymentCancelRequestDto;
+import com.thock.back.shared.settlement.dto.SettlementOrderItemDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -158,11 +162,14 @@ public class Order extends BaseIdAndTime {
 
         log.info("✅ 결제 완료: orderId={}, orderNumber={}, paymentDate={}",
                 getId(), orderNumber, paymentDate);
+
+        // Settlement 이벤트 발행 (결제 완료)
+        publishSettlementEvent(SettlementEventType.PAYMENT_COMPLETED);
     }
 
     /**
      * 주문 전체 취소 1. 결제 요청 중 취소
-     * PG 결제창 띄워놓고 사용자가 취소하거나 결제 안 하고 나간 경우
+     * PG 결제창 띄워놓고 사용자가 취소(명시적 취소)하거나 결제 안 하고(타임 아웃) 나간 경우
      */
     public void cancelRequestPayment(CancelReasonType cancelReasonType, String cancelReasonDetail) {
         if (!isPaymentInProgress()) {
@@ -172,28 +179,18 @@ public class Order extends BaseIdAndTime {
         // 모든 OrderItem 취소
         this.items.forEach(item -> item.cancel(cancelReasonType, cancelReasonDetail));
 
-        this.requestPaymentDate = null;
         this.state = OrderState.CANCELLED;
         this.cancelDate = LocalDateTime.now();
 
         log.info("❌ 결제 요청 취소: orderId={}, orderNumber={}, reason={}", getId(), orderNumber, cancelReasonType);
 
-        // Payment 모듈에 취소 알림 (환불 불필요)
-        String cancelReason = cancelReasonType == CancelReasonType.ETC && cancelReasonDetail != null
-                ? String.format("%s: %s", cancelReasonType.getDescription(), cancelReasonDetail)
-                : cancelReasonType.getDescription();
-
-        PaymentCancelRequestDto cancelDto = new PaymentCancelRequestDto(
-                this.orderNumber,
-                String.format("결제 요청 취소 (사유: %s)", cancelReason),
-                0L // 결제 하지 않았으니 0원
-        );
-
-        publishEvent(new MarketOrderPaymentRequestCanceledEvent(cancelDto));
+        // Payment 모듈에 결제 전 취소 알림 (REQUESTED → CANCELED)
+        BeforePaymentCancelRequestDto cancelDto = new BeforePaymentCancelRequestDto(this.orderNumber);
+        publishEvent(new MarketOrderBeforePaymentCanceledEvent(cancelDto));
     }
 
     /**
-     * 주문 전체 취소 2. PG 결제창에서 결제까지 완료 한 경우
+     * 주문 전체 취소 2. 결제까지 완료 한 경우
      */
     public void cancel(CancelReasonType cancelReasonType, String cancelReasonDetail) {
         if (!this.state.isCancellable()) {
@@ -302,13 +299,35 @@ public class Order extends BaseIdAndTime {
                 .forEach(OrderItem::completeRefund);
 
         // 2. 활성 상태 아이템들을 강제 구매확정 처리
-        this.items.stream()
+        List<OrderItem> forceConfirmedItems = this.items.stream()
                 .filter(item -> item.getState().isActiveState())
-                .forEach(OrderItem::forceConfirm);
+                .toList();
+        forceConfirmedItems.forEach(OrderItem::forceConfirm);
 
         // 3. 상태 결정: 모든 아이템이 REFUNDED인지 확인
         boolean allRefunded = this.items.stream()
                 .allMatch(item -> item.getState() == OrderItemState.REFUNDED);
+
+        // 4. Settlement 이벤트 발행: 환불 아이템 + 강제 구매확정 아이템
+        List<SettlementOrderItemDto> refundedItems = this.items.stream()
+                .filter(item -> item.getState() == OrderItemState.REFUNDED)
+                .map(item -> item.toSettlementDto(SettlementEventType.REFUND_COMPLETED))
+                .toList();
+
+        List<SettlementOrderItemDto> confirmedItems = forceConfirmedItems.stream()
+                .map(item -> item.toSettlementDto(SettlementEventType.PURCHASE_CONFIRMED))
+                .toList();
+
+        if (!refundedItems.isEmpty()) {
+            publishEvent(new MarketOrderSettlementEvent(refundedItems));
+            log.info("📊 환불 Settlement 이벤트 발행: orderNumber={}, count={}", orderNumber, refundedItems.size());
+        }
+
+        if (!confirmedItems.isEmpty()) {
+            publishEvent(new MarketOrderSettlementEvent(confirmedItems));
+            log.info("📊 환불 Settlement 이벤트 발행: orderNumber={}, count={}", orderNumber, confirmedItems.size());
+        }
+
 
         if (allRefunded) {
             this.state = OrderState.REFUNDED;
@@ -369,6 +388,37 @@ public class Order extends BaseIdAndTime {
 
     public boolean isPaid() {
         return this.paymentDate != null;
+    }
+
+    /**
+     * 주문 전체 구매 확정
+     */
+    public void confirm() {
+        if (!this.state.isConfirmable()) {
+            throw new CustomException(ErrorCode.ORDER_INVALID_STATE);
+        }
+
+        // 모든 OrderItem 구매 확정
+        this.items.forEach(OrderItem::confirm);
+        this.state = OrderState.CONFIRMED;
+
+        log.info("✅ 구매 확정: orderId={}, orderNumber={}", getId(), orderNumber);
+
+        // Settlement 이벤트 발행 (구매 확정)
+        publishSettlementEvent(SettlementEventType.PURCHASE_CONFIRMED);
+    }
+
+    /**
+     * Settlement 정산 이벤트 발행 헬퍼
+     */
+    private void publishSettlementEvent(SettlementEventType eventType) {
+        List<SettlementOrderItemDto> settlementItems = this.items.stream()
+                .map(item -> item.toSettlementDto(eventType))
+                .toList();
+
+        publishEvent(new MarketOrderSettlementEvent(settlementItems));
+        log.info("📊 Settlement 이벤트 발행: orderNumber={}, eventType={}, itemCount={}",
+                orderNumber, eventType, settlementItems.size());
     }
 
     public OrderDto toDto() {

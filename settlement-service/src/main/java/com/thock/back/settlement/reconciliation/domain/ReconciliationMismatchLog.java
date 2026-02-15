@@ -2,6 +2,8 @@ package com.thock.back.settlement.reconciliation.domain;
 
 import com.github.f4b6a3.tsid.TsidCreator;
 import com.thock.back.settlement.reconciliation.domain.enums.MismatchType;
+import com.thock.back.settlement.shared.money.Money;
+import com.thock.back.settlement.shared.money.MoneyAttributeConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,10 +29,12 @@ public class ReconciliationMismatchLog {
     @Column(nullable = false)
     private MismatchType type;
 
-    // [수정] BigDecimal -> Long (원화 기준)
-    private Long internalAmount;
-    private Long pgAmount;
-    private Long diffAmount;
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money internalAmount;
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money pgAmount;
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money diffAmount;
 
     @Column(columnDefinition = "TEXT")
     private String reason;
@@ -44,7 +48,7 @@ public class ReconciliationMismatchLog {
 
     @Builder
     public ReconciliationMismatchLog(ReconciliationJob job, String orderNo, String pgKey,
-                                     MismatchType type, Long internalAmount, Long pgAmount, String reason) {
+                                     MismatchType type, Money internalAmount, Money pgAmount, String reason) {
         this.job = job;
         this.orderNo = orderNo;
         this.pgKey = pgKey;
@@ -53,10 +57,8 @@ public class ReconciliationMismatchLog {
         this.pgAmount = pgAmount;
         this.reason = reason;
 
-        // [수정] Long 타입 Null Safe 연산
-        // 값이 없으면 0원으로 취급해서 계산
-        long safePg = pgAmount != null ? pgAmount : 0L;
-        long safeInternal = internalAmount != null ? internalAmount : 0L;
-        this.diffAmount = safePg - safeInternal;
+        Money safePg = pgAmount != null ? pgAmount : Money.zero();
+        Money safeInternal = internalAmount != null ? internalAmount : Money.zero();
+        this.diffAmount = safePg.minus(safeInternal);
     }
 }

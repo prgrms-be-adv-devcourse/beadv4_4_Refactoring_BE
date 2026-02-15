@@ -3,6 +3,8 @@ package com.thock.back.settlement.reconciliation.domain;
 import com.thock.back.global.jpa.entity.BaseCreatedTime;
 import com.thock.back.settlement.reconciliation.domain.enums.PaymentMethod;
 import com.thock.back.settlement.reconciliation.domain.enums.PgStatus;
+import com.thock.back.settlement.shared.money.Money;
+import com.thock.back.settlement.shared.money.MoneyAttributeConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,7 +38,8 @@ public class PgSalesRaw extends BaseCreatedTime {
     private PaymentMethod paymentMethod;
 
     @Column(name = "payment_amount", nullable = false)
-    private Long paymentAmount;
+    @Convert(converter = MoneyAttributeConverter.class)
+    private Money paymentAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "pg_status", nullable = false, length = 50)
@@ -50,7 +53,7 @@ public class PgSalesRaw extends BaseCreatedTime {
     //createdAt 상속 받아 사용. 관리자가 엑셀 데이터를 입력한 시점
 
     @Builder
-    public PgSalesRaw(String pgKey, String merchantUid, PaymentMethod paymentMethod, Long paymentAmount, PgStatus pgStatus, LocalDateTime transactedAt){
+    public PgSalesRaw(String pgKey, String merchantUid, PaymentMethod paymentMethod, Money paymentAmount, PgStatus pgStatus, LocalDateTime transactedAt){
         this.pgKey = pgKey;
         this.merchantUid = merchantUid;
         this.paymentMethod = paymentMethod;
@@ -59,4 +62,3 @@ public class PgSalesRaw extends BaseCreatedTime {
         this.transactedAt = transactedAt;
     }
 }
-

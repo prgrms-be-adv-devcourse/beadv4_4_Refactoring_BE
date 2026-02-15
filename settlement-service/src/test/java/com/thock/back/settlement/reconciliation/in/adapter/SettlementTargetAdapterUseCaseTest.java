@@ -5,6 +5,7 @@ import com.thock.back.settlement.reconciliation.domain.SalesLog;
 import com.thock.back.settlement.reconciliation.domain.enums.ReconciliationStatus;
 import com.thock.back.settlement.reconciliation.out.SalesLogRepository;
 import com.thock.back.settlement.shared.enums.TransactionType;
+import com.thock.back.settlement.shared.money.Money;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,11 +37,11 @@ class SettlementTargetAdapterUseCaseTest {
                 .sellerId(1L)
                 .reconciliationStatus(ReconciliationStatus.MATCH) // 대사 성공
                 .dailySettlementId(null) // 정산 안 됨
-                .paymentAmount(10000L)
+                .paymentAmount(Money.of(10000L))
                 .productId(100L)
                 .productName("키보드")
                 .productQuantity(1)
-                .productPrice(10000L)
+                .productPrice(Money.of(10000L))
                 .transactionType(TransactionType.PAYMENT)
                 .snapshotAt(LocalDateTime.now())
                 .confirmedAt(LocalDateTime.now())
@@ -52,11 +53,11 @@ class SettlementTargetAdapterUseCaseTest {
                 .sellerId(1L)
                 .reconciliationStatus(ReconciliationStatus.MISMATCH) // 실패!
                 .dailySettlementId(null)
-                .paymentAmount(20000L)
+                .paymentAmount(Money.of(20000L))
                 .productId(101L)
                 .productName("마우스")
                 .productQuantity(1)
-                .productPrice(20000L)
+                .productPrice(Money.of(20000L))
                 .transactionType(TransactionType.PAYMENT)
                 .snapshotAt(LocalDateTime.now())
                 .build();
@@ -67,11 +68,11 @@ class SettlementTargetAdapterUseCaseTest {
                 .sellerId(1L)
                 .reconciliationStatus(ReconciliationStatus.MATCH)
                 .dailySettlementId(999L) // 이미 정산됨!
-                .paymentAmount(30000L)
+                .paymentAmount(Money.of(30000L))
                 .productId(102L)
                 .productName("모니터")
                 .productQuantity(1)
-                .productPrice(30000L)
+                .productPrice(Money.of(30000L))
                 .transactionType(TransactionType.PAYMENT)
                 .snapshotAt(LocalDateTime.now())
                 .build();

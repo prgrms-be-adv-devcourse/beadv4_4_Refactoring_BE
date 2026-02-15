@@ -6,6 +6,7 @@ import com.thock.back.market.domain.Cart;
 import com.thock.back.market.domain.CartItem;
 import com.thock.back.market.domain.MarketMember;
 import com.thock.back.market.domain.Order;
+import com.thock.back.market.domain.OrderState;
 import com.thock.back.market.in.dto.req.OrderCreateRequest;
 import com.thock.back.market.in.dto.res.OrderCreateResponse;
 import com.thock.back.market.out.api.dto.ProductInfo;
@@ -37,11 +38,16 @@ public class MarketCreateOrderUseCase {
         MarketMember buyer = marketMemberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
 
-        // 2. 장바구니 조회
+        // 2. 미결제 주문 존재 여부 확인 (1인 1주문 제한)
+        if (orderRepository.existsByBuyerIdAndState(memberId, OrderState.PENDING_PAYMENT)) {
+            throw new CustomException(ErrorCode.ORDER_PENDING_EXISTS);
+        }
+
+        // 3. 장바구니 조회
         Cart cart = cartRepository.findByBuyer(buyer)
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_ITEM_NOT_FOUND));
 
-        // 3. 선택한 CartItem들만 필터링
+        // 4. 선택한 CartItem들만 필터링
         List<Long> selectedCartItemIds = request.cartItemIds();
 
         if (selectedCartItemIds == null || selectedCartItemIds.isEmpty()) {

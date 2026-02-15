@@ -4,6 +4,7 @@ import com.thock.back.settlement.reconciliation.domain.SalesLog;
 import com.thock.back.settlement.reconciliation.domain.enums.OrderEventStatus;
 import com.thock.back.settlement.reconciliation.domain.enums.ReconciliationStatus;
 import com.thock.back.settlement.shared.enums.TransactionType;
+import com.thock.back.settlement.shared.money.Money;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -29,7 +30,7 @@ public record OrderItemMessageDto(
         TransactionType transactionType = eventStatus.getTransactionType();
 
         // 환불일 경우 수량과 가격을 음수로 저장
-        Long finalAmount = this.paymentAmount;
+        long finalAmount = this.paymentAmount;
         int finalQuantity = this.productQuantity;
 
         if(transactionType == TransactionType.REFUND){
@@ -43,8 +44,8 @@ public record OrderItemMessageDto(
                 .productId(this.productId)
                 .productName(this.productName)
                 .productQuantity(finalQuantity)
-                .productPrice(this.productPrice)
-                .paymentAmount(finalAmount)
+                .productPrice(Money.of(this.productPrice))
+                .paymentAmount(Money.of(finalAmount))
                 .transactionType(transactionType)
                 .metadata(this.metadata)
                 .snapshotAt(this.snapshotAt)

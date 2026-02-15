@@ -9,6 +9,7 @@ import com.thock.back.settlement.reconciliation.out.PgSalesRawRepository;
 import com.thock.back.settlement.reconciliation.out.SalesLogRepository;
 import com.thock.back.settlement.settlement.app.SettlementFacade;
 import com.thock.back.settlement.shared.enums.TransactionType;
+import com.thock.back.settlement.shared.money.Money;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +69,7 @@ public class ManualReconciliationScenarioService {
                 targetDate,
                 logs.size(),
                 generated.size(),
-                generated.stream().mapToLong(PgSalesRaw::getPaymentAmount).sum()
+                generated.stream().mapToLong(pg -> pg.getPaymentAmount().amount()).sum()
         );
     }
 
@@ -101,13 +102,13 @@ public class ManualReconciliationScenarioService {
         SalesLog sample = group.get(0);
         TransactionType txType = sample.getTransactionType();
         PgStatus pgStatus = txType == TransactionType.REFUND ? PgStatus.CANCELED : PgStatus.PAID;
-        long amount = Math.abs(group.stream().mapToLong(SalesLog::getPaymentAmount).sum());
+        long amount = Math.abs(group.stream().mapToLong(log -> log.getPaymentAmount().amount()).sum());
 
         return PgSalesRaw.builder()
                 .pgKey("MANUAL-" + sample.getOrderNo() + "-" + pgStatus + "-" + System.currentTimeMillis())
                 .merchantUid(sample.getOrderNo())
                 .paymentMethod(sample.getPaymentMethod() == null ? PaymentMethod.CARD : sample.getPaymentMethod())
-                .paymentAmount(amount)
+                .paymentAmount(Money.of(amount))
                 .pgStatus(pgStatus)
                 .transactedAt(LocalDateTime.of(targetDate, LocalTime.of(12, 0)))
                 .build();

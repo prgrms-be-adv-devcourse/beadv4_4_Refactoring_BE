@@ -12,6 +12,7 @@ import com.thock.back.settlement.reconciliation.in.dto.ReconciliationMismatchLog
 import com.thock.back.settlement.reconciliation.out.PgSalesRawRepository;
 import com.thock.back.settlement.reconciliation.out.SalesLogRepository;
 import com.thock.back.settlement.shared.enums.TransactionType;
+import com.thock.back.settlement.shared.money.Money;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -125,8 +126,8 @@ class RunReconciliationUseCaseTest {
 
         ReconciliationMismatchLog savedLog = logCaptor.getValue();
         assertThat(savedLog.getType()).isEqualTo(MismatchType.AMOUNT_DIFF);
-        assertThat(savedLog.getPgAmount()).isEqualTo(50000L);
-        assertThat(savedLog.getInternalAmount()).isEqualTo(40000L); // 계산된 합계가 들어갔는지 확인
+        assertThat(savedLog.getPgAmount().amount()).isEqualTo(50000L);
+        assertThat(savedLog.getInternalAmount().amount()).isEqualTo(40000L); // 계산된 합계가 들어갔는지 확인
     }
 
     @Test
@@ -176,8 +177,8 @@ class RunReconciliationUseCaseTest {
 
         ReconciliationMismatchLog savedLog = logCaptor.getValue();
         assertThat(savedLog.getType()).isEqualTo(MismatchType.INTERNAL_ONLY);
-        assertThat(savedLog.getInternalAmount()).isEqualTo(50000L);
-        assertThat(savedLog.getPgAmount()).isEqualTo(0L); // PG 데이터가 없으므로 0원
+        assertThat(savedLog.getInternalAmount().amount()).isEqualTo(50000L);
+        assertThat(savedLog.getPgAmount().amount()).isEqualTo(0L); // PG 데이터가 없으므로 0원
     }
 
     @Test
@@ -205,8 +206,8 @@ class RunReconciliationUseCaseTest {
 
         ReconciliationMismatchLog savedLog = logCaptor.getValue();
         assertThat(savedLog.getType()).isEqualTo(MismatchType.AMOUNT_DIFF);
-        assertThat(savedLog.getPgAmount()).isEqualTo(50000L);
-        assertThat(savedLog.getInternalAmount()).isEqualTo(49999L);
+        assertThat(savedLog.getPgAmount().amount()).isEqualTo(50000L);
+        assertThat(savedLog.getInternalAmount().amount()).isEqualTo(49999L);
         assertThat(savedLog.getReason()).contains("금액 불일치");
     }
 
@@ -264,8 +265,8 @@ class RunReconciliationUseCaseTest {
 
         ReconciliationMismatchLog savedLog = logCaptor.getValue();
         assertThat(savedLog.getType()).isEqualTo(MismatchType.INTERNAL_ONLY);
-        assertThat(savedLog.getInternalAmount()).isEqualTo(50000L);
-        assertThat(savedLog.getPgAmount()).isEqualTo(0L); // PG 데이터가 없으므로 0원
+        assertThat(savedLog.getInternalAmount().amount()).isEqualTo(50000L);
+        assertThat(savedLog.getPgAmount().amount()).isEqualTo(0L); // PG 데이터가 없으므로 0원
         assertThat(savedLog.getReason()).contains("PG 내역 없음");
     }
 
@@ -356,7 +357,7 @@ class RunReconciliationUseCaseTest {
         return PgSalesRaw.builder()
                 .merchantUid(merchantUid)
                 .pgStatus(status)
-                .paymentAmount(amount)
+                .paymentAmount(Money.of(amount))
                 .pgKey("PG-" + merchantUid)
                 .build();
     }
@@ -365,7 +366,11 @@ class RunReconciliationUseCaseTest {
         return SalesLog.builder()
                 .orderNo(orderNo)
                 .transactionType(type)
-                .paymentAmount(amount)
+                .paymentAmount(Money.of(amount))
+                .productPrice(Money.of(amount))
+                .productName("test-item")
+                .productQuantity(1)
+                .sellerId(1L)
                 .snapshotAt(LocalDateTime.now())
                 .build();
     }
