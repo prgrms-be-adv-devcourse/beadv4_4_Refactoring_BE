@@ -38,7 +38,7 @@ public class RunMonthlySettlementUseCase {
         LocalDate startDate = targetMonth.atDay(1);
         LocalDate endDate = targetMonth.atEndOfMonth();
 
-        // 2. 이번 달에 정산된 '모든' 일별 정산 데이터 조회 (일단 다 가져옴)
+        // 2. 이번 달에 정산된 '모든' 일별 정산 데이터 조회 기능 (일단 다 가져옴)
         List<DailySettlement> allDailySettlements = dailySettlementRepository.findAllByTargetDateBetween(startDate, endDate);
 
         if (allDailySettlements.isEmpty()) {
