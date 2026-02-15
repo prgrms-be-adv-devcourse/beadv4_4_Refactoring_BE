@@ -16,7 +16,7 @@ import java.util.Map;
 // 1차 통합테스트를 위한 수동 트키러
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/finance/reconciliation/manual")
+@RequestMapping("/api/v1/settlements/reconciliation/manual")
 public class ManualReconciliationController {
 
     private final ManualReconciliationScenarioService manualReconciliationScenarioService;

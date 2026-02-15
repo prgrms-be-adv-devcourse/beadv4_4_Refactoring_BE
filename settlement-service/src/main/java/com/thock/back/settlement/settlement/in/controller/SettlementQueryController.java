@@ -18,7 +18,7 @@ import java.util.List;
 // 정산 관련 판매자 페이지에 들어갈 기능
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/finance/settlement/query")
+@RequestMapping("/api/v1/settlements/settlement/query")
 public class SettlementQueryController {
 
     private final SettlementQueryService settlementQueryService;

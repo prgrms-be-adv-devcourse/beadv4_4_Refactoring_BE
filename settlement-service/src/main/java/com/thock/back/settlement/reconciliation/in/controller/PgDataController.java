@@ -15,7 +15,7 @@ public class PgDataController {
     private final ReconciliationFacade reconciliationFacade;
 
     // pg데이터 받는 컨트롤러
-    @PostMapping("/api/v1/finance/reconciliation/pg-data")
+    @PostMapping("/api/v1/settlements/reconciliation/pg-data")
     public void uploadPgData(@RequestBody List<PgSalesDto> dtos){
         reconciliationFacade.receivePgData(dtos);
     }
