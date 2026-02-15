@@ -1,5 +1,7 @@
 package com.thock.back.settlement.settlement.app.useCase;
 
+import com.thock.back.global.eventPublisher.EventPublisher;
+import com.thock.back.shared.settlement.event.SettlementCompletedEvent;
 import com.thock.back.settlement.settlement.domain.DailySettlement;
 import com.thock.back.settlement.settlement.domain.MonthlySettlement;
 import com.thock.back.settlement.shared.money.Money;
@@ -24,6 +26,7 @@ public class RunMonthlySettlementUseCase {
 
     private final DailySettlementRepository dailySettlementRepository;
     private final MonthlySettlementRepository monthlySettlementRepository;
+    private final EventPublisher eventPublisher;
     // TODO : 현재 일별 정산 데이터(1일~31일)까지 모두 긁어 오기 때문에, 데이터가 많으면 메모리가 부족할 수 있음
     // TODO : 따라서 판매자 목록을 조회 후, 루프를 도는 것이 안전
     // TODO : 대용량 처리를 위해 페이징 처리(offest, cursor) 고도화 예정
@@ -35,7 +38,7 @@ public class RunMonthlySettlementUseCase {
         LocalDate startDate = targetMonth.atDay(1);
         LocalDate endDate = targetMonth.atEndOfMonth();
 
-        // 2. 이번 달에 정산된 '모든' 일별 정산 데이터 조회 (일단 다 가져옴)
+        // 2. 이번 달에 정산된 '모든' 일별 정산 데이터 조회 기능 (일단 다 가져옴)
         List<DailySettlement> allDailySettlements = dailySettlementRepository.findAllByTargetDateBetween(startDate, endDate);
 
         if (allDailySettlements.isEmpty()) {
@@ -69,6 +72,12 @@ public class RunMonthlySettlementUseCase {
 
             // 5. 저장
             monthlySettlementRepository.save(monthlySettlement);
+
+            // 6. Payment 서비스로 월 정산 완료 이벤트 발행
+            eventPublisher.publish(new SettlementCompletedEvent(
+                    sellerId,
+                    totalPayout
+            ));
         }
 
         log.info("=========[월별 정산 종료] 처리된 판매자 수: {} =========", groups.size());

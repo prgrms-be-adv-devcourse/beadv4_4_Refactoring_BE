@@ -5,6 +5,7 @@ import com.thock.back.settlement.reconciliation.app.UseCase.SavePgDataUseCase;
 import com.thock.back.settlement.reconciliation.app.UseCase.SaveSalesLogUseCase;
 import com.thock.back.settlement.reconciliation.in.dto.OrderItemMessageDto;
 import com.thock.back.settlement.reconciliation.in.dto.PgSalesDto;
+import com.thock.back.shared.settlement.dto.SettlementOrderItemDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,17 @@ public class ReconciliationFacade {
     public void receiveOrderItems(OrderItemMessageDto dto) {
         saveSalesLogUseCase.execute(dto);
     }
+
+    @Transactional
+    public void receiveSettlementItems(List<SettlementOrderItemDto> items) {
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+
+        for (SettlementOrderItemDto item : items) {
+            saveSalesLogUseCase.execute(toOrderItemMessageDto(item));
+        }
+    }
     // 2. PG사의 주문서 저장하는 로직
     @Transactional
     public void receivePgData(List<PgSalesDto> dtos) {
@@ -37,4 +49,18 @@ public class ReconciliationFacade {
         runReconciliationUseCase.execute(targetDate);
     }
 
+    private OrderItemMessageDto toOrderItemMessageDto(SettlementOrderItemDto item) {
+        return new OrderItemMessageDto(
+                item.orderNo(),
+                item.sellerId(),
+                item.productId(),
+                item.productName(),
+                item.productQuantity(),
+                item.productPrice(),
+                item.paymentAmount(),
+                item.eventType(),
+                item.metadata(),
+                item.snapshotAt()
+        );
+    }
 }

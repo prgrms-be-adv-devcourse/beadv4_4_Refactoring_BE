@@ -1,5 +1,7 @@
 package com.thock.back.settlement.settlement.app.useCase;
 
+import com.thock.back.global.eventPublisher.EventPublisher;
+import com.thock.back.shared.settlement.event.SettlementCompletedEvent;
 import com.thock.back.settlement.settlement.domain.DailySettlement;
 import com.thock.back.settlement.settlement.domain.MonthlySettlement;
 import com.thock.back.settlement.settlement.domain.enums.MonthlySettlementStatus;
@@ -35,6 +37,9 @@ class RunMonthlySettlementUseCaseTest {
 
     @Mock
     private MonthlySettlementRepository monthlySettlementRepository;
+
+    @Mock
+    private EventPublisher eventPublisher;
 
     @Test
     @DisplayName("정상 흐름: 2월달 일별 정산 데이터를 모아서 판매자별 월별 정산서가 생성되어야 한다.")
@@ -85,6 +90,15 @@ class RunMonthlySettlementUseCaseTest {
                 .findFirst().orElseThrow();
 
         assertThat(settlementB.getTotalPayoutAmount().amount()).isEqualTo(40000L);
+
+        ArgumentCaptor<SettlementCompletedEvent> eventCaptor = ArgumentCaptor.forClass(SettlementCompletedEvent.class);
+        verify(eventPublisher, times(2)).publish(eventCaptor.capture());
+        assertThat(eventCaptor.getAllValues())
+                .extracting(SettlementCompletedEvent::memberID, SettlementCompletedEvent::amount)
+                .containsExactlyInAnyOrder(
+                        org.assertj.core.groups.Tuple.tuple(100L, 24000L),
+                        org.assertj.core.groups.Tuple.tuple(200L, 40000L)
+                );
     }
 
     @Test
@@ -99,6 +113,7 @@ class RunMonthlySettlementUseCaseTest {
 
         // then
         verify(monthlySettlementRepository, times(0)).save(any());
+        verify(eventPublisher, times(0)).publish(any());
     }
 
     // --- Helper Method ---
