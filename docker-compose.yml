@@ -3,13 +3,14 @@ services:
   api-gateway:
     image: sang234/api-gateway:latest
     container_name: api-gateway
-    expose:
-      - "8080"  # Nginx를 통해서만 접근
+    ports:
+      - "8080:8080"
     env_file:
       - .env
     environment:
       TZ: Asia/Seoul
       JAVA_OPTS: -Duser.timezone=Asia/Seoul
+      SPRING_PROFILES_ACTIVE: docker
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       LOG_PATH: /app/logs
     depends_on:
@@ -210,6 +211,8 @@ services:
   mysql:
     image: mysql:8.0
     container_name: thock-mysql
+    ports:
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       TZ: Asia/Seoul
@@ -224,33 +227,6 @@ services:
     networks:
       - internal
     restart: unless-stopped
-
-  # ==================== Nginx (Reverse Proxy) ====================
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/certbot/www:/var/www/certbot
-      - ./nginx/certbot/conf:/etc/letsencrypt
-    depends_on:
-      - api-gateway
-    networks:
-      - internal
-    restart: unless-stopped
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - ./nginx/certbot/www:/var/www/certbot
-      - ./nginx/certbot/conf:/etc/letsencrypt
-    command: certonly --webroot -w /var/www/certbot -d api.thock.site --email admin@thock.site --agree-tos --no-eff-email
-    networks:
-      - internal
 
 # ==================== Networks ====================
 networks:

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -20,8 +21,14 @@ import org.springframework.context.annotation.Profile;
         scheme = "bearer",
         bearerFormat = "JWT"
 )
-@Profile("!prod") // 운영환경에서 비활성화
 public class SwaggerConfig {
+
+    // 환경 변수로 주입
+    @Value("${swagger.server.url:http://localhost:8080}")
+    private String swaggerServerUrl;
+
+    @Value("${swagger.server.description:API Gateway}")
+    private String swaggerServerDescription;
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -29,10 +36,10 @@ public class SwaggerConfig {
         // JWT 토큰을 위한 보안 스키마 이름 정의
         final String securitySchemeName = "bearerAuth";
 
-        // API Gateway를 통한 접근 설정
+        // 환경별로 다른 URL 사용
         io.swagger.v3.oas.models.servers.Server server = new io.swagger.v3.oas.models.servers.Server();
-        server.setUrl("http://localhost:8080");
-        server.setDescription("API Gateway");
+        server.setUrl(swaggerServerUrl);
+        server.setDescription(swaggerServerDescription);
 
         return new OpenAPI()
                 .info(new Info()
@@ -41,16 +48,8 @@ public class SwaggerConfig {
                         .description("Thock 프로젝트용 Swagger 문서입니다.")
                 )
                 .addServersItem(server);
-//                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
-//                .components(new Components()
-//                        .addSecuritySchemes(securitySchemeName,
-//                                new SecurityScheme()
-//                                        .name(securitySchemeName)
-//                                        .type(SecurityScheme.Type.HTTP)
-//                                        .scheme("bearer")
-//                                        .bearerFormat("JWT")
-//                        )
     }
+}
 
     // 드롭다운
     /**
@@ -79,5 +78,5 @@ public class SwaggerConfig {
 //                        .security(Collections.emptyList())) // SecurityRequirement 제거
 //                .build();
 //    }
-}
+
 

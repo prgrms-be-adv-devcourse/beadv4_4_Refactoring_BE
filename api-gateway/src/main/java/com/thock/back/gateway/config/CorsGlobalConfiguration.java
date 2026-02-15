@@ -1,5 +1,7 @@
 package com.thock.back.gateway.config;
 
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -7,21 +9,22 @@ import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class CorsGlobalConfiguration {
+
+    // 환경 변수로 허용 Origin 주입
+    @Value("${cors.allowed.origins}")
+    private String allowedOrigins;
 
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
 
-        // 허용할 Origin
-        corsConfig.setAllowedOrigins(Arrays.asList(
-                "http://localhost:8080",  // API Gateway & Swagger UI
-                "http://localhost:3000",  // Frontend Dev Server
-                "http://localhost:3001",   // Frontend Alt Port
-                "http://localhost:5173"
-        ));
+        // 쉼표로 구분된 문자열을 List로 변환
+        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        corsConfig.setAllowedOrigins(origins);
 
         // 허용할 HTTP 메서드
         corsConfig.setAllowedMethods(Arrays.asList(

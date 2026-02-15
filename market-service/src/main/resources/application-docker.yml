@@ -7,10 +7,14 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
 
 # 다른 서비스 URL (Docker 환경)
 custom:
   global:
     productServiceUrl: ${PRODUCT_SERVICE_URL}
     paymentServiceUrl: ${PAYMENT_SERVICE_URL}
+
+swagger:
+  server:
+    url: http://localhost:8080
+    description: Docker API Gateway

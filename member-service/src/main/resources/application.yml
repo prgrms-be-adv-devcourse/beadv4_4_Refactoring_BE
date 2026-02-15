@@ -6,6 +6,7 @@ server:
   port: 8081
 
 spring:
+
   application:
     name: member-service
 
@@ -19,6 +20,9 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
 # JWT 설정 (공통)
 jwt:

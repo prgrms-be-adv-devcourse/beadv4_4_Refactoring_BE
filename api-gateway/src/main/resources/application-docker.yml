@@ -1,0 +1,18 @@
+# ============================================
+# Docker 환경 (Docker Compose)
+# ============================================
+
+# Docker 환경에서는 서비스 이름으로 통신
+# application.yml의 기본값이 Docker 서비스 이름이므로
+# 별도 환경변수 설정 불필요
+# (예: http://member-service:8081)
+
+# Swagger Docker 설정
+swagger:
+  server:
+    url: http://localhost:8080
+    description: Docker API Gateway
+
+# CORS Docker 설정
+cors:
+  allowed.origins: http://localhost:8080
