@@ -1,4 +1,0 @@
-package com.thock.back.api.shared.market.dto;
-
-public class OrderItemDto {
-}
