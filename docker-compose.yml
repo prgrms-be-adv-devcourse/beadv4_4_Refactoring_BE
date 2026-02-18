@@ -199,10 +199,11 @@ services:
     container_name: redpanda-console
     depends_on:
       - redpanda
-    expose:
-      - "8090"
+    ports:
+      - "8090:8090"
     environment:
       KAFKA_BROKERS: redpanda:29092
+      SERVER_LISTENPORT: 8090
     networks:
       - internal
     restart: unless-stopped
@@ -228,6 +229,78 @@ services:
       - internal
     restart: unless-stopped
 
+  # ==================== Monitoring ====================
+  prometheus:
+    image: prom/prometheus:v2.49.1
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - internal
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --tries=1 -O- http://localhost:3100/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: promtail
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml
+      - ./logs:/var/log/apps:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      loki:
+        condition: service_healthy
+    networks:
+      - internal
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.3.1
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: http://localhost:3000/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - internal
+    restart: unless-stopped
+
 # ==================== Networks ====================
 networks:
   internal:
@@ -237,3 +310,6 @@ networks:
 volumes:
   mysql-data:
   redpanda-data:
+  prometheus-data:
+  loki-data:
+  grafana-data:
