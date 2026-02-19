@@ -36,7 +36,7 @@ jobs:
         with:
           context: .
           file: api-gateway/Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: sang234/api-gateway:latest
 
@@ -45,7 +45,7 @@ jobs:
         with:
           context: .
           file: member-service/Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: sang234/member-service:latest
 
@@ -54,7 +54,7 @@ jobs:
         with:
           context: .
           file: product-service/Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: sang234/product-service:latest
 
@@ -63,7 +63,7 @@ jobs:
         with:
           context: .
           file: market-service/Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: sang234/market-service:latest
 
@@ -72,7 +72,7 @@ jobs:
         with:
           context: .
           file: payment-service/Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: sang234/payment-service:latest
 
@@ -81,7 +81,7 @@ jobs:
         with:
           context: .
           file: settlement-service/Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: sang234/settlement-service:latest
 
