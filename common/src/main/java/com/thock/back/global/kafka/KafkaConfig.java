@@ -66,6 +66,12 @@ public class KafkaConfig {
         configProps.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, 120_000); // 2분
         configProps.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 30_000); // 30초
 
+        /**
+         *  JsonSerializer<Object> + setAddTypeInfo(true)
+         *  - 일반 이벤트 발행 경로에서 Object(여러 이벤트 클래스)를 그대로 보냄
+         *  - 소비자에서 어떤 클래스인지 알아야 역직렬화 가능
+         *  - type header(__TypeId__)를 붙여서 클래스 정보를 전달
+         */
         JsonSerializer<Object> jsonSerializer = new JsonSerializer<>(kafkaObjectMapper());
         jsonSerializer.setAddTypeInfo(true);
 
@@ -81,10 +87,46 @@ public class KafkaConfig {
         return new KafkaTemplate<>(producerFactory());
     }
 
+    /**
+     * Outbox용 String Producer
+     * Outbox에서 payload는 이미 JSON 문자열로 저장되어 있으므로
+     * StringSerializer를 사용해야 함 (JsonSerializer 사용 시 이중 직렬화 문제 발생)
+     * 타입 정보도 eventType으로 관리 가능
+     */
+    @Bean
+    public ProducerFactory<String, String> outboxProducerFactory() {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        /**
+         * Outbox용 신뢰성 설정
+         * 즉시 발행 RETRIES=Integer.MAX_VALUE vs outbox RETRIES=3 이유
+         * 재시도 정책을 즉시 발행은 producer에서, outbox는 poller + DB에서로 책임 분리
+         *
+         * 즉시 발행
+         * - 요청 트랜잭션/흐름 안에서 바로 보내는 모델이라 producer 측 재시도를 크게 잡아 "당장 전달 성공" 확률을 높이려는 의도
+         * outbox
+         * - 실패해도 DB outbox에 남아서 poller가 다시 재시도 함
+         * - producer 내부 재시도를 무한으로 하면 poller 스레드가 오래 묶일 수 있음
+         * - 그래서 재시도 횟수를 짧게 두고, 큰 재시도는 outbox 레벨에서 처리하도록 함
+         */
+        configProps.put(ProducerConfig.ACKS_CONFIG, "all");                 // 모든 복제본 확인
+        configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);    // 멱등성 보장
+        configProps.put(ProducerConfig.RETRIES_CONFIG, 3);                  // 재시도 횟수
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    @Bean
+    public KafkaTemplate<String, String> outboxKafkaTemplate() {
+        return new KafkaTemplate<>(outboxProducerFactory());
+    }
+
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest"); // 기본값 latest 이지만 명시
 
         // ErrorHandlingDeserializer : 역직렬화 에러로 컨슈머 죽는거 방지
         configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
