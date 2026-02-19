@@ -104,6 +104,6 @@ jobs:
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             cd ~/deploy
-            docker compose -f docker-compose-prod.yml pull
-            docker compose -f docker-compose-prod.yml up -d
+            docker compose -f docker-compose.yml pull
+            docker compose -f docker-compose.yml up -d
           EOF
