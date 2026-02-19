@@ -1,22 +1,24 @@
 package com.thock.back.global.outbox.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * 아웃박스 패턴을 위한 기본 엔티티
  */
-@MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
+@Entity
+@Table(name = "OUTBOX_EVENT", indexes = {
+        @Index(name = "idx_outbox_status_created", columnList = "status, createdAt"),
+        @Index(name = "idx_outbox_aggregate", columnList = "aggregateType, aggregateId")
+})
 @Getter
-@NoArgsConstructor
-public abstract class OutboxEvent {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class OutboxEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,13 +46,13 @@ public abstract class OutboxEvent {
     /**
      * Kafka 토픽명
      */
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, length = 100)
     private String topic;
 
     /**
-     * 이벤트 페이로드 == 이벤트 상세 데이터 (JSON 직렬화, ex. {"memberId": 300, "amount": 5000})
+     * 이벤트 페이로드 == 이벤트 상세 데이터
      */
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String payload;
 
     /**
@@ -58,7 +60,7 @@ public abstract class OutboxEvent {
      */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private OutboxStatus status;
+    private OutboxStatus status = OutboxStatus.PENDING;
 
     /**
      * 재시도 횟수 - 재시도 정책 적용
@@ -69,8 +71,7 @@ public abstract class OutboxEvent {
     /**
      * 실패 에러 메시지
      */
-    @Column(columnDefinition = "TEXT")
-    private String errorMessage;
+    private String lastErrorMessage;
 
     /**
      * 이벤트 생성 시간
@@ -89,12 +90,15 @@ public abstract class OutboxEvent {
      */
     private LocalDateTime processingStartedAt;
 
+    @Version
+    private Long version;
+
     /**
      * 분산 추적 ID - 이벤트 추적용 고유 식별자
      * Zipkin, Jaeger 등 분산 추적 시스템과 연동 가능
      */
-    @Column(nullable = false, length = 36)
-    private String traceId;
+//    @Column(nullable = false, length = 36)
+//    private String traceId;
 
     /**
      * TODO
@@ -109,16 +113,17 @@ public abstract class OutboxEvent {
      */
 
 
-    public OutboxEvent(String aggregateType, String aggregateId, String eventType,
-                       String topic, String payload) {
-        this.aggregateType = aggregateType;
-        this.aggregateId = aggregateId;
-        this.eventType = eventType;
-        this.topic = topic;
-        this.payload = payload;
-        this.status = OutboxStatus.PENDING;
-        this.retryCount = 0;
-        this.traceId = UUID.randomUUID().toString();
+    public static OutboxEvent create(String aggregateType, String aggregateId,
+                                     String eventType, String topic, String payload) {
+        OutboxEvent event = new OutboxEvent();
+        event.aggregateType = aggregateType;
+        event.aggregateId = aggregateId;
+        event.eventType = eventType;
+        event.topic = topic;
+        event.payload = payload;
+        event.createdAt = LocalDateTime.now();
+        event.status = OutboxStatus.PENDING;
+        return event;
     }
 
     /**
@@ -141,10 +146,14 @@ public abstract class OutboxEvent {
     /**
      * 발행 실패 처리
      */
-    public void markAsFailed(String error) {
-        this.status = OutboxStatus.FAILED;
+    public void markAsFailed(String errorMessage) {
         this.retryCount++;
-        this.errorMessage = error;
+        this.lastErrorMessage = errorMessage;
+        if (this.retryCount >= 5) {
+            this.status = OutboxStatus.FAILED;
+        } else {
+            this.status = OutboxStatus.PENDING;
+        }
     }
 
     /**
