@@ -1,9 +1,7 @@
 spring:
   autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration
-
-  autoconfigure:
     exclude:
+      - org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
   kafka:
     bootstrap-servers: localhost:9092
