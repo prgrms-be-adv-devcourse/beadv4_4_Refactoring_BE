@@ -3,11 +3,9 @@ package com.thock.back.global.outbox;
 import com.thock.back.global.outbox.entity.OutboxEvent;
 import com.thock.back.global.outbox.entity.OutboxStatus;
 import com.thock.back.global.outbox.repository.OutboxEventRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,9 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @ConditionalOnExpression("${outbox.enabled:false} and ${outbox.poller.enabled:true}")
-
 /**
  * @ConditionalOnProperty(name = "outbox.poller.enabled", havingValue = "true", matchIfMissing = true)
  * outbox.poller.enabled가 yml에 없어도 (matchIfMissing = true)
@@ -34,11 +30,16 @@ import java.util.concurrent.TimeUnit;
  * havingValue="true" - 해당 프로퍼티 값이 true일 때만 빈 생성
  * matchIfMissing=true - 프로퍼티가 없어도 생성
  */
-
 public class OutboxPoller {
 
     private final OutboxEventRepository outboxEventRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, String> outboxKafkaTemplate;
+
+    public OutboxPoller(OutboxEventRepository outboxEventRepository,
+                        KafkaTemplate<String, String> outboxKafkaTemplate) {
+        this.outboxEventRepository = outboxEventRepository;
+        this.outboxKafkaTemplate = outboxKafkaTemplate;
+    }
 
     @Value("${outbox.poller.batch-size:100}")
     private int batchSize;
@@ -75,7 +76,7 @@ public class OutboxPoller {
         try {
             event.markAsProcessing();
 
-            kafkaTemplate.send(event.getTopic(), event.getAggregateId(), event.getPayload())
+            outboxKafkaTemplate.send(event.getTopic(), event.getAggregateId(), event.getPayload())
                     .get(sendTimeoutSeconds, TimeUnit.SECONDS);
 
             event.markAsSent();
