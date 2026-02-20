@@ -1,7 +1,7 @@
 package com.thock.back.product.out;
 
 import com.thock.back.product.domain.Category;
-import com.thock.back.product.domain.Product;
+import com.thock.back.product.domain.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
