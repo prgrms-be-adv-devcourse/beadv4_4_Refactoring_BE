@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -135,7 +137,7 @@ public class ProductController {
     })
     @PostMapping("/internal/list")
     public ResponseEntity<List<ProductInternalResponse>> getProductsByIds(
-            @RequestBody List<Long> productIds
+            @RequestBody @NotEmpty List<@NotNull Long> productIds
     ) {
         return ResponseEntity.ok(productQueryService.getProductsByIds(productIds));
     }
