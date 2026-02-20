@@ -62,3 +62,25 @@ outbox:
     max-retry: 5
   cleanup:
     cron: "0 0 3 * * *"
+
+feign:
+  circuitbreaker:
+    enabled: true                   # Feign 호출에 Resilience4j 서킷브레이커 연동 활성화
+  client:
+    config:
+      default:
+        connectTimeout: 5000        # 모든 FeignClient에 적용되는 기본 값
+        readTimeout: 5000           # TCP 연결 맺는 데 최대 5초
+        loggerLevel: basic          # 요청/응답 URL, 상태코드만 로그 출력
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      product-client:
+        sliding-window-size: 10                 # 최근 10번의 호출을 기준으로 판단
+        failure-rate-threshold: 50              # 10번 중 5번 (50%) 실패 시 서킷 OPEN
+        wait-duration-in-open-state: 10s        # OPEN 후 10초 동안 호출 차단 / 이후 HALF_OPEN(일부 호출 허용, 테스트)
+      payment-wallet-client:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s

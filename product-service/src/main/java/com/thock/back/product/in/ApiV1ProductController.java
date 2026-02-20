@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -150,13 +152,11 @@ public class ApiV1ProductController {
                             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[1, 2, 3]")
                     )
             )
-            @RequestBody List<Long> productIds
+            @RequestBody @NotEmpty List<@NotNull Long> productIds
     ) {
         List<ProductInternalResponse> responses = productService.getProductsByIds(productIds);
         return ResponseEntity.ok(responses);
     }
-
-
 
     // 판매자가 등록한 자신의 상품 조회 - 판매자 페이지에서 이용
     @Operation(summary = "내가 등록한 상품 리스트 조회", description = "판매자가 본인이 등록한 상품들을 페이지네이션으로 조회합니다. " + "판매자 권한이 필요하며, 최신 등록순으로 정렬됩니다.")
