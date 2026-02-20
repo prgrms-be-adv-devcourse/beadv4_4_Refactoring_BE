@@ -16,6 +16,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Getter
 @NoArgsConstructor
 @Table(name = "payment_payments")
+//d
 public class Payment extends BaseIdAndTime {
     private Long amount;
 

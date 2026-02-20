@@ -66,7 +66,7 @@ public class OutboxEvent {
      * 재시도 횟수 - 재시도 정책 적용
      */
     @Column(nullable = false)
-    private Integer retryCount;
+    private Integer retryCount = 0;
 
     /**
      * 실패 에러 메시지
