@@ -6,7 +6,7 @@
     <include resource="logback-base.xml"/>
 
     <!-- API Logger -->
-    <logger name="com.thock.back.product.in.ApiV1ProductController" level="INFO" additivity="false">
+    <logger name="com.thock.back.product.in.ProductController" level="INFO" additivity="false">
         <appender-ref ref="API_FILE"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
