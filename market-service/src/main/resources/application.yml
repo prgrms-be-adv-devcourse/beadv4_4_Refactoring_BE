@@ -52,3 +52,13 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     enabled: false
+
+outbox:
+  enabled: true
+  poller:
+    enabled: true
+    interval-ms: 5000
+    batch-size: 100
+    max-retry: 5
+  cleanup:
+    cron: "0 0 3 * * *"

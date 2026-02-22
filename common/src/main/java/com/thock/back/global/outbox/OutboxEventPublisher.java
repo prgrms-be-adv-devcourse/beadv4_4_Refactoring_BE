@@ -49,7 +49,7 @@ public class OutboxEventPublisher {
             OutboxEvent outboxEvent = OutboxEvent.create(
                     metadata.aggregateType(),
                     metadata.aggregateId(),
-                    event.getClass().getSimpleName(),
+                    event.getClass().getName(), // getName -> FQN(Fully Quality Name) : 역직렬화/라우팅에 안정적
                     metadata.topic(),
                     payload
             );

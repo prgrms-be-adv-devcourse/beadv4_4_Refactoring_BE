@@ -1,8 +1,10 @@
-package com.thock.back.product.domain;
+package com.thock.back.product.domain.entity;
 
 import com.thock.back.global.exception.CustomException;
 import com.thock.back.global.exception.ErrorCode;
 import com.thock.back.global.jpa.entity.BaseIdAndTime;
+import com.thock.back.product.domain.Category;
+import com.thock.back.product.domain.ProductState;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -85,10 +87,23 @@ public class Product extends BaseIdAndTime {
     public void modify(String name, Long price, Long salePrice, Integer stock,
                        Category category, String description, String imageUrl,
                        Map<String, Object> detail){
+
+        if (name == null || name.isBlank()) {
+            throw new CustomException(ErrorCode.PRODUCT_NAME_REQUIRED);
+        }
+
+        if (price == null || price <= 0) {
+            throw new CustomException(ErrorCode.PRODUCT_PRICE_INVALID);
+        }
+
+        if (category == null) {
+            throw new CustomException(ErrorCode.PRODUCT_CATEGORY_REQUIRED);
+        }
+
         this.name = name;
         this.price = price;
-        this.salePrice = salePrice;
-        this.stock = stock;
+        this.salePrice = (salePrice != null) ? salePrice : price;
+        this.stock = (stock != null) ? stock : 0;
         this.category = category;
         this.description = description;
         this.imageUrl = imageUrl;

@@ -4,6 +4,7 @@ import com.thock.back.global.outbox.entity.OutboxEvent;
 import com.thock.back.global.outbox.entity.OutboxStatus;
 import com.thock.back.global.outbox.repository.OutboxEventRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -76,8 +78,15 @@ public class OutboxPoller {
         try {
             event.markAsProcessing();
 
-            outboxKafkaTemplate.send(event.getTopic(), event.getAggregateId(), event.getPayload())
-                    .get(sendTimeoutSeconds, TimeUnit.SECONDS);
+            /**
+             * 파티션이 null이면 Kafka 기본 파티셔너가 결정
+             * key가 있으므로 보통 key(aggregateId) 해시 기반으로 같은 key는 같은 파티션에 가서 순서 보장이 된다
+             */
+            ProducerRecord<String, String> record = new ProducerRecord<>(
+                    event.getTopic(), null, event.getAggregateId(), event.getPayload()
+            );
+            record.headers().add("__TypeId__", event.getEventType().getBytes(StandardCharsets.UTF_8));
+            outboxKafkaTemplate.send(record).get(sendTimeoutSeconds, TimeUnit.SECONDS);
 
             event.markAsSent();
             log.debug("Published outbox event: id={}, topic={}", event.getId(), event.getTopic());
