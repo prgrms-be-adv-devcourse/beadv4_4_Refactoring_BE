@@ -52,7 +52,7 @@ public class PaymentKafkaListener {
     @KafkaListener(topics = KafkaTopics.MARKET_ORDER_PAYMENT_REQUEST_CANCELED, groupId = "payment-service")
     @Transactional
     public void handle(MarketOrderPaymentRequestCanceledEvent event) {
-        log.info("Received MarketOrderPaymentRequestCanceledEvent via Kafka");
+        log.info("Received MarketOrderPaymentRequestCanceledEvent via Kafka : orderId={}", event.dto().orderId());
         paymentFacade.canceledPayment(event.dto());
     }
 

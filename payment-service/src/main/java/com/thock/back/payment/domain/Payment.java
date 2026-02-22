@@ -9,6 +9,7 @@ import com.thock.back.shared.payment.dto.PaymentDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import static jakarta.persistence.FetchType.LAZY;
 
@@ -16,7 +17,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Getter
 @NoArgsConstructor
 @Table(name = "payment_payments")
-//d
+@Slf4j
 public class Payment extends BaseIdAndTime {
     private Long amount;
 
@@ -68,6 +69,9 @@ public class Payment extends BaseIdAndTime {
     }
 
     public void updatePaymentStatus(PaymentStatus status){
+        if (this.status == status) {
+            return;
+        }
         this.status = status;
     }
 

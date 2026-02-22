@@ -27,17 +27,19 @@ public class PaymentCompletedOrderPaymentUseCase {
     public void completedOrderPayment(OrderDto order) {
         Wallet wallet = walletRepository.findByHolderId(order.buyerId())
                 .orElseThrow(() -> {
-                    log.error("지갑 조회 실패 - memberId={}", order.buyerId());
+                    log.error("지갑 조회 실패 - orderId={}, memberId={}", order.orderNumber(), order.buyerId());
                     return new CustomException(ErrorCode.WALLET_NOT_FOUND);
                 });
         PaymentMember member = paymentMemberRepository.findById(order.buyerId())
                 .orElseThrow(() -> {
-                    log.error("멤버 조회 실패 - memberId={}", order.buyerId());
+                    log.error("멤버 조회 실패 - orderId={}, memberId={}", order.orderNumber(), order.buyerId());
                     return new CustomException(ErrorCode.MEMBER_NOT_FOUND);
                 });
+        log.info("일반 결제 신청 요청- orderId={}, Amount={}", order.orderNumber(), order.totalSalePrice());
 
         if (wallet.getBalance() < order.totalSalePrice()) {
-            log.error("잔액 부족 - memberId={}, balance={}, required={}", order.buyerId(), wallet.getBalance(), order.totalSalePrice());
+            log.error("잔액 부족 - orderId={}, memberId={}, balance={}, required={}",
+                    order.orderNumber(), order.buyerId(), wallet.getBalance(), order.totalSalePrice());
             throw new CustomException(ErrorCode.WALLET_NOT_WITHDRAW);
         }
 
@@ -71,6 +73,6 @@ public class PaymentCompletedOrderPaymentUseCase {
                 )
         );
 
-        log.info("주문 결제 완료 - orderId={}, memberId={}, amount={}", order.orderNumber(), order.buyerId(), order.totalSalePrice());
+        log.info("일반 결제 완료 - orderId={}, memberId={}, amount={}", order.orderNumber(), order.buyerId(), order.totalSalePrice());
     }
 }

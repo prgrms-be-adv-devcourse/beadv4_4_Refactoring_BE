@@ -56,6 +56,7 @@ public class PaymentConfirmAndRefundUseCase {
      * 토스페이먼츠 검증 기능
      **/
     public Map<String, Object> confirmPayment(PaymentConfirmRequestDto req) {
+        log.info("토스 결제 신청 - orderId={}, Amount={}", req.getOrderId(), req.getAmount());
         Payment payment = paymentRepository.findByOrderId(req.getOrderId())
                 .orElseThrow(() -> {
                     log.error("결제 조회 실패 - orderId={}", req.getOrderId());
@@ -63,12 +64,12 @@ public class PaymentConfirmAndRefundUseCase {
                 });
         PaymentMember member = paymentMemberRepository.findById(payment.getBuyer().getId())
                 .orElseThrow(() -> {
-                    log.error("멤버 조회 실패 - memberId={}", payment.getBuyer().getId());
+                    log.error("멤버 조회 실패 - orderId={}, memberId={}", req.getOrderId(), payment.getBuyer().getId());
                     return new CustomException(ErrorCode.MEMBER_NOT_FOUND);
                 });
         Wallet wallet = walletRepository.findByHolderId(member.getId())
                 .orElseThrow(() -> {
-                    log.error("지갑 조회 실패 - memberId={}", member.getId());
+                    log.error("지갑 조회 실패 - orderId={}, memberId={}", req.getOrderId(), member.getId());
                     return new CustomException(ErrorCode.WALLET_NOT_FOUND);
                 });
         // 상태 체크
@@ -150,7 +151,7 @@ public class PaymentConfirmAndRefundUseCase {
         payment.updatePaymentKey(req.getPaymentKey());
         paymentRepository.save(payment);
         payment.createPaymentLogEvent();
-        log.info("토스페이먼츠 검증 완료 - orderId={}, amount={} ", req.getOrderId(),  approvedAmount);
+        log.info("토스페이먼츠 결제 완료 - orderId={}, amount={} ", req.getOrderId(),  approvedAmount);
         PaymentDto paymentDto = new PaymentDto(payment.getId(),
                                                 payment.getOrderId(),
                                                 payment.getPaymentKey(),
@@ -194,27 +195,28 @@ public class PaymentConfirmAndRefundUseCase {
     )
     public void cancelToss(PaymentCancelRequestDto req) {
         // 검증 (트랜잭션 외부에서 조회)
+        log.info("토스 환불 신청 - orderId={}, refundAmount={}", req.orderId(), req.amount());
         Payment payment = paymentRepository.findByOrderId(req.orderId())
                 .orElseThrow(() -> {
-                    log.error("결제 조회 실패 - orderId={}", req.orderId());
+                    log.warn("결제 조회 실패 - orderId={}", req.orderId());
                     return new CustomException(ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER);
                 });
 
         // 상태 체크
         if (payment.getStatus() == PaymentStatus.CANCELED || payment.getStatus() == PaymentStatus.REQUESTED) {
-            log.error("이미 취소된 결제입니다 - orderId={}", req.orderId());
+            log.warn("이미 취소된 결제입니다 - orderId={}", req.orderId());
             throw new CustomException(ErrorCode.PAYMENT_NOT_COMPLETE);
         }
 
         // 환불 이유 체크
         if (req.cancelReason() == null) {
-            log.error("환불 사유가 없습니다 - orderId={}", req.orderId());
+            log.warn("환불 사유가 없습니다 - orderId={}", req.orderId());
             throw new CustomException(ErrorCode.REFUND_NOT_CANCEL_REASON);
         }
 
         // 1. 0원 / 음수 방지
         if (req.amount() <= 0) {
-            log.error("환불 금액이 유효하지 않습니다 - orderId={}, amount={}", req.orderId(), req.amount());
+            log.warn("환불 금액이 유효하지 않습니다 - orderId={}, amount={}", req.orderId(), req.amount());
             throw new CustomException(ErrorCode.INVALID_REFUND_AMOUNT);
         }
 
@@ -254,7 +256,7 @@ public class PaymentConfirmAndRefundUseCase {
                     .onStatus(HttpStatusCode::isError, response ->
                             response.bodyToMono(TossErrorResponseDto.class)
                                     .flatMap(error -> {
-                                        log.error("토스 결제 취소 실패 - orderId={}, error={}", req.orderId(), error.message());
+                                        log.warn("토스 결제 취소 실패 - orderId={}, error={}", req.orderId(), error.message());
                                         return Mono.error(
                                                 new CustomException(
                                                         ErrorCode.TOSS_CONFIRM_FAIL,
@@ -271,7 +273,7 @@ public class PaymentConfirmAndRefundUseCase {
                 p.updatePaymentStatus(previousStatus);
                 paymentRepository.save(p);
             });
-            log.error("토스 API 호출 실패로 상태 복원 - orderId={}, status={}", req.orderId(), previousStatus);
+            log.warn("토스 API 호출 실패로 상태 복원 - orderId={}, status={}", req.orderId(), previousStatus);
             throw e;
         }
 
@@ -333,27 +335,28 @@ public class PaymentConfirmAndRefundUseCase {
     )
     public void cancelPayment(PaymentCancelRequestDto req){
         // 결제 확인
+        log.info("내부 결제 환불 신청 - orderId={}", req.orderId());
         Payment payment = paymentRepository.findByOrderId(req.orderId())
                 .orElseThrow(() -> {
-                    log.error("결제 조회 실패 - orderId={}", req.orderId());
+                    log.warn("결제 조회 실패 - orderId={}", req.orderId());
                     return new CustomException(ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER);
                 });
         // 지갑 확인
         Wallet wallet = walletRepository.findByHolderId(payment.getBuyer().getId())
                 .orElseThrow(() -> {
-                    log.error("지갑 조회 실패 - memberId={}", payment.getBuyer().getId());
+                    log.warn("지갑 조회 실패 - memberId={}", payment.getBuyer().getId());
                     return new CustomException(ErrorCode.WALLET_NOT_FOUND);
                 });
 
         // 상태 체크 - 유저가 부분취소를 여러번 할 수 있음
         if (payment.getStatus() == PaymentStatus.CANCELED || payment.getStatus() == PaymentStatus.REQUESTED) {
-            log.error("이미 취소된 결제입니다 - orderId={}", req.orderId());
+            log.warn("이미 취소된 결제입니다 - orderId={}", req.orderId());
             throw new CustomException(ErrorCode.PAYMENT_NOT_COMPLETE);
         }
 
         // 1. 0원 / 음수 방지
         if (req.amount() <= 0) {
-            log.error("환불 금액이 유효하지 않습니다 - orderId={}, amount={}", req.orderId(), req.amount());
+            log.warn("환불 금액이 유효하지 않습니다 - orderId={}, amount={}", req.orderId(), req.amount());
             throw new CustomException(ErrorCode.INVALID_REFUND_AMOUNT);
         }
         // 3. 환불
@@ -402,13 +405,15 @@ public class PaymentConfirmAndRefundUseCase {
     }
 
     public void cancelBeforePayment(String orderId) {
+        log.info("결제 전 환불 신청 - orderId={}", orderId);
         Payment payment = paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> {
-                    log.error("결제 조회 실패 - orderId={}", orderId);
+                    log.warn("결제 조회 실패 - orderId={}", orderId);
                     return new CustomException(ErrorCode.PAYMENT_UNKNOWN_ORDER_NUMBER);
                 });
         payment.updatePaymentStatus(PaymentStatus.CANCELED);
         paymentRepository.save(payment);
         payment.createPaymentLogEvent();
+        log.info("결제 전 환불 완료- orderId={}, refundedAmount={}", orderId, payment.getAmount());
     }
 }

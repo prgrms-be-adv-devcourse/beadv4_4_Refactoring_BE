@@ -32,6 +32,8 @@ services:
         condition: service_started
     networks:
       - internal
+    volumes:
+      - ./logs/gateway:/app/logs
     restart: unless-stopped
 
   # ==================== Application Services ====================
@@ -62,6 +64,8 @@ services:
         condition: service_started
     networks:
       - internal
+    volumes:
+      - ./logs/member:/app/logs
     restart: unless-stopped
 
   product-service:
@@ -91,6 +95,8 @@ services:
         condition: service_started
     networks:
       - internal
+    volumes:
+      - ./logs/product:/app/logs
     restart: unless-stopped
 
   market-service:
@@ -126,6 +132,8 @@ services:
         condition: service_started
     networks:
       - internal
+    volumes:
+      - ./logs/market:/app/logs
     restart: unless-stopped
 
   payment-service:
@@ -155,6 +163,8 @@ services:
         condition: service_started
     networks:
       - internal
+    volumes:
+      - ./logs/payment:/app/logs
     restart: unless-stopped
 
   settlement-service:
@@ -184,6 +194,8 @@ services:
         condition: service_started
     networks:
       - internal
+    volumes:
+      - ./logs/settlement:/app/logs
     restart: unless-stopped
 
   # ==================== Kafka ====================

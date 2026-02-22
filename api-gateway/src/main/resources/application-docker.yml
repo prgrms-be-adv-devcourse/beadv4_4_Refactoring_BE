@@ -15,4 +15,4 @@ swagger:
 
 # CORS Docker 설정
 cors:
-  allowed.origins: http://localhost:8080
+  allowed.origins: http://localhost:8080,http://localhost:5173

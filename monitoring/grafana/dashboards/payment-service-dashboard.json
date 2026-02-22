@@ -1,7 +1,5 @@
 {
-  "annotations": {
-    "list": []
-  },
+  "annotations": { "list": [] },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
@@ -10,504 +8,160 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "fieldConfig": { "defaults": { "unit": "suffix:건", "noValue": "--건", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 4, "x": 0, "y": 0 },
       "id": 1,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["sum"],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
       "targets": [
-        {
-          "expr": "sum(count_over_time({service=~\"$service\", log_type=\"service-info\", level=~\"$level\", logger=~\"$logger\"} |~ \"$search\"[$__range]))",
-          "legendFormat": "",
-          "refId": "A"
-        }
+        { "refId": "A", "expr": "sum(count_over_time({service=\"payment\",log_type=~\"service-info|app\",level=\"INFO\"} |~ \"(일반 결제 신청|토스 결제 신청 - .*Amount=[1-9][0-9]*)\"[$__range]))" }
       ],
-      "title": "Total INFO Logs",
+      "title": "결제 요청 건수",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "red"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 10 },
-              { "color": "red", "value": 50 }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "fieldConfig": { "defaults": { "unit": "suffix:건", "noValue": "--건", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 4, "x": 4, "y": 0 },
       "id": 2,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["sum"],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
       "targets": [
-        {
-          "expr": "sum(count_over_time({service=~\"$service\", log_type=\"service-error\", level=~\"$level\", logger=~\"$logger\"} |~ \"$search\"[$__range]))",
-          "legendFormat": "",
-          "refId": "A"
-        }
+        { "refId": "A", "expr": "sum(count_over_time({service=\"payment\",log_type=~\"service-info|app\",level=\"INFO\"} |~ \"결제 완료\"[$__range]))" }
       ],
-      "title": "Total ERROR Logs",
+      "title": "결제 완료 건수",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "fieldConfig": { "defaults": { "unit": "suffix:건", "noValue": "--건", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 } ] } }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 4, "x": 8, "y": 0 },
       "id": 3,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["sum"],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
       "targets": [
-        {
-          "expr": "sum(count_over_time({service=~\"$service\", log_type=\"service-info\", level=~\"$level\", logger=~\"$logger\"} |~ \"환불 완료\" |~ \"$search\"[$__range]))",
-          "legendFormat": "",
-          "refId": "A"
-        }
+        { "refId": "A", "expr": "count(sum by (orderId) (count_over_time({service=\"payment\",log_type=~\"service-error|app\",level=\"ERROR\",logger=~\"com[.]thock[.]back[.]payment[.]app[.]PaymentCompletedOrderPaymentUseCase|com[.]thock[.]back[.]payment[.]app[.]PaymentConfirmAndRefundUseCase\"} | regexp \"orderId=(?P<orderId>[^, ]+)\"[$__range])))" }
       ],
-      "title": "Refund Success",
+      "title": "결제 실패 건수",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "orange"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 10 }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "fieldConfig": { "defaults": { "unit": "suffix:건", "noValue": "--건", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 4, "x": 12, "y": 0 },
       "id": 4,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["sum"],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
       "targets": [
-        {
-          "expr": "sum(count_over_time({service=~\"$service\", log_type=\"service-error\", level=~\"$level\", logger=~\"$logger\"} |~ \"환불|취소\" |~ \"$search\"[$__range]))",
-          "legendFormat": "",
-          "refId": "A"
-        }
+        { "refId": "A", "expr": "sum(count_over_time({service=\"payment\",log_type=~\"service-info|app\",level=\"INFO\"} |~ \"환불 신청\"[$__range]))" }
       ],
-      "title": "Refund Errors",
+      "title": "환불 신청 건수",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          }
-        },
-        "overrides": [
-          {
-            "matcher": { "id": "byName", "options": "service-error" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
-          },
-          {
-            "matcher": { "id": "byName", "options": "service-info" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
-          }
-        ]
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "fieldConfig": { "defaults": { "unit": "suffix:건", "noValue": "--건", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 4, "x": 16, "y": 0 },
       "id": 5,
-      "options": {
-        "legend": {
-          "calcs": ["sum"],
-          "displayMode": "table",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
       "targets": [
-        {
-          "expr": "sum(count_over_time({service=~\"$service\", log_type=~\"$log_type\", level=~\"$level\", logger=~\"$logger\"} |~ \"$search\"[1m])) by (log_type)",
-          "legendFormat": "{{log_type}}",
-          "refId": "A"
-        }
+        { "refId": "A", "expr": "sum(count_over_time({service=\"payment\",log_type=~\"service-info|app\",level=\"INFO\"} |~ \"(토스 (전액|부분) 환불 완료|내부 결제 (전액|부분) 환불 완료)\"[$__range]))" }
       ],
-      "title": "Service Logs Over Time (Info vs Error)",
-      "type": "timeseries"
+      "title": "환불 완료 건수",
+      "type": "stat"
     },
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "fieldConfig": { "defaults": { "unit": "suffix:건", "noValue": "--건", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 } ] } }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 4, "x": 20, "y": 0 },
       "id": 6,
-      "options": {
-        "legend": {
-          "calcs": ["sum"],
-          "displayMode": "table",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
       "targets": [
-        {
-          "expr": "topk(10, sum(count_over_time({service=~\"$service\", log_type=~\"$log_type\", level=~\"$level\", logger=~\"$logger\"} |~ \"$search\"[1m])) by (logger))",
-          "legendFormat": "{{logger}}",
-          "refId": "A"
-        }
+        { "refId": "A", "expr": "sum(count_over_time({service=\"payment\",log_type=\"service-error\",level=\"WARN\",logger=~\"com[.]thock[.]back[.]payment[.]app[.]PaymentCompletedOrderPaymentUseCase|com[.]thock[.]back[.]payment[.]app[.]PaymentConfirmAndRefundUseCase\"}[$__range]))" }
       ],
-      "title": "Logs by Logger (Class)",
-      "type": "timeseries"
+      "title": "환불 실패 건수",
+      "type": "stat"
     },
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 12 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "fieldConfig": { "defaults": { "unit": "currencyKRW", "decimals": 0, "noValue": "--원", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 6 },
       "id": 7,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": true,
-        "showCommonLabels": false,
-        "showLabels": true,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
-      },
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
       "targets": [
         {
-          "expr": "{service=~\"$service\", log_type=\"service-info\", level=~\"$level\", logger=~\"$logger\"} |~ \"$search\"",
-          "refId": "A"
+          "refId": "A",
+          "expr": "sum(sum_over_time({service=\"payment\",log_type=~\"service-info|app\",level=\"INFO\"} |~ \"결제 완료\" | regexp \"amount=(?P<amount>[0-9]+)\" | unwrap amount [$__range]))"
         }
       ],
-      "title": "Service INFO Logs",
-      "type": "logs"
+      "title": "결제 완료 총금액",
+      "type": "stat"
     },
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 22 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "fieldConfig": { "defaults": { "unit": "currencyKRW", "decimals": 0, "noValue": "--원", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 6 },
       "id": 8,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": true,
-        "showCommonLabels": false,
-        "showLabels": true,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
-      },
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
       "targets": [
         {
-          "expr": "{service=~\"$service\", log_type=\"service-error\", level=~\"$level\", logger=~\"$logger\"} |~ \"$search\"",
-          "refId": "A"
+          "refId": "A",
+          "expr": "sum(sum_over_time({service=\"payment\",log_type=~\"service-info|app\",level=\"INFO\"} |~ \"(토스 (전액|부분) 환불 완료|내부 결제 (전액|부분) 환불 완료)\" | regexp \"refundAmount=(?P<amount>[0-9]+)\" | unwrap amount [$__range]))"
         }
       ],
-      "title": "Service ERROR Logs",
-      "type": "logs"
+      "title": "환불 완료 총금액",
+      "type": "stat"
     },
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 12 },
       "id": 9,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": true,
-        "showCommonLabels": false,
-        "showLabels": true,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
-      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" }, "orientation": "horizontal", "showValue": "always" },
       "targets": [
         {
-          "expr": "{service=~\"$service\", log_type=\"service-info\", level=~\"$level\", logger=~\"$logger\"} |~ \"토스.*완료|검증 완료\" |~ \"$search\"",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{reason}} 건수",
+          "expr": "topk(5, sum by (reason) (count_over_time({service=\"payment\",log_type=~\"service-error|app\",level=\"ERROR\",logger=~\"com[.]thock[.]back[.]payment[.]app[.]PaymentCompletedOrderPaymentUseCase|com[.]thock[.]back[.]payment[.]app[.]PaymentConfirmAndRefundUseCase\"} | json | line_format \"{{.message}}\" | regexp \"(?P<reason>[^-]+)\"[$__range])))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "{{reason}} 비율(%)",
+          "expr": "topk(5, 100 * sum by (reason) (count_over_time({service=\"payment\",log_type=~\"service-error|app\",level=\"ERROR\",logger=~\"com[.]thock[.]back[.]payment[.]app[.]PaymentCompletedOrderPaymentUseCase|com[.]thock[.]back[.]payment[.]app[.]PaymentConfirmAndRefundUseCase\"} | json | line_format \"{{.message}}\" | regexp \"(?P<reason>[^-]+)\"[$__range])) / sum(count_over_time({service=\"payment\",log_type=~\"service-error|app\",level=\"ERROR\",logger=~\"com[.]thock[.]back[.]payment[.]app[.]PaymentCompletedOrderPaymentUseCase|com[.]thock[.]back[.]payment[.]app[.]PaymentConfirmAndRefundUseCase\"}[$__range])))"
         }
       ],
-      "title": "Toss Payment Success Logs",
-      "type": "logs"
+      "title": "결제 실패 TOP5 이유 (건수/비율)",
+      "type": "barchart"
     },
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 12 },
       "id": 10,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": true,
-        "showCommonLabels": false,
-        "showLabels": true,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
-      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" }, "orientation": "horizontal", "showValue": "always" },
       "targets": [
         {
-          "expr": "{service=~\"$service\", log_type=\"service-error\", level=~\"$level\", logger=~\"$logger\"} |~ \"토스|결제 확인 실패|결제 취소 실패\" |~ \"$search\"",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{reason}} 건수",
+          "expr": "topk(5, sum by (reason) (count_over_time({service=\"payment\",log_type=\"service-error\",level=\"WARN\",logger=~\"com[.]thock[.]back[.]payment[.]app[.]PaymentCompletedOrderPaymentUseCase|com[.]thock[.]back[.]payment[.]app[.]PaymentConfirmAndRefundUseCase\"} | json | line_format \"{{.message}}\" | regexp \"(?P<reason>[^-]+)\"[$__range])))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "{{reason}} 비율(%)",
+          "expr": "topk(5, 100 * sum by (reason) (count_over_time({service=\"payment\",log_type=\"service-error\",level=\"WARN\",logger=~\"com[.]thock[.]back[.]payment[.]app[.]PaymentCompletedOrderPaymentUseCase|com[.]thock[.]back[.]payment[.]app[.]PaymentConfirmAndRefundUseCase\"} | json | line_format \"{{.message}}\" | regexp \"(?P<reason>[^-]+)\"[$__range])) / sum(count_over_time({service=\"payment\",log_type=\"service-error\",level=\"WARN\",logger=~\"com[.]thock[.]back[.]payment[.]app[.]PaymentCompletedOrderPaymentUseCase|com[.]thock[.]back[.]payment[.]app[.]PaymentConfirmAndRefundUseCase\"}[$__range])))"
         }
       ],
-      "title": "Toss Payment Error Logs",
-      "type": "logs"
+      "title": "환불 실패 TOP5 이유 (건수/비율)",
+      "type": "barchart"
     }
   ],
   "refresh": "10s",
   "schemaVersion": 38,
   "style": "dark",
   "tags": ["payment", "service", "logs", "loki"],
-  "templating": {
-    "list": [
-      {
-        "current": {
-          "selected": true,
-          "text": ["payment"],
-          "value": ["payment"]
-        },
-        "datasource": {
-          "type": "loki",
-          "uid": "P8E80F9AEF21F6940"
-        },
-        "definition": "label_values(service)",
-        "hide": 0,
-        "includeAll": true,
-        "allValue": ".*",
-        "label": "Service",
-        "multi": true,
-        "name": "service",
-        "options": [],
-        "query": "label_values(service)",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "current": {
-          "selected": true,
-          "text": ["All"],
-          "value": ["$__all"]
-        },
-        "datasource": {
-          "type": "loki",
-          "uid": "P8E80F9AEF21F6940"
-        },
-        "definition": "label_values({service=~\"$service\"}, log_type)",
-        "hide": 0,
-        "includeAll": true,
-        "allValue": ".*",
-        "label": "Log Type",
-        "multi": true,
-        "name": "log_type",
-        "options": [],
-        "query": "label_values({service=~\"$service\"}, log_type)",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "current": {
-          "selected": true,
-          "text": ["All"],
-          "value": ["$__all"]
-        },
-        "datasource": {
-          "type": "loki",
-          "uid": "P8E80F9AEF21F6940"
-        },
-        "definition": "label_values({service=~\"$service\", log_type=~\"$log_type\"}, level)",
-        "hide": 0,
-        "includeAll": true,
-        "allValue": ".*",
-        "label": "Level",
-        "multi": true,
-        "name": "level",
-        "options": [],
-        "query": "label_values({service=~\"$service\", log_type=~\"$log_type\"}, level)",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "current": {
-          "selected": true,
-          "text": ["All"],
-          "value": ["$__all"]
-        },
-        "datasource": {
-          "type": "loki",
-          "uid": "P8E80F9AEF21F6940"
-        },
-        "definition": "label_values({service=~\"$service\", log_type=~\"$log_type\"}, logger)",
-        "hide": 0,
-        "includeAll": true,
-        "allValue": ".*",
-        "label": "Logger",
-        "multi": true,
-        "name": "logger",
-        "options": [],
-        "query": "label_values({service=~\"$service\", log_type=~\"$log_type\"}, logger)",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "",
-          "value": ""
-        },
-        "hide": 0,
-        "label": "Search",
-        "name": "search",
-        "options": [],
-        "query": "",
-        "skipUrlSync": false,
-        "type": "textbox"
-      }
-    ]
-  },
-  "time": {
-    "from": "now-1h",
-    "to": "now"
-  },
+  "templating": { "list": [] },
+  "time": { "from": "now-24h", "to": "now" },
   "timepicker": {},
   "timezone": "Asia/Seoul",
   "title": "Payment Service Dashboard",
   "uid": "payment-service-dashboard",
-  "version": 2,
+  "version": 10,
   "weekStart": ""
 }
