@@ -1,13 +1,18 @@
 package com.thock.back.market.out.client;
 
 import com.thock.back.market.out.api.dto.ProductInfo;
+import com.thock.back.market.out.client.fallback.ProductClientFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient(name = "product-client", url = "${custom.global.productServiceUrl}/api/v1/products/internal")
+@FeignClient(
+        name = "product-client",
+        url = "${custom.global.productServiceUrl}/api/v1/products/internal",
+        fallbackFactory = ProductClientFallbackFactory.class
+)
 public interface ProductClient {
 
     @PostMapping("/list")
