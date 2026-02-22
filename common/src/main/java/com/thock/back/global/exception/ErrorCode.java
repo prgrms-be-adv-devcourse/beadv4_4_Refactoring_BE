@@ -82,6 +82,7 @@ public enum ErrorCode {
     ORDER_NOT_FOUND("ORDER-404-1", "주문을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     ORDER_ITEM_NOT_FOUND("ORDER-404-1", "주문 상품을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     ORDER_PENDING_EXISTS("ORDER-409-1", "이미 결제 대기 중인 주문이 있습니다.", HttpStatus.CONFLICT),
+    ORDER_WALLET_API_FAILED("WALLET-500-1", "지갑 정보를 불러올 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // ===== 배송 =====
 
@@ -107,6 +108,9 @@ public enum ErrorCode {
     INVALID_AMOUNT("PAYMENT-400-12", "출금 금액이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
 
     // ===== 정산 =====
+
+    // ===== 외부 서비스 =====
+    SERVICE_UNAVAILABLE("GLOBAL-503-1", "외부 서비스가 일시적으로 사용 불가합니다.", HttpStatus.SERVICE_UNAVAILABLE),
 
     ;
 
