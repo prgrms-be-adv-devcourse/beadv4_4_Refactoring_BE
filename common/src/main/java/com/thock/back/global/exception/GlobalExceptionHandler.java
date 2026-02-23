@@ -5,9 +5,14 @@ import jakarta.persistence.OptimisticLockException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.StaleObjectStateException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.dao.DeadlockLoserDataAccessException;
+import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -155,12 +160,42 @@ public class GlobalExceptionHandler {
      * 낙관적 락 충돌 예외 처리
      * 동일 리소스 동시 업데이트 충돌 시 409(CONFLICT)로 응답
      */
-    @ExceptionHandler({ObjectOptimisticLockingFailureException.class, OptimisticLockException.class})
+    @ExceptionHandler({
+            ObjectOptimisticLockingFailureException.class,
+            OptimisticLockingFailureException.class,
+            OptimisticLockException.class,
+            StaleObjectStateException.class
+    })
     public ResponseEntity<ErrorResponse> handleOptimisticLockException(
             Exception e,
             HttpServletRequest request) {
 
         log.warn("낙관적 락 충돌 발생: path={}", request.getRequestURI(), e);
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+                ErrorCode.CONCURRENT_MODIFICATION,
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(errorResponse);
+    }
+
+    /**
+     * DB 락 충돌/데드락 예외 처리
+     * 동시성 경합에서 발생한 락 획득 실패를 409(CONFLICT)로 응답
+     */
+    @ExceptionHandler({
+            CannotAcquireLockException.class,
+            DeadlockLoserDataAccessException.class,
+            PessimisticLockingFailureException.class
+    })
+    public ResponseEntity<ErrorResponse> handleLockConflictException(
+            Exception e,
+            HttpServletRequest request) {
+
+        log.warn("락 충돌/데드락 발생: path={}", request.getRequestURI(), e);
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 ErrorCode.CONCURRENT_MODIFICATION,
