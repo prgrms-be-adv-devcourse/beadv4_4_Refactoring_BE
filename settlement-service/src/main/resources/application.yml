@@ -22,6 +22,12 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+
 # JWT 설정
 jwt:
   secret: ${JWT_SECRET_KEY:thock-2026-backend-authentication-jwt-secret-key-very-very-long-256bit}
@@ -49,3 +55,13 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     enabled: false
+
+outbox:
+  enabled: true
+  poller:
+    enabled: true
+    interval-ms: 5000
+    batch-size: 100
+    max-retry: 5
+  cleanup:
+    cron: "0 0 3 * * *"
