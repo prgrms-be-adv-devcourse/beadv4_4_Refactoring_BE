@@ -1,6 +1,9 @@
-# Kubernetes Deployment Guide
+# Kubernetes (K3s) Deployment Guide
 
-이 디렉토리는 Thock 애플리케이션을 Kubernetes 클러스터에 배포하기 위한 모든 매니페스트 파일을 포함합니다.
+이 디렉토리는 Thock 애플리케이션을 K3s(경량 Kubernetes)로 배포하기 위한 모든 매니페스트 파일을 포함합니다.
+
+**기본 설정**: 단일 EC2에서 K3s 사용 (학습 및 개발 환경)
+**확장 가능**: AWS EKS 등 프로덕션 환경으로 전환 가능
 
 ## 목차
 
@@ -19,6 +22,11 @@
 
 ### 필수 도구
 
+**단일 EC2 (K3s) 사용 시:**
+- EC2 인스턴스 (Ubuntu 22.04, t3.medium 이상)
+- K3s 설치 (자동으로 kubectl 포함)
+
+**프로덕션 (EKS) 사용 시:**
 - **kubectl**: Kubernetes CLI 도구
   ```bash
   # macOS
@@ -30,12 +38,10 @@
   sudo mv kubectl /usr/local/bin/
   ```
 
-- **Kubernetes 클러스터**: 다음 중 하나
-  - AWS EKS (권장 - 프로덕션)
-  - Google GKE
-  - Azure AKS
-  - Minikube (로컬 테스트)
-  - K3s (경량 클러스터)
+- **eksctl**: EKS 클러스터 관리 도구
+  ```bash
+  brew install eksctl  # macOS
+  ```
 
 ### 선택사항 (권장)
 
@@ -100,43 +106,61 @@ k8s/
 
 ---
 
-## 빠른 시작
+## 빠른 시작 (K3s - 권장)
 
-### 1. Secret 파일 생성
+**완전 초보자는 [SINGLE_EC2_SETUP.md](SINGLE_EC2_SETUP.md)를 먼저 읽으세요!**
 
-```bash
-# Secret 템플릿을 복사하고 실제 값으로 채웁니다
-cp base/secrets.yaml.template base/secrets.yaml
-
-# 실제 비밀번호와 키를 입력하세요
-vim base/secrets.yaml
-
-# Git에 커밋하지 않도록 확인
-echo "k8s/base/secrets.yaml" >> .gitignore
-```
-
-### 2. Kubernetes 클러스터 연결
+### 1. EC2에 K3s 설치 (1분)
 
 ```bash
-# AWS EKS 예시
-aws eks update-kubeconfig --name your-cluster-name --region ap-northeast-2
+# EC2에 SSH 접속
+ssh ubuntu@your-ec2-ip
 
-# 연결 확인
-kubectl cluster-info
+# K3s 설치
+curl -sfL https://get.k3s.io | sh -
+
+# kubectl 설정
+mkdir -p ~/.kube
+sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+sudo chown $USER:$USER ~/.kube/config
+
+# 확인
 kubectl get nodes
 ```
 
-### 3. 자동 배포 스크립트 실행
+### 2. 프로젝트 파일 업로드
 
 ```bash
-# 실행 권한 부여
-chmod +x deploy.sh
+# 로컬 PC에서
+scp -r k8s ubuntu@your-ec2-ip:~/
 
+# EC2에서
+cd ~/k8s
+```
+
+### 3. Secret 파일 생성
+
+```bash
+cp base/secrets.yaml.template base/secrets.yaml
+vim base/secrets.yaml  # 비밀번호 입력
+```
+
+### 4. 배포 실행
+
+```bash
 # 전체 배포
 ./deploy.sh
 
-# 선택적 배포 (예: Ingress 제외)
-./deploy.sh --skip-ingress
+# 또는 모니터링 제외 (리소스 절약)
+./deploy.sh --skip-monitoring
+```
+
+### 5. 접근
+
+```bash
+# Port-Forward로 테스트
+kubectl port-forward svc/api-gateway 8080:8080 -n thock-prod
+# http://localhost:8080
 ```
 
 ---
