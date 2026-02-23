@@ -63,3 +63,6 @@ outbox:
     max-retry: 5
   cleanup:
     cron: "0 0 3 * * *"
+
+inbox:
+  enabled: true

@@ -16,11 +16,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableJpaRepositories(basePackages = {
         "com.thock.back.payment",
-        "com.thock.back.global.outbox.repository"
+        "com.thock.back.global.outbox.repository",
+        "com.thock.back.global.inbox.repository"
 })
 @EntityScan(basePackages = {
         "com.thock.back.payment",
-        "com.thock.back.global.outbox.entity"
+        "com.thock.back.global.outbox.entity",
+        "com.thock.back.global.inbox.entity"
 })
 public class PaymentServiceApplication {
 
