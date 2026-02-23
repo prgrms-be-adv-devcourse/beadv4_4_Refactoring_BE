@@ -3,8 +3,8 @@ package com.thock.back.settlement.settlement.app;
 import com.thock.back.settlement.settlement.app.service.SettlementQueryService;
 import com.thock.back.settlement.settlement.app.useCase.RunDailySettlementUseCase;
 import com.thock.back.settlement.settlement.app.useCase.RunMonthlySettlementUseCase;
-import com.thock.back.settlement.settlement.in.dto.DailySettlementItemView;
-import com.thock.back.settlement.settlement.in.dto.MonthlySettlementView;
+import com.thock.back.settlement.settlement.in.dto.DailySettlementItemsResponseItem;
+import com.thock.back.settlement.settlement.in.dto.MonthlySettlementSummaryResponseItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,12 +31,12 @@ public class SettlementFacade {
     }
 
     // 월별 정산 내역서
-    public List<MonthlySettlementView> getMonthlySummary(Long sellerId, YearMonth targetMonth) {
+    public List<MonthlySettlementSummaryResponseItem> getMonthlySummary(Long sellerId, YearMonth targetMonth) {
         return settlementQueryService.getMonthlySummary(sellerId, targetMonth);
     }
 
     // 일별 세부 내역서 실행
-    public List<DailySettlementItemView> getDailyItems(Long sellerId, LocalDate targetDate) {
+    public List<DailySettlementItemsResponseItem> getDailyItems(Long sellerId, LocalDate targetDate) {
         return settlementQueryService.getDailyItems(sellerId, targetDate);
     }
 }

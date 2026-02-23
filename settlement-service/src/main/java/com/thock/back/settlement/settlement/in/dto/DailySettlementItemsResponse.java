@@ -7,9 +7,9 @@ import java.util.List;
 public record DailySettlementItemsResponse(
         Long sellerId,
         LocalDate targetDate,
-        List<DailySettlementItemView> items
+        List<DailySettlementItemsResponseItem> items
 ) {
-    public static DailySettlementItemsResponse of(Long sellerId, LocalDate targetDate, List<DailySettlementItemView> items) {
+    public static DailySettlementItemsResponse of(Long sellerId, LocalDate targetDate, List<DailySettlementItemsResponseItem> items) {
         return new DailySettlementItemsResponse(sellerId, targetDate, items);
     }
 }

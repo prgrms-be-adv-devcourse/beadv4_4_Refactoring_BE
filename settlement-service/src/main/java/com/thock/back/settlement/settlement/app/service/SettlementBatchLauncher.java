@@ -1,6 +1,5 @@
 package com.thock.back.settlement.settlement.app.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
@@ -13,16 +12,21 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 
 @Service
-@RequiredArgsConstructor
 public class SettlementBatchLauncher {
 
     private final JobLauncher jobLauncher;
-
-    @Qualifier("dailySettlementJob")
     private final Job dailySettlementJob;
-
-    @Qualifier("monthlySettlementJob")
     private final Job monthlySettlementJob;
+
+    public SettlementBatchLauncher(
+            JobLauncher jobLauncher,
+            @Qualifier("dailySettlementJob") Job dailySettlementJob,
+            @Qualifier("monthlySettlementJob") Job monthlySettlementJob
+    ){
+        this.jobLauncher = jobLauncher;
+        this.dailySettlementJob = dailySettlementJob;
+        this.monthlySettlementJob = monthlySettlementJob;
+    }
 
     public BatchRunResult runDaily(LocalDate targetDate) {
         try {

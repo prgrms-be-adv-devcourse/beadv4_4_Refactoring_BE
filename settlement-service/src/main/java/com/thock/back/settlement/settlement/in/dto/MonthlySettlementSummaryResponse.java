@@ -7,9 +7,9 @@ import java.util.List;
 public record MonthlySettlementSummaryResponse(
         Long sellerId,
         String targetMonth,
-        List<MonthlySettlementView> items
+        List<MonthlySettlementSummaryResponseItem> items
 ) {
-    public static MonthlySettlementSummaryResponse of(Long sellerId, YearMonth targetMonth, List<MonthlySettlementView> items) {
+    public static MonthlySettlementSummaryResponse of(Long sellerId, YearMonth targetMonth, List<MonthlySettlementSummaryResponseItem> items) {
         return new MonthlySettlementSummaryResponse(sellerId, targetMonth.toString(), items);
     }
 }

@@ -2,7 +2,7 @@ package com.thock.back.settlement.settlement.in.dto;
 
 import java.time.LocalDateTime;
 
-public record MonthlySettlementView(
+public record MonthlySettlementSummaryResponseItem(
         Long monthlySettlementId,
         Long sellerId,
         String targetYearMonth,

@@ -2,8 +2,8 @@ package com.thock.back.settlement.settlement.app.service;
 import com.thock.back.settlement.settlement.domain.DailySettlement;
 import com.thock.back.settlement.settlement.domain.DailySettlementItem;
 import com.thock.back.settlement.settlement.domain.MonthlySettlement;
-import com.thock.back.settlement.settlement.in.dto.DailySettlementItemView;
-import com.thock.back.settlement.settlement.in.dto.MonthlySettlementView;
+import com.thock.back.settlement.settlement.in.dto.DailySettlementItemsResponseItem;
+import com.thock.back.settlement.settlement.in.dto.MonthlySettlementSummaryResponseItem;
 import com.thock.back.settlement.settlement.out.DailySettlementRepository;
 import com.thock.back.settlement.settlement.out.MonthlySettlementRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +26,12 @@ public class SettlementQueryService {
     private final DailySettlementRepository dailySettlementRepository;
     private final MonthlySettlementRepository monthlySettlementRepository;
 
-    public List<MonthlySettlementView> getMonthlySummary(Long sellerId, YearMonth targetMonth) {
+    public List<MonthlySettlementSummaryResponseItem> getMonthlySummary(Long sellerId, YearMonth targetMonth) {
         String targetYearMonth = targetMonth.toString().replace("-", "");
         List<MonthlySettlement> rows = monthlySettlementRepository.findBySellerIdAndTargetYearMonth(sellerId, targetYearMonth);
         return rows.stream()
                 .sorted(Comparator.comparing(MonthlySettlement::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
-                .map(row -> new MonthlySettlementView(
+                .map(row -> new MonthlySettlementSummaryResponseItem(
                         row.getId(),
                         row.getSellerId(),
                         row.getTargetYearMonth(),
@@ -46,17 +46,17 @@ public class SettlementQueryService {
                 .toList();
     }
 
-    public List<DailySettlementItemView> getDailyItems(Long sellerId, LocalDate targetDate) {
+    public List<DailySettlementItemsResponseItem> getDailyItems(Long sellerId, LocalDate targetDate) {
         List<DailySettlement> settlements = dailySettlementRepository.findBySellerIdAndTargetDate(sellerId, targetDate);
         return settlements.stream()
                 .flatMap(settlement -> settlement.getItems().stream()
-                        .map(item -> toView(settlement, item)))
-                .sorted(Comparator.comparing(DailySettlementItemView::dailySettlementId))
+                        .map(item -> toResponseItem(settlement, item)))
+                .sorted(Comparator.comparing(DailySettlementItemsResponseItem::dailySettlementId))
                 .toList();
     }
 
-    private DailySettlementItemView toView(DailySettlement settlement, DailySettlementItem item) {
-        return new DailySettlementItemView(
+    private DailySettlementItemsResponseItem toResponseItem(DailySettlement settlement, DailySettlementItem item) {
+        return new DailySettlementItemsResponseItem(
                 settlement.getId(),
                 settlement.getSellerId(),
                 settlement.getTargetDate(),
