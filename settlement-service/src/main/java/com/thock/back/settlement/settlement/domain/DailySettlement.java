@@ -22,6 +22,9 @@ import java.util.Objects;
         name = "daily_settlement",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_daily_settlement_seller_date", columnNames = {"seller_id", "target_date"})
+        },
+        indexes = {
+                @Index(name = "idx_daily_settlement_target_seller", columnList = "target_date, seller_id")
         }
 )
 public class DailySettlement {
