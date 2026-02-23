@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: thock-prod
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets: []
+
+    scrape_configs:
+      # Prometheus self-monitoring
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+
+      # API Gateway - Kubernetes Service Discovery
+      - job_name: 'api-gateway'
+        metrics_path: '/actuator/prometheus'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - thock-prod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name]
+            regex: api-gateway
+            action: keep
+          - source_labels: [__meta_kubernetes_endpoint_port_name]
+            regex: http
+            action: keep
+        scrape_interval: 10s
+
+      # Member Service
+      - job_name: 'member-service'
+        metrics_path: '/actuator/prometheus'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - thock-prod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name]
+            regex: member-service
+            action: keep
+          - source_labels: [__meta_kubernetes_endpoint_port_name]
+            regex: http
+            action: keep
+        scrape_interval: 10s
+
+      # Product Service
+      - job_name: 'product-service'
+        metrics_path: '/actuator/prometheus'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - thock-prod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name]
+            regex: product-service
+            action: keep
+          - source_labels: [__meta_kubernetes_endpoint_port_name]
+            regex: http
+            action: keep
+        scrape_interval: 10s
+
+      # Market Service
+      - job_name: 'market-service'
+        metrics_path: '/actuator/prometheus'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - thock-prod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name]
+            regex: market-service
+            action: keep
+          - source_labels: [__meta_kubernetes_endpoint_port_name]
+            regex: http
+            action: keep
+        scrape_interval: 10s
+
+      # Payment Service
+      - job_name: 'payment-service'
+        metrics_path: '/actuator/prometheus'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - thock-prod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name]
+            regex: payment-service
+            action: keep
+          - source_labels: [__meta_kubernetes_endpoint_port_name]
+            regex: http
+            action: keep
+        scrape_interval: 10s
+
+      # Settlement Service
+      - job_name: 'settlement-service'
+        metrics_path: '/actuator/prometheus'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - thock-prod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name]
+            regex: settlement-service
+            action: keep
+          - source_labels: [__meta_kubernetes_endpoint_port_name]
+            regex: http
+            action: keep
+        scrape_interval: 10s
+
+      # Redpanda metrics
+      - job_name: 'redpanda'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - thock-prod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name]
+            regex: redpanda
+            action: keep
+          - source_labels: [__meta_kubernetes_endpoint_port_name]
+            regex: admin
+            action: keep
+        scrape_interval: 10s

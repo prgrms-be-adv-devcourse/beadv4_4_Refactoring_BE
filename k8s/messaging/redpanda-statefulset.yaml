@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redpanda
+  namespace: thock-prod
+spec:
+  serviceName: redpanda
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redpanda
+  template:
+    metadata:
+      labels:
+        app: redpanda
+    spec:
+      containers:
+      - name: redpanda
+        image: redpandadata/redpanda:v24.1.1
+        command:
+          - redpanda
+          - start
+          - --smp=1
+          - --memory=512M
+          - --reserve-memory=0M
+          - --overprovisioned
+          - --node-id=0
+          - --check=false
+          - --kafka-addr=PLAINTEXT://0.0.0.0:29092
+          - --advertise-kafka-addr=PLAINTEXT://redpanda:29092
+        ports:
+        - containerPort: 29092
+          name: kafka
+        - containerPort: 9644
+          name: admin
+        volumeMounts:
+        - name: redpanda-storage
+          mountPath: /var/lib/redpanda/data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+  volumeClaimTemplates:
+  - metadata:
+      name: redpanda-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+      # AWS EKS의 경우 storageClassName 지정
+      # storageClassName: gp3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redpanda
+  namespace: thock-prod
+spec:
+  selector:
+    app: redpanda
+  ports:
+  - port: 29092
+    targetPort: 29092
+    name: kafka
+  - port: 9644
+    targetPort: 9644
+    name: admin
+  clusterIP: None  # Headless service for StatefulSet

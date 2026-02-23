@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: settlement-service
+  namespace: thock-prod
+  labels:
+    app: settlement-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: settlement-service
+  template:
+    metadata:
+      labels:
+        app: settlement-service
+    spec:
+      containers:
+      - name: settlement-service
+        image: sang234/settlement-service:latest
+        ports:
+        - containerPort: 8085
+          name: http
+        env:
+        - name: TZ
+          valueFrom:
+            configMapKeyRef:
+              name: common-config
+              key: TZ
+        - name: JAVA_OPTS
+          valueFrom:
+            configMapKeyRef:
+              name: common-config
+              key: JAVA_OPTS
+        - name: SPRING_PROFILES_ACTIVE
+          valueFrom:
+            configMapKeyRef:
+              name: common-config
+              key: SPRING_PROFILES_ACTIVE
+        - name: MYSQL_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: common-config
+              key: MYSQL_HOST
+        - name: MYSQL_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: common-config
+              key: MYSQL_PORT
+        - name: MYSQL_DATABASE
+          value: "thock_settlement_db"
+        - name: MYSQL_USER
+          value: "thock_settlement_db_user"
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: SETTLEMENT_DB_PASSWORD
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          valueFrom:
+            configMapKeyRef:
+              name: common-config
+              key: KAFKA_BOOTSTRAP_SERVERS
+        - name: LOG_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: common-config
+              key: LOG_PATH
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8085
+          initialDelaySeconds: 90
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8085
+          initialDelaySeconds: 60
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: settlement-service
+  namespace: thock-prod
+spec:
+  selector:
+    app: settlement-service
+  ports:
+  - port: 8085
+    targetPort: 8085
+    name: http
+  type: ClusterIP
