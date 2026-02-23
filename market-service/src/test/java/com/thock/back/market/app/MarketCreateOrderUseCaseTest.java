@@ -63,7 +63,7 @@ class MarketCreateOrderUseCaseTest {
                     "101호"
             );
 
-            given(marketMemberRepository.findById(memberId)).willReturn(Optional.of(buyer));
+            given(marketMemberRepository.findByIdForUpdate(memberId)).willReturn(Optional.of(buyer));
             given(orderRepository.existsByBuyerIdAndState(memberId, OrderState.PENDING_PAYMENT))
                     .willReturn(true); // 이미 미결제 주문 존재
 
@@ -91,7 +91,7 @@ class MarketCreateOrderUseCaseTest {
                     "101호"
             );
 
-            given(marketMemberRepository.findById(memberId)).willReturn(Optional.of(buyer));
+            given(marketMemberRepository.findByIdForUpdate(memberId)).willReturn(Optional.of(buyer));
             given(orderRepository.existsByBuyerIdAndState(memberId, OrderState.PENDING_PAYMENT))
                     .willReturn(false); // 미결제 주문 없음
             given(cartRepository.findByBuyer(buyer)).willReturn(Optional.empty());
@@ -121,7 +121,7 @@ class MarketCreateOrderUseCaseTest {
                     "101호"
             );
 
-            given(marketMemberRepository.findById(memberId)).willReturn(Optional.of(buyer));
+            given(marketMemberRepository.findByIdForUpdate(memberId)).willReturn(Optional.of(buyer));
 
             // 첫 번째 주문은 성공했다고 가정 (이미 PENDING_PAYMENT 상태)
             given(orderRepository.existsByBuyerIdAndState(memberId, OrderState.PENDING_PAYMENT))
@@ -156,7 +156,7 @@ class MarketCreateOrderUseCaseTest {
                     "101호"
             );
 
-            given(marketMemberRepository.findById(memberId)).willReturn(Optional.empty());
+            given(marketMemberRepository.findByIdForUpdate(memberId)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> marketCreateOrderUseCase.createOrder(memberId, request))
