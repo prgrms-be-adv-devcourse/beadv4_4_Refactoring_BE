@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface MonthlySettlementRepository extends JpaRepository <MonthlySettlement, Long> {
     List<MonthlySettlement> findBySellerIdAndTargetYearMonth(Long sellerId, String targetYearMonth);
+    boolean existsBySellerIdAndTargetYearMonth(Long sellerId, String targetYearMonth);
 }

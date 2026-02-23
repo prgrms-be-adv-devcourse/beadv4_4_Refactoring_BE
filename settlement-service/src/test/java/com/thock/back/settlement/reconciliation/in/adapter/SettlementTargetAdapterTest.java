@@ -19,10 +19,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest // 실제 스프링 컨테이너를 띄워서 테스트 (DB 연결됨)
 @Transactional // 테스트 끝나면 데이터 롤백 (DB 깨끗하게 유지)
-class SettlementTargetAdapterUseCaseTest {
+class SettlementTargetAdapterTest {
 
     @Autowired
-    private SettlementTargetAdapterUseCase adapter; // 테스트 대상
+    private SettlementTargetAdapter adapter; // 테스트 대상
 
     @Autowired
     private SalesLogRepository salesLogRepository; // 데이터 준비용

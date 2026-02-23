@@ -2,7 +2,7 @@ package com.thock.back.settlement.settlement.in.dto;
 
 import java.time.LocalDate;
 
-public record DailySettlementItemView(
+public record DailySettlementItemsResponseItem(
         Long dailySettlementId,
         Long sellerId,
         LocalDate targetDate,

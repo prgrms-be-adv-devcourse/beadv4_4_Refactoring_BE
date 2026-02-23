@@ -52,6 +52,12 @@ public class RunMonthlySettlementUseCase {
 
         // 4. 각 판매자별로 월별 정산서 생성
         for (Long sellerId : groups.keySet()) {
+            String targetYearMonth = targetMonth.format(DateTimeFormatter.ofPattern("yyyyMM"));
+            if (monthlySettlementRepository.existsBySellerIdAndTargetYearMonth(sellerId, targetYearMonth)) {
+                log.info("이미 생성된 월별 정산이 있어 스킵합니다. sellerId={}, targetYearMonth={}", sellerId, targetYearMonth);
+                continue;
+            }
+
             List<DailySettlement> dailyItems = groups.get(sellerId);
 
             // 4-1. 합계 계산 (Sum)
@@ -63,7 +69,7 @@ public class RunMonthlySettlementUseCase {
             // 4-2. 월별 정산서 엔티티 생성
             MonthlySettlement monthlySettlement = MonthlySettlement.builder()
                     .sellerId(sellerId)
-                    .targetYearMonth(targetMonth.format(DateTimeFormatter.ofPattern("yyyyMM")))
+                    .targetYearMonth(targetYearMonth)
                     .totalCount(totalCount)
                     .totalPaymentAmount(Money.of(totalPayment))
                     .totalFeeAmount(Money.of(totalFee))

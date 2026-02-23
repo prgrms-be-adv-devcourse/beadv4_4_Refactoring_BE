@@ -1,4 +1,4 @@
-package com.thock.back.settlement.reconciliation.app.UseCase;
+package com.thock.back.settlement.reconciliation.app.useCase;
 
 import com.thock.back.settlement.reconciliation.domain.PgSalesRaw;
 import com.thock.back.settlement.reconciliation.domain.ReconciliationResult;
@@ -7,8 +7,8 @@ import com.thock.back.settlement.reconciliation.domain.SalesLog;
 import com.thock.back.settlement.reconciliation.domain.enums.MismatchType;
 import com.thock.back.settlement.reconciliation.domain.enums.PgStatus;
 import com.thock.back.settlement.reconciliation.domain.enums.ReconciliationStatus;
-import com.thock.back.settlement.reconciliation.in.dto.ReconciliationJobRepository;
-import com.thock.back.settlement.reconciliation.in.dto.ReconciliationMismatchLogRepository;
+import com.thock.back.settlement.reconciliation.out.ReconciliationJobRepository;
+import com.thock.back.settlement.reconciliation.out.ReconciliationMismatchLogRepository;
 import com.thock.back.settlement.reconciliation.out.PgSalesRawRepository;
 import com.thock.back.settlement.reconciliation.out.SalesLogRepository;
 import com.thock.back.settlement.shared.enums.TransactionType;

@@ -1,9 +1,8 @@
 package com.thock.back.settlement.settlement.app.useCase;
 
 import com.thock.back.settlement.reconciliation.app.port.GetSettlementCandidatesUseCase;
+import com.thock.back.settlement.reconciliation.app.port.MarkSalesLogsSettledPort;
 import com.thock.back.settlement.reconciliation.app.port.SettlementCandidate;
-import com.thock.back.settlement.reconciliation.domain.SalesLog;
-import com.thock.back.settlement.reconciliation.out.SalesLogRepository;
 import com.thock.back.settlement.settlement.domain.DailySettlement;
 import com.thock.back.settlement.settlement.domain.DailySettlementItem;
 import com.thock.back.settlement.settlement.domain.SettlementFeePolicy;
@@ -31,7 +30,7 @@ import java.util.stream.Collectors;
 public class RunDailySettlementUseCase {
 
     private final GetSettlementCandidatesUseCase getSettlementCandidatesUseCase;
-    private final SalesLogRepository salesLogRepository;
+    private final MarkSalesLogsSettledPort markSalesLogsSettledPort;
     private final DailySettlementRepository dailySettlementRepository;
     private final SettlementFeePolicy settlementFeePolicy;
 
@@ -52,6 +51,10 @@ public class RunDailySettlementUseCase {
 
         // 3. 각 판매자별로 정산서와 상세내역 생성 및 저장
         for (Long sellerId : groupsBySeller.keySet()) {
+            if (dailySettlementRepository.existsBySellerIdAndTargetDate(sellerId, targetDate)) {
+                log.info("이미 생성된 일별 정산이 있어 스킵합니다. sellerId={}, targetDate={}", sellerId, targetDate);
+                continue;
+            }
 
             // 판매자별로 그루핑된 맵의 value값
             List<SettlementCandidate> sellerItems = groupsBySeller.get(sellerId);
@@ -68,20 +71,11 @@ public class RunDailySettlementUseCase {
             // 4. DB 저장
             DailySettlement savedSettlement = dailySettlementRepository.save(settlement);
 
-            //5. Write-back: JPA Dirty Checking (N+1 문제 재현)
-
-            // DTO에는 엔티티의 생명주기가 없으므로, ID를 추출해 엔티티를 다시 조회해야 함.
-
-            // 5-1. ID 추출
+            // 5. Write-back (대사 로그에 정산 완료 마킹)
             List<Long> logIds = sellerItems.stream()
                     .map(SettlementCandidate::salesLogId)
                     .toList();
-
-            // 5-2. 엔티티 조회 (SELECT 발생) - 여기서 영속성 컨텍스트에 올라감
-            List<SalesLog> targetLogs = salesLogRepository.findAllById(logIds);
-
-            // 5-3. 상태 변경 (트랜잭션 커밋 시점에 UPDATE 쿼리 발생)
-            targetLogs.forEach(log -> log.markAsSettled(savedSettlement.getId()));
+            markSalesLogsSettledPort.markAsSettled(logIds, savedSettlement.getId());
         }
 
         log.info("=========[일별 정산 종료] 처리된 판매자 수: {} =========", groupsBySeller.size());

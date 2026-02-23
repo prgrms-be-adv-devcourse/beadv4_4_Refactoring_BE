@@ -1,4 +1,4 @@
-package com.thock.back.settlement.reconciliation.app.UseCase;
+package com.thock.back.settlement.reconciliation.app.useCase;
 
 import com.thock.back.settlement.reconciliation.domain.SalesLog;
 import com.thock.back.settlement.reconciliation.in.dto.OrderItemMessageDto;

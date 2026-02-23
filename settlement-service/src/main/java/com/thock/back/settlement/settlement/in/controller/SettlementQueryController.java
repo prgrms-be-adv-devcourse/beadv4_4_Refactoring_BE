@@ -1,8 +1,8 @@
 package com.thock.back.settlement.settlement.in.controller;
 
-import com.thock.back.settlement.settlement.app.service.SettlementQueryService;
-import com.thock.back.settlement.settlement.in.dto.DailySettlementItemView;
-import com.thock.back.settlement.settlement.in.dto.MonthlySettlementView;
+import com.thock.back.settlement.settlement.app.SettlementFacade;
+import com.thock.back.settlement.settlement.in.dto.DailySettlementItemsResponse;
+import com.thock.back.settlement.settlement.in.dto.MonthlySettlementSummaryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,33 +12,39 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.List;
-
-
 // 정산 관련 판매자 페이지에 들어갈 기능
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/settlements/settlement/query")
 public class SettlementQueryController {
 
-    private final SettlementQueryService settlementQueryService;
+    private final SettlementFacade settlementFacade;
 
     // 월별 정산 내역
     @GetMapping("/monthly")
-    public List<MonthlySettlementView> getMonthlySummary(
+    public MonthlySettlementSummaryResponse getMonthlySummary(
             @RequestParam Long sellerId,
             @RequestParam String targetMonth
     ) {
-        return settlementQueryService.getMonthlySummary(sellerId, YearMonth.parse(targetMonth));
+        YearMonth month = YearMonth.parse(targetMonth);
+        return MonthlySettlementSummaryResponse.of(
+                sellerId,
+                month,
+                settlementFacade.getMonthlySummary(sellerId, month)
+        );
     }
 
     // 일별 정산 세부내역서
     @GetMapping("/daily-items")
-    public List<DailySettlementItemView> getDailyItems(
+    public DailySettlementItemsResponse getDailyItems(
             @RequestParam Long sellerId,
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate
     ) {
-        return settlementQueryService.getDailyItems(sellerId, targetDate);
+        return DailySettlementItemsResponse.of(
+                sellerId,
+                targetDate,
+                settlementFacade.getDailyItems(sellerId, targetDate)
+        );
     }
 }

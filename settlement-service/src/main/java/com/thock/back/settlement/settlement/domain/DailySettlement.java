@@ -18,13 +18,18 @@ import java.util.Objects;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "daily_settlement")
+@Table(
+        name = "daily_settlement",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_daily_settlement_seller_date", columnNames = {"seller_id", "target_date"})
+        }
+)
 public class DailySettlement {
 
     @Id
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "seller_id", nullable = false)
     private Long sellerId; // 판매자 ID
 
     @Column(nullable = false)

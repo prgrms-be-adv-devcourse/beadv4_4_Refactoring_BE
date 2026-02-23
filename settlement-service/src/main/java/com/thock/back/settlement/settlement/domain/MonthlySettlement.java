@@ -14,7 +14,12 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "monthly_settlement")
+@Table(
+        name = "monthly_settlement",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_monthly_settlement_seller_month", columnNames = {"seller_id", "target_year_month"})
+        }
+)
 @EntityListeners(AuditingEntityListener.class) // ★ created_at 자동 주입
 public class MonthlySettlement {
 

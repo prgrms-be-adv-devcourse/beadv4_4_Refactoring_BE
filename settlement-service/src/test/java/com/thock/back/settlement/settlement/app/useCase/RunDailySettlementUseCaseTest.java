@@ -1,9 +1,8 @@
 package com.thock.back.settlement.settlement.app.useCase;
 
 import com.thock.back.settlement.reconciliation.app.port.GetSettlementCandidatesUseCase;
+import com.thock.back.settlement.reconciliation.app.port.MarkSalesLogsSettledPort;
 import com.thock.back.settlement.reconciliation.app.port.SettlementCandidate;
-import com.thock.back.settlement.reconciliation.domain.SalesLog;
-import com.thock.back.settlement.reconciliation.out.SalesLogRepository;
 import com.thock.back.settlement.settlement.domain.SettlementFeePolicy;
 import com.thock.back.settlement.settlement.domain.DailySettlement;
 import com.thock.back.settlement.settlement.out.DailySettlementRepository;
@@ -21,7 +20,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -35,7 +33,7 @@ class RunDailySettlementUseCaseTest {
     private GetSettlementCandidatesUseCase getSettlementCandidatesUseCase; // 가짜 Port
 
     @Mock
-    private SalesLogRepository salesLogRepository; // 가짜 Repo
+    private MarkSalesLogsSettledPort markSalesLogsSettledPort; // 가짜 Port
 
     @Mock
     private DailySettlementRepository dailySettlementRepository; // 가짜 Repo
@@ -65,9 +63,6 @@ class RunDailySettlementUseCaseTest {
         given(dailySettlementRepository.save(any(DailySettlement.class)))
                 .willAnswer(invocation -> invocation.getArgument(0)); // 들어온 객체 그대로 반환
 
-        // "로그 조회하라고 하면, 빈 껍데기 로그 리턴해라" (Write-back 테스트용)
-        given(salesLogRepository.findAllById(anyList()))
-                .willReturn(List.of(mock(SalesLog.class), mock(SalesLog.class)));
         given(settlementFeePolicy.calculateFee(any(Money.class)))
                 .willAnswer(invocation -> {
                     Money payment = invocation.getArgument(0);

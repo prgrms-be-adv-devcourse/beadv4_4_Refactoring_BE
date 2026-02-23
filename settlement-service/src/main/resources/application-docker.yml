@@ -1,5 +1,4 @@
 spring:
-
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
   datasource:

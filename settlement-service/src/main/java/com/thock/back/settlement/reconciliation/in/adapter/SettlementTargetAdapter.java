@@ -10,7 +10,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class SettlementTargetAdapterUseCase implements GetSettlementCandidatesUseCase {
+public class SettlementTargetAdapter implements GetSettlementCandidatesUseCase {
 
     private final ReconciliationService reconciliationService;
 

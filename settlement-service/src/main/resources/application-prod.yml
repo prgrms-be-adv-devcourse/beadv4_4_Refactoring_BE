@@ -1,4 +1,7 @@
 spring:
+  batch:
+    jdbc:
+      initialize-schema: always
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}

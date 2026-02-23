@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.Map;
 
 
@@ -40,27 +39,6 @@ public class ManualReconciliationController {
         LocalDate date = targetDate == null ? LocalDate.now() : targetDate;
         manualReconciliationScenarioService.runReconciliation(date);
         return Map.of("step", "reconciliation", "targetDate", date, "status", "done");
-    }
-
-    // 일별 정산 수동 컨트롤러
-    @PostMapping("/run-daily")
-    public Map<String, Object> runDaily(
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate
-    ) {
-        LocalDate date = targetDate == null ? LocalDate.now() : targetDate;
-        manualReconciliationScenarioService.runDailySettlement(date);
-        return Map.of("step", "daily", "targetDate", date, "status", "done");
-    }
-
-    // 월별 정산 수동 컨트롤러
-    @PostMapping("/run-monthly")
-    public Map<String, Object> runMonthly(
-            @RequestParam(required = false) String targetMonth
-    ) {
-        YearMonth month = targetMonth == null ? YearMonth.now() : YearMonth.parse(targetMonth);
-        manualReconciliationScenarioService.runMonthlySettlement(month);
-        return Map.of("step", "monthly", "targetMonth", month.toString(), "status", "done");
     }
 
     // PG파일 생성 - 대사 -일별정산 - 월별정산 수동 총 진행

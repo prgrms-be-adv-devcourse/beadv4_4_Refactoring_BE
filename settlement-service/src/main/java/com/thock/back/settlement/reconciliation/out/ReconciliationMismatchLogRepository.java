@@ -1,4 +1,4 @@
-package com.thock.back.settlement.reconciliation.in.dto;
+package com.thock.back.settlement.reconciliation.out;
 
 import com.thock.back.settlement.reconciliation.domain.ReconciliationMismatchLog;
 import org.springframework.data.jpa.repository.JpaRepository;
