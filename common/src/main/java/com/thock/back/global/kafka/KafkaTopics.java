@@ -16,6 +16,7 @@ public class KafkaTopics {
     public static final String MARKET_ORDER_BEFORE_PAYMENT_REQUEST_CANCELED = "market.order.before.payment.request.canceled"; // Listener : payment, 결제 전 취소 알림
     public static final String MARKET_ORDER_DELETED = "market.order.deleted"; //  Listener : payment, Payment 삭제 알림
     public static final String MARKET_ORDER_SETTLEMENT = "market.order.settlement"; // Listener : settlement, 정산 이벤트 (결제완료/구매확정/환불완료)
+    public static final String MARKET_ORDER_STOCK_CHANGED = "market.order.stock.changed"; // Listener : product, 재고 예약/해제/확정 이벤트
 
     // Payment events
     public static final String PAYMENT_REFUND_COMPLETED = "payment.refund.completed";

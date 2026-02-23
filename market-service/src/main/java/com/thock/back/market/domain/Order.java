@@ -4,12 +4,15 @@ import com.thock.back.global.exception.CustomException;
 import com.thock.back.global.exception.ErrorCode;
 import com.thock.back.global.jpa.entity.BaseIdAndTime;
 import com.thock.back.shared.market.domain.CancelReasonType;
+import com.thock.back.shared.market.domain.StockEventType;
 import com.thock.back.shared.market.dto.OrderDto;
+import com.thock.back.shared.market.dto.StockOrderItemDto;
 import com.thock.back.shared.market.event.MarketOrderBeforePaymentCanceledEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentCompletedEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestCanceledEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestedEvent;
 import com.thock.back.shared.market.event.MarketOrderSettlementEvent;
+import com.thock.back.shared.market.event.MarketOrderStockChangedEvent;
 import com.thock.back.shared.payment.dto.BeforePaymentCancelRequestDto;
 import com.thock.back.shared.payment.dto.PaymentCancelRequestDto;
 import com.thock.back.shared.settlement.dto.SettlementOrderItemDto;
@@ -20,7 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static jakarta.persistence.CascadeType.PERSIST;
@@ -165,6 +170,8 @@ public class Order extends BaseIdAndTime {
 
         // Settlement 이벤트 발행 (결제 완료)
         publishSettlementEvent(SettlementEventType.PAYMENT_COMPLETED);
+        // Product 재고 예약 이벤트 발행
+        publishStockEvent(StockEventType.RESERVE, this.items);
     }
 
     /**
@@ -309,8 +316,11 @@ public class Order extends BaseIdAndTime {
                 .allMatch(item -> item.getState() == OrderItemState.REFUNDED);
 
         // 4. Settlement 이벤트 발행: 환불 아이템 + 강제 구매확정 아이템
-        List<SettlementOrderItemDto> refundedItems = this.items.stream()
+        List<OrderItem> refundedOrderItems = this.items.stream()
                 .filter(item -> item.getState() == OrderItemState.REFUNDED)
+                .toList();
+
+        List<SettlementOrderItemDto> refundedItems = refundedOrderItems.stream()
                 .map(item -> item.toSettlementDto(SettlementEventType.REFUND_COMPLETED))
                 .toList();
 
@@ -321,11 +331,13 @@ public class Order extends BaseIdAndTime {
         if (!refundedItems.isEmpty()) {
             publishEvent(new MarketOrderSettlementEvent(refundedItems));
             log.info("📊 환불 Settlement 이벤트 발행: orderNumber={}, count={}", orderNumber, refundedItems.size());
+            publishStockEvent(StockEventType.RELEASE, refundedOrderItems);
         }
 
         if (!confirmedItems.isEmpty()) {
             publishEvent(new MarketOrderSettlementEvent(confirmedItems));
             log.info("📊 환불 Settlement 이벤트 발행: orderNumber={}, count={}", orderNumber, confirmedItems.size());
+            publishStockEvent(StockEventType.COMMIT, forceConfirmedItems);
         }
 
 
@@ -354,6 +366,8 @@ public class Order extends BaseIdAndTime {
 
         // Settlement 이벤트 발행 (구매 확정)
         publishSettlementEvent(SettlementEventType.PURCHASE_CONFIRMED);
+        // Product 재고 확정(실차감) 이벤트 발행
+        publishStockEvent(StockEventType.COMMIT, this.items);
     }
 
     /**
@@ -390,6 +404,7 @@ public class Order extends BaseIdAndTime {
             publishEvent(new MarketOrderSettlementEvent(confirmedItems));
             log.info("📊 부분 구매 확정 Settlement 이벤트 발행: orderNumber={}, count={}",
                     orderNumber, confirmedItems.size());
+            publishStockEvent(StockEventType.COMMIT, targetItems);
         }
 
     }
@@ -480,6 +495,25 @@ public class Order extends BaseIdAndTime {
         publishEvent(new MarketOrderSettlementEvent(settlementItems));
         log.info("📊 Settlement 이벤트 발행: orderNumber={}, eventType={}, itemCount={}",
                 orderNumber, eventType, settlementItems.size());
+    }
+
+    private void publishStockEvent(StockEventType eventType, List<OrderItem> targetItems) {
+        Map<Long, Integer> quantityByProductId = new LinkedHashMap<>();
+        for (OrderItem item : targetItems) {
+            quantityByProductId.merge(item.getProductId(), item.getQuantity(), Integer::sum);
+        }
+
+        List<StockOrderItemDto> stockItems = quantityByProductId.entrySet().stream()
+                .map(entry -> new StockOrderItemDto(entry.getKey(), entry.getValue()))
+                .toList();
+
+        if (stockItems.isEmpty()) {
+            return;
+        }
+
+        publishEvent(new MarketOrderStockChangedEvent(this.orderNumber, eventType, stockItems));
+        log.info("📦 재고 이벤트 발행: orderNumber={}, eventType={}, itemCount={}",
+                orderNumber, eventType, stockItems.size());
     }
 
     public OrderDto toDto() {

@@ -51,6 +51,8 @@ public class KafkaEventPublisher {
             return KafkaTopics.MARKET_ORDER_DELETED;
         } else if (event instanceof MarketOrderSettlementEvent) {
             return KafkaTopics.MARKET_ORDER_SETTLEMENT;
+        } else if (event instanceof MarketOrderStockChangedEvent) {
+            return KafkaTopics.MARKET_ORDER_STOCK_CHANGED;
         } else if (event instanceof PaymentCompletedEvent) {
             return KafkaTopics.PAYMENT_COMPLETED;
         }

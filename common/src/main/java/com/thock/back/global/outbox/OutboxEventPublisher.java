@@ -12,6 +12,7 @@ import com.thock.back.shared.market.event.MarketOrderPaymentCompletedEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestCanceledEvent;
 import com.thock.back.shared.market.event.MarketOrderPaymentRequestedEvent;
 import com.thock.back.shared.market.event.MarketOrderSettlementEvent;
+import com.thock.back.shared.market.event.MarketOrderStockChangedEvent;
 import com.thock.back.shared.member.event.MemberJoinedEvent;
 import com.thock.back.shared.member.event.MemberModifiedEvent;
 import com.thock.back.shared.payment.event.PaymentCompletedEvent;
@@ -92,6 +93,8 @@ public class OutboxEventPublisher {
                     e.items().isEmpty() ? "unknown" : e.items().get(0).orderNo(),
                     KafkaTopics.MARKET_ORDER_SETTLEMENT
             );
+        } else if (event instanceof MarketOrderStockChangedEvent e) {
+            return new OutboxEventMetadata("Order", e.orderNumber(), KafkaTopics.MARKET_ORDER_STOCK_CHANGED);
         }
 
         return new OutboxEventMetadata("Unknown", "unknown", null);
