@@ -75,9 +75,9 @@ public class MonthlySettlementItemWriter implements ItemWriter<MonthlySettlement
                     monthlySettlement.startPayout();
 
                     // 월별 정산 실패 시나리오 시 재처리 로직 및 슬랙 알림 테스트 코드
-                    if (item.sellerId() % 10 == 0) {
+                    /* if (item.sellerId() % 10 == 0) {
                         throw new IllegalStateException("forced failure for retry test");
-                    }
+                    } */
 
                     eventPublisher.publish(new SettlementCompletedEvent(item.sellerId(), item.totalPayoutAmount()));
                     monthlySettlement.completePayout();
