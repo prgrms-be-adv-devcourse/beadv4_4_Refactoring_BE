@@ -15,3 +15,17 @@ datasources:
     editable: false
     jsonData:
       maxLines: 1000
+
+  - name: Settlement MySQL
+    type: mysql
+    access: proxy
+    url: mysql:3306
+    database: thock_settlement_db
+    user: thock_settlement_db_user
+    editable: false
+    jsonData:
+      maxOpenConns: 20
+      maxIdleConns: 20
+      connMaxLifetime: 14400
+    secureJsonData:
+      password: thock_settlement_db_password
