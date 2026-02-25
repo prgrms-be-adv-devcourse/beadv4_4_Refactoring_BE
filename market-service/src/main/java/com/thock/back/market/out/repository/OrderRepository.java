@@ -19,4 +19,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // 취소 상태의 주문 며칠 지났는지 확인용 / 30일 지났을 시 배치 처리
     List<Order> findByStateAndCancelDateBefore(OrderState state, LocalDateTime before);
+
+    long countByState(OrderState state);
 }

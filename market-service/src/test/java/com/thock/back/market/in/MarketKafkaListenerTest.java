@@ -4,6 +4,7 @@ import com.thock.back.global.inbox.InboxGuard;
 import com.thock.back.global.kafka.KafkaTopics;
 import com.thock.back.market.app.MarketFacade;
 import com.thock.back.market.in.idempotency.MarketInboundEventIdempotencyKeyResolver;
+import com.thock.back.market.monitoring.MarketKafkaInboundMetrics;
 import com.thock.back.shared.member.domain.MemberRole;
 import com.thock.back.shared.member.domain.MemberState;
 import com.thock.back.shared.member.dto.MemberDto;
@@ -39,12 +40,14 @@ class MarketKafkaListenerTest {
     private InboxGuard inboxGuard;
     @Mock
     private MarketInboundEventIdempotencyKeyResolver keyResolver;
+    @Mock
+    private MarketKafkaInboundMetrics inboundMetrics;
 
     private MarketKafkaListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new MarketKafkaListener(marketFacade, inboxGuardProvider, keyResolver);
+        listener = new MarketKafkaListener(marketFacade, inboxGuardProvider, keyResolver, inboundMetrics);
     }
 
     @Test

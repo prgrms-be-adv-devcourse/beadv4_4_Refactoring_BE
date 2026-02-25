@@ -79,4 +79,6 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
     // 모니터링용
     List<OutboxEvent> findByStatusOrderByProcessingStartedAtAsc(OutboxStatus status);
 
+    long countByStatus(OutboxStatus status);
+
 }

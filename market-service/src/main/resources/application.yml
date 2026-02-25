@@ -71,6 +71,10 @@ market:
       period-ms: 100
       max-period-ms: 300
       max-attempts: 3
+  metrics:
+    enabled: true
+    collect-interval-ms: 10000
+    consumer-group-id: market-service
 
 # JWT 설정
 jwt:
