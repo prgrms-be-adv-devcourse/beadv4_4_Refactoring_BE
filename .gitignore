@@ -55,4 +55,4 @@ logs/
 .claude
 
 ### Kubernetes Secrets ###
-k8s/base/secrets.yaml
+k3s/base/secrets.yaml

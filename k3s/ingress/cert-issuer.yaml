@@ -14,10 +14,10 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
-    # HTTP-01 Challenge (Nginx Ingress 사용 시)
+    # HTTP-01 Challenge (K3s Traefik Ingress 사용)
     - http01:
         ingress:
-          class: nginx
+          class: traefik
 
     # DNS-01 Challenge (AWS Route53 사용 시 - 주석 해제)
     # - dns01:
@@ -40,4 +40,4 @@ spec:
     solvers:
     - http01:
         ingress:
-          class: nginx
+          class: traefik

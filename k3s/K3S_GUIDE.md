@@ -165,7 +165,7 @@ spec:
 ### 1. Secret 파일 준비
 
 ```bash
-cd ~/k8s
+cd ~/k3s
 
 # Secret 템플릿 복사
 cp base/secrets.yaml.template base/secrets.yaml

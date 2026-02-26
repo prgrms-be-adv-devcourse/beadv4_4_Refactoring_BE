@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # K3s Deployment Script for Single EC2 Instance
-# Usage: ./deploy-k3s.sh [--skip-secrets] [--skip-ingress] [--skip-monitoring]
+# Usage: ./deploy-k3s.sh [--skip-secrets] [--skip-ingress] [--skip-monitoring] [--with-hpa]
 
 set -e
 
@@ -16,6 +16,7 @@ NC='\033[0m'
 SKIP_SECRETS=false
 SKIP_INGRESS=false
 SKIP_MONITORING=false
+WITH_HPA=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -30,6 +31,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-monitoring)
       SKIP_MONITORING=true
+      shift
+      ;;
+    --with-hpa)
+      WITH_HPA=true
       shift
       ;;
     *)
@@ -69,28 +74,8 @@ fi
 echo -e "${GREEN}K3s is running!${NC}"
 kubectl get nodes
 
-print_step "Step 1: Optimizing for Single EC2"
-
-# Reduce resource requests for single EC2
-echo "Adjusting resource limits for single EC2 instance..."
-
-# Backup original files
-if [ ! -d "services/.backup" ]; then
-    mkdir -p services/.backup
-    cp services/*.yaml services/.backup/
-fi
-
-# Reduce replicas in HPA
-if [ -f "base/hpa.yaml" ]; then
-    sed -i.bak 's/minReplicas: 2/minReplicas: 1/g' base/hpa.yaml
-    sed -i.bak 's/maxReplicas: 10/maxReplicas: 2/g' base/hpa.yaml
-    sed -i.bak 's/maxReplicas: 8/maxReplicas: 2/g' base/hpa.yaml
-    echo -e "${GREEN}HPA adjusted for single EC2${NC}"
-fi
-
-# Set storageClassName to local-path
-echo "Setting storageClassName to 'local-path' for K3s..."
-find database/ messaging/ monitoring/ -name "*.yaml" -type f -exec sed -i.bak 's/# storageClassName: gp3/storageClassName: local-path/g' {} \;
+print_step "Step 1: Validating Single EC2 Settings"
+echo "Using manifest defaults optimized for K3s single-node (local-path, minReplicas=1)."
 
 print_step "Step 2: Creating Namespace"
 kubectl apply -f base/namespace.yaml
@@ -122,25 +107,43 @@ fi
 print_step "Step 5: Deploying MySQL Database"
 kubectl apply -f database/mysql-statefulset.yaml
 echo "Waiting for MySQL to be ready (this may take 2-3 minutes)..."
-kubectl wait --for=condition=ready pod -l app=mysql -n thock-prod --timeout=300s || true
+kubectl wait --for=condition=ready pod -l app=mysql -n thock-prod --timeout=300s
 
 print_step "Step 6: Deploying Redpanda (Kafka)"
 kubectl apply -f messaging/redpanda-statefulset.yaml
 kubectl apply -f messaging/redpanda-console.yaml
 echo "Waiting for Redpanda to be ready..."
-kubectl wait --for=condition=ready pod -l app=redpanda -n thock-prod --timeout=300s || true
+kubectl wait --for=condition=ready pod -l app=redpanda -n thock-prod --timeout=300s
 
 print_step "Step 7: Deploying Application Services"
 echo "Deploying services with reduced resource requests..."
 
 # Deploy services one by one
-for service in member product payment settlement market api-gateway; do
-    echo "Deploying ${service}-service..."
-    kubectl apply -f services/${service}-service.yaml
-done
+echo "Deploying member-service..."
+kubectl apply -f services/member-service.yaml
+
+echo "Deploying product-service..."
+kubectl apply -f services/product-service.yaml
+
+echo "Deploying payment-service..."
+kubectl apply -f services/payment-service.yaml
+
+echo "Deploying settlement-service..."
+kubectl apply -f services/settlement-service.yaml
+
+echo "Deploying market-service..."
+kubectl apply -f services/market-service.yaml
+
+echo "Deploying api-gateway..."
+kubectl apply -f services/api-gateway.yaml
 
 echo "Waiting for services to be ready (this may take 5-10 minutes)..."
-sleep 10
+kubectl rollout status deployment/member-service -n thock-prod --timeout=600s
+kubectl rollout status deployment/product-service -n thock-prod --timeout=600s
+kubectl rollout status deployment/payment-service -n thock-prod --timeout=600s
+kubectl rollout status deployment/settlement-service -n thock-prod --timeout=600s
+kubectl rollout status deployment/market-service -n thock-prod --timeout=600s
+kubectl rollout status deployment/api-gateway -n thock-prod --timeout=600s
 
 print_step "Step 8: Deploying Monitoring Stack"
 if [ "$SKIP_MONITORING" = false ]; then
@@ -169,21 +172,20 @@ if [ "$SKIP_INGRESS" = false ]; then
         echo -e "${YELLOW}kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml${NC}"
     fi
 
-    # Modify ingress for Traefik
-    if grep -q "kubernetes.io/ingress.class.*nginx" ingress/ingress.yaml; then
-        echo "Modifying ingress for Traefik..."
-        sed -i.bak 's/kubernetes.io\/ingress.class: "nginx"/kubernetes.io\/ingress.class: "traefik"/g' ingress/ingress.yaml
-    fi
-
     kubectl apply -f ingress/ingress.yaml
 else
     echo -e "${YELLOW}Skipping ingress deployment (--skip-ingress flag)${NC}"
 fi
 
-print_step "Step 10: Deploying HPA (Horizontal Pod Autoscaler)"
-# K3s includes metrics-server by default
-kubectl apply -f base/hpa.yaml
-echo -e "${GREEN}HPA created successfully${NC}"
+print_step "Step 10: HPA (Horizontal Pod Autoscaler)"
+if [ "$WITH_HPA" = true ]; then
+    # K3s includes metrics-server by default
+    kubectl apply -f base/hpa.yaml
+    echo -e "${GREEN}HPA created successfully${NC}"
+else
+    echo -e "${YELLOW}Skipping HPA by default for single EC2 stability.${NC}"
+    echo -e "${YELLOW}If needed, enable with: ./deploy-k3s.sh --with-hpa${NC}"
+fi
 
 print_step "Deployment Complete!"
 echo -e "${GREEN}========================================${NC}"

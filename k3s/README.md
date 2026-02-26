@@ -70,7 +70,7 @@
 ## 디렉토리 구조
 
 ```
-k8s/
+k3s/
 ├── base/                    # 기본 설정
 │   ├── namespace.yaml       # 네임스페이스
 │   ├── configmap.yaml       # 공통 환경변수
@@ -132,10 +132,10 @@ kubectl get nodes
 
 ```bash
 # 로컬 PC에서
-scp -r k8s ubuntu@your-ec2-ip:~/
+scp -r k3s ubuntu@your-ec2-ip:~/
 
 # EC2에서
-cd ~/k8s
+cd ~/k3s
 ```
 
 ### 3. Secret 파일 생성

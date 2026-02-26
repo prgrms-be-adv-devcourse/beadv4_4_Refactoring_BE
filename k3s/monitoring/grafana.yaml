@@ -33,7 +33,7 @@ spec:
         - name: GF_USERS_ALLOW_SIGN_UP
           value: "false"
         - name: GF_SERVER_ROOT_URL
-          value: "https://api.thock.site/grafana/"
+          value: "%(protocol)s://%(domain)s/grafana/"
         - name: GF_SERVER_SERVE_FROM_SUB_PATH
           value: "true"
         volumeMounts:
@@ -57,11 +57,11 @@ spec:
           timeoutSeconds: 3
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "200m"
+            memory: "128Mi"
+            cpu: "50m"
           limits:
-            memory: "512Mi"
-            cpu: "500m"
+            memory: "256Mi"
+            cpu: "250m"
       volumes:
       - name: grafana-storage
         persistentVolumeClaim:

@@ -57,9 +57,9 @@ ip-xxx      Ready    control-plane,master   30s   v1.28.5+k3s1
 **로컬 PC에서:**
 
 ```bash
-# k8s 디렉토리를 EC2로 복사
+# k3s 디렉토리를 EC2로 복사
 cd /path/to/your/project
-scp -r k8s ubuntu@your-ec2-ip:~/
+scp -r k3s ubuntu@your-ec2-ip:~/
 ```
 
 **또는 Git 사용:**
@@ -73,7 +73,7 @@ cd your-project
 ### 5단계: Secret 파일 생성
 
 ```bash
-cd ~/k8s
+cd ~/k3s
 
 # Secret 템플릿 복사
 cp base/secrets.yaml.template base/secrets.yaml
@@ -366,7 +366,7 @@ kubectl get pods -n thock-prod
 **자동 조정 스크립트:**
 
 ```bash
-cd ~/k8s
+cd ~/k3s
 
 # 리소스 요청 감소
 find services/ -name "*.yaml" -exec sed -i 's/memory: "512Mi"/memory: "256Mi"/g' {} \;

@@ -103,10 +103,11 @@ kubectl apply -f base/namespace.yaml
 print_step "Step 2: Creating ConfigMaps"
 kubectl apply -f base/configmap.yaml
 kubectl apply -f database/mysql-configmap.yaml
-kubectl apply -f monitoring/prometheus-config.yaml
-kubectl apply -f monitoring/loki-config.yaml
-kubectl apply -f monitoring/promtail-config.yaml
-kubectl apply -f monitoring/grafana.yaml  # Grafana datasources ConfigMap included
+if [ "$SKIP_MONITORING" = false ]; then
+    kubectl apply -f monitoring/prometheus-config.yaml
+    kubectl apply -f monitoring/loki-config.yaml
+    kubectl apply -f monitoring/promtail-config.yaml
+fi
 
 print_step "Step 3: Creating Secrets"
 if [ "$SKIP_SECRETS" = false ]; then
