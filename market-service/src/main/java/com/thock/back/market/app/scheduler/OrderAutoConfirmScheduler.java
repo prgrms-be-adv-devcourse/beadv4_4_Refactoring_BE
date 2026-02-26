@@ -8,6 +8,7 @@ import com.thock.back.market.out.repository.OrderItemRepository;
 import com.thock.back.market.out.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,17 +25,17 @@ public class OrderAutoConfirmScheduler {
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
 
-    // TODO : Policy로 변경
-    private static final int AUTO_CONFIRM_DAYS = 7;
+    @Value("${market.order.auto-confirm-days:7}")
+    private int autoConfirmDays;
 
     /**
      * 자동 구매 확정 처리
      * 배송 완료 후 7일이 지난 제품을 구매 확정 처리
      */
-    @Scheduled(cron = "0 0 3 * * *") // 매일 새벽 3시 실행
+    @Scheduled(cron = "${market.order.auto-confirm-cron:0 0 3 * * *}") // 기본: 매일 새벽 3시 실행
     @Transactional
     public void autoConfirmDeliveredOrders() {
-        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(AUTO_CONFIRM_DAYS);
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(autoConfirmDays);
 
         List<OrderItem> expiredOrderItems = orderItemRepository.findByStateAndDeliveredAtBefore(
                 OrderItemState.DELIVERED, cutoffDate

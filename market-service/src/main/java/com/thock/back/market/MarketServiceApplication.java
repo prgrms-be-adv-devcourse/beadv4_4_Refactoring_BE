@@ -14,11 +14,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 })
 @EnableJpaRepositories(basePackages = {
         "com.thock.back.market",
-        "com.thock.back.global.outbox.repository"
+        "com.thock.back.global.outbox.repository",
+        "com.thock.back.global.inbox.repository"
 })
 @EntityScan(basePackages = {
         "com.thock.back.market",
-        "com.thock.back.global.outbox.entity"
+        "com.thock.back.global.outbox.entity",
+        "com.thock.back.global.inbox.entity"
 })
 @EnableJpaAuditing
 @EnableScheduling

@@ -7,6 +7,7 @@ import com.thock.back.shared.market.dto.OrderDeleteRequestDto;
 import com.thock.back.shared.market.event.MarketOrderDeletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -23,18 +24,18 @@ public class OrderCleanupScheduler {
     private final OrderRepository orderRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    // TODO : Policy로 변경
-    private static final int CLEANUP_RETENTION_DAYS = 30;
+    @Value("${market.order.cleanup-retention-days:30}")
+    private int cleanupRetentionDays;
 
     /**
      * 취소된 주문 정리 (30일 경과 후 삭제)
      * CANCELLED 상태 = 실제로 결제가 완료되지 않은 주문
      * Payment는 REQUESTED 혹은 PG_PENDING 상태로 남아있음
      */
-    @Scheduled(cron = "0 0 3 * * *") // 매일 새벽 3시 실행
+    @Scheduled(cron = "${market.order.cleanup-cron:0 0 3 * * *}") // 기본: 매일 새벽 3시 실행
     @Transactional
     public void cleanupCancelledOrders() {
-        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(CLEANUP_RETENTION_DAYS);
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(cleanupRetentionDays);
 
         List<Order> expiredOrders = orderRepository.findByStateAndCancelDateBefore(
                 OrderState.CANCELLED, cutoffDate);

@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ManualReconciliationScenarioService {
 
+    // 통합 테스트 전용 컨트롤러가 호출하는 서비스들만 모아두었기에 운영 관리 측면에서 UseCase로 분리하지 않았음
+
     private final SalesLogRepository salesLogRepository;
     private final PgSalesRawRepository pgSalesRawRepository;
     private final ReconciliationFacade reconciliationFacade;
@@ -78,11 +80,11 @@ public class ManualReconciliationScenarioService {
     }
 
     public void runDailySettlement(LocalDate targetDate) {
-        settlementFacade.runDaily(targetDate);
+        settlementFacade.runDailySettlement(targetDate);
     }
 
     public void runMonthlySettlement(YearMonth targetMonth) {
-        settlementFacade.runMonthly(targetMonth);
+        settlementFacade.runMonthlySettlement(targetMonth);
     }
 
     @Transactional

@@ -17,6 +17,7 @@ import com.thock.back.market.out.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -33,9 +34,15 @@ public class MarketCreateOrderUseCase {
     private final MarketSupport marketSupport; // 조회 전용
 
     // 주문 생성 - 장바구니 내 선택한 상품들만 주문에 들어감
+    @Transactional
     public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request) {
-        // 1. 회원 조회
-        MarketMember buyer = marketMemberRepository.findById(memberId)
+        /**
+         *  1. 회원 조회
+         *  같은 회원의 주문 생성 동시 요청을 직렬화해 TOCTOU(확인 시점, 사용 시점 사이 상태가 바뀌는 문제)를 방지한다.
+         *  동시 주문 요청이 들어와도 먼저 들어온 트랜잭션이 끝날 때까지 뒤 요청은 대기
+         *  대기 후 existsByBuyerIdAndState 에서 걸리므로 중복 생성 차단
+         */
+        MarketMember buyer = marketMemberRepository.findByIdForUpdate(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
 
         // 2. 미결제 주문 존재 여부 확인 (1인 1주문 제한)

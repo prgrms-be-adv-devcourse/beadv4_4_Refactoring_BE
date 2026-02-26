@@ -51,6 +51,9 @@ public class Order extends BaseIdAndTime {
     @Column(nullable = false)
     private OrderState state;
 
+    @Version
+    private Long version;
+
     // 구매자 관점의 금액만
     private Long totalPrice;
     private Long totalSalePrice;

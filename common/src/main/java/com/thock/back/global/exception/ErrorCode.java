@@ -21,6 +21,7 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR("GLOBAL-500-1", "서버 내부 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_REQUEST("GLOBAL-400-1", "잘못된 요청입니다.", HttpStatus.BAD_REQUEST),
     INVALID_ROLE_SELLER("GLOBAL-2", "해당 유저의 등급이 판매자가 아닙니다.", HttpStatus.BAD_REQUEST),
+    CONCURRENT_MODIFICATION("GLOBAL-409-1", "동시 요청 충돌이 발생했습니다. 잠시 후 다시 시도해주세요.", HttpStatus.CONFLICT),
 
     PAYMENT_TOSS_CONFIRM_FAILED("PAYMENT-400-1", "토스 결제 승인 실패", HttpStatus.BAD_REQUEST),
     PAYMENT_TOSS_EMPTY_RESPONSE("PAYMENT-500-1", "토스 결제 승인 응답이 비어있습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -82,6 +83,7 @@ public enum ErrorCode {
     ORDER_NOT_FOUND("ORDER-404-1", "주문을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     ORDER_ITEM_NOT_FOUND("ORDER-404-1", "주문 상품을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     ORDER_PENDING_EXISTS("ORDER-409-1", "이미 결제 대기 중인 주문이 있습니다.", HttpStatus.CONFLICT),
+    ORDER_CONCURRENT_MODIFICATION("ORDER-409-2", "주문 처리 중 동시성 충돌이 발생했습니다. 잠시 후 다시 시도해주세요.", HttpStatus.CONFLICT),
     ORDER_WALLET_API_FAILED("WALLET-500-1", "지갑 정보를 불러올 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // ===== 배송 =====

@@ -14,4 +14,6 @@ public interface DailySettlementRepository extends JpaRepository<DailySettlement
     //일별 판매
     List<DailySettlement> findAllByTargetDateBetween(LocalDate startDate, LocalDate endDate);
 
+    boolean existsBySellerIdAndTargetDate(Long sellerId, LocalDate targetDate);
+
 }

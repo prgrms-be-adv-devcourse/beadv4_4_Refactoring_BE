@@ -7,8 +7,12 @@ import com.thock.back.market.domain.Cart;
 import com.thock.back.market.domain.Order;
 import com.thock.back.market.out.repository.CartRepository;
 import com.thock.back.market.out.repository.OrderRepository;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +29,14 @@ public class MarketCompleteOrderPaymentUseCase {
      * 결제가 완료되었음을 확인하면 주문 시 선택한 상품들 -> 장바구니 상품들을 장바구니에서 제거
      * @param orderNumber 주문번호(orderNumber)
      */
+    @Retryable(
+            retryFor = {
+                    OptimisticLockException.class,
+                    ObjectOptimisticLockingFailureException.class
+            },
+            maxAttemptsExpression = "${market.retry.optimistic-lock.max-attempts:3}",
+            backoff = @Backoff(delayExpression = "${market.retry.optimistic-lock.backoff-ms:100}")
+    )
     @Transactional
     public void completeOrderPayment(String orderNumber){
         Order order = orderRepository.findByOrderNumber(orderNumber)

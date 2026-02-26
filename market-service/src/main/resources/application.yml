@@ -54,6 +54,28 @@ custom:
     product:
       payoutRate: 80
 
+market:
+  order:
+    payment-timeout-minutes: 30
+    timeout-check-interval-ms: 60000
+    auto-confirm-days: 7
+    auto-confirm-cron: "0 0 3 * * *"
+    cleanup-retention-days: 30
+    cleanup-cron: "0 0 3 * * *"
+  retry:
+    optimistic-lock:
+      max-attempts: 3
+      backoff-ms: 100
+  feign:
+    retry:
+      period-ms: 100
+      max-period-ms: 300
+      max-attempts: 3
+  metrics:
+    enabled: true
+    collect-interval-ms: 10000
+    consumer-group-id: market-service
+
 # JWT 설정
 jwt:
   secret: ${JWT_SECRET_KEY}
@@ -91,6 +113,9 @@ outbox:
     max-retry: 5
   cleanup:
     cron: "0 0 3 * * *"
+
+inbox:
+  enabled: true
 
 logging:
   level:

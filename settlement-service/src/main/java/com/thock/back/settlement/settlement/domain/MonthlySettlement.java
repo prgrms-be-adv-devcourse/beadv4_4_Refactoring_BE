@@ -14,7 +14,12 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "monthly_settlement")
+@Table(
+        name = "monthly_settlement",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_monthly_settlement_seller_month", columnNames = {"seller_id", "target_year_month"})
+        }
+)
 @EntityListeners(AuditingEntityListener.class) // ★ created_at 자동 주입
 public class MonthlySettlement {
 
@@ -107,5 +112,12 @@ public class MonthlySettlement {
             // 여기서는 일단 PROCESSING 유지 혹은 PENDING으로 되돌리기 전략 선택
             this.status = MonthlySettlementStatus.PENDING; // 다음 배치 때 다시 시도하게 둠
         }
+    }
+
+    public void refreshTotals(Long totalCount, Money totalPaymentAmount, Money totalFeeAmount, Money totalPayoutAmount) {
+        this.totalCount = totalCount;
+        this.totalPaymentAmount = totalPaymentAmount;
+        this.totalFeeAmount = totalFeeAmount;
+        this.totalPayoutAmount = totalPayoutAmount;
     }
 }

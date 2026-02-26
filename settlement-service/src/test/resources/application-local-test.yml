@@ -2,8 +2,6 @@ spring:
   config:
     import:
       - optional:file:./settlement-service/.env[.properties]
-  autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration
 
   application:
     name: settlement_service
