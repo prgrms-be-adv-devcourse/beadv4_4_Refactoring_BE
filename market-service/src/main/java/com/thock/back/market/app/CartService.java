@@ -110,8 +110,13 @@ public class CartService {
             throw new CustomException(ErrorCode.CART_PRODUCT_API_FAILED);
         }
 
-        // 재고 확인
-        if (product.getStock() < request.quantity()) {
+        int existingQuantity = cart.getItems().stream()
+                .filter(item -> item.getProductId().equals(request.productId()))
+                .mapToInt(CartItem::getQuantity)
+                .sum();
+
+        // 재고 확인 (기존 장바구니 수량 + 신규 추가 수량)
+        if (product.getStock() < existingQuantity + request.quantity()) {
              throw new CustomException(ErrorCode.CART_PRODUCT_OUT_OF_STOCK);
         }
 

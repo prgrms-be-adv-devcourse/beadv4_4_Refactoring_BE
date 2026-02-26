@@ -42,6 +42,16 @@ public class Cart extends BaseManualIdAndTime {
     // 장바구니에 상품 등록
     // TODO : 상품 상태도 받아야 할듯, 그래야 판매중, 판매중지, 품절 표현 가능
     public CartItem addItem(Long productId, Integer quantity) {
+        CartItem existingItem = items.stream()
+                .filter(item -> item.getProductId().equals(productId))
+                .findFirst()
+                .orElse(null);
+
+        if (existingItem != null) {
+            existingItem.addQuantity(quantity);
+            return existingItem;
+        }
+
         CartItem cartItem = new CartItem(this, productId, quantity);
         this.items.add(cartItem);
         this.itemsCount++;
@@ -73,4 +83,3 @@ public class Cart extends BaseManualIdAndTime {
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_ITEM_NOT_FOUND));
     }
 }
-
