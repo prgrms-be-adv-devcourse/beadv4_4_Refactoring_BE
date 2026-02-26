@@ -2,7 +2,7 @@ name: CD
 
 on:
   pull_request:
-    branches: ["task/340-infra-CD"]  # 임시 테스트 대상 브랜치
+    branches: ["main", "dev"]
     types: [ closed ]
 
 jobs:
