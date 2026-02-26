@@ -187,7 +187,7 @@ public class PaymentConfirmAndRefundUseCase {
                 });
 
         // 상태 체크
-        if (payment.getStatus() == PaymentStatus.CANCELED || payment.getStatus() == PaymentStatus.REQUESTED || payment.getStatus() == PaymentStatus.CANCELED_PENDING) {
+        if (payment.getStatus() == PaymentStatus.CANCELED || payment.getStatus() == PaymentStatus.REQUESTED) {
             log.warn("이미 취소된 결제입니다 - orderId={}", req.orderId());
             throw new CustomException(ErrorCode.PAYMENT_NOT_COMPLETE);
         }
@@ -243,7 +243,7 @@ public class PaymentConfirmAndRefundUseCase {
         Number cancelAmountNum = (Number) lastCancel.get("cancelAmount");
         Long amount = cancelAmountNum.longValue();
 
-        if (tossStatus.equals("CANCELED")) {
+        if (tossStatus.equals("PARTIAL_CANCELED") || tossStatus.equals("CANCELED")) {
             // 성공 시 결과 처리 (별도 트랜잭션으로 커밋)
             transactionTemplate.executeWithoutResult(status -> {
                 Payment p = paymentRepository.findById(payment.getId()).orElseThrow();
@@ -252,12 +252,17 @@ public class PaymentConfirmAndRefundUseCase {
                 // 부분 취소 입금
                 if (!amount.equals(p.getAmount())) {
                     if (p.updatePaymentRefundedAmount(amount)) {
-                        p.updatePaymentStatus(PaymentStatus.PARTIALLY_CANCELED);
+                        if(p.getRefundedAmount().equals(p.getAmount())){
+                            p.updatePaymentStatus(PaymentStatus.CANCELED);
+                            log.info("토스 전액 환불 완료 - orderId={}, refundAmount={}", req.orderId(), amount);
+                        } else {
+                            p.updatePaymentStatus(PaymentStatus.PARTIALLY_CANCELED);
+                            log.info("토스 부분 환불 완료 - orderId={}, refundAmount={}", req.orderId(), amount);
+                        }
                         w.depositBalance(amount);
                         walletRepository.save(w);
                         paymentRepository.save(p);
                         w.createBalanceLogEvent(req.amount(), EventType.부분취소_입금);
-                        log.info("토스 부분 환불 완료 - orderId={}, refundAmount={}", req.orderId(), amount);
                         // 환불 완료 이벤트 발행
                         eventPublisher.publish(
                                 new PaymentRefundCompletedEvent(
@@ -317,7 +322,7 @@ public class PaymentConfirmAndRefundUseCase {
                 });
 
         // 상태 체크 - 유저가 부분취소를 여러번 할 수 있음
-        if (payment.getStatus() == PaymentStatus.CANCELED || payment.getStatus() == PaymentStatus.REQUESTED || payment.getStatus() == PaymentStatus.CANCELED_PENDING) {
+        if (payment.getStatus() == PaymentStatus.CANCELED || payment.getStatus() == PaymentStatus.REQUESTED) {
             log.warn("이미 취소된 결제입니다 - orderId={}", req.orderId());
             throw new CustomException(ErrorCode.PAYMENT_NOT_COMPLETE);
         }
