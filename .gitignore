@@ -54,5 +54,7 @@ logs/
 .DS_store
 .claude
 
-### Kubernetes Secrets ###
-k3s/base/secrets.yaml
+### AWS EC2 Environment/Sensitive Files ###
+AWS EC2/deploy-kubernetes/base/secrets.yaml
+AWS EC2/deploy-docker-compose/nginx/ssl/*.key
+AWS EC2/deploy-docker-compose/nginx/ssl/*.crt
