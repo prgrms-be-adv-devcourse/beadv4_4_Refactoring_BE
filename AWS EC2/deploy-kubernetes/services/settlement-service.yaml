@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: settlement-service
+  namespace: thock-prod
+  labels:
+    app: settlement-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: settlement-service
+  template:
+    metadata:
+      labels:
+        app: settlement-service
+    spec:
+      containers:
+        - name: settlement-service
+          image: sang234/settlement-service:latest
+          ports:
+            - containerPort: 8085
+              name: http
+
+          envFrom:
+            - configMapRef:
+                name: common-config
+            - secretRef:
+                name: app-secrets
+
+          env:
+            - name: MYSQL_DATABASE
+              value: "thock_settlement_db"
+            - name: MYSQL_USER
+              value: "thock_settlement_db_user"
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SETTLEMENT_DB_PASSWORD
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8085
+            initialDelaySeconds: 240
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8085
+            initialDelaySeconds: 180
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 10
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "50m"
+            limits:
+              memory: "512Mi"
+              cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: settlement-service
+  namespace: thock-prod
+spec:
+  selector:
+    app: settlement-service
+  ports:
+    - port: 8085
+      targetPort: 8085
+      name: http
+  type: ClusterIP
