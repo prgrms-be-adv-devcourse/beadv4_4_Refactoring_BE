@@ -8,7 +8,6 @@ public class KafkaTopics {
     public static final String MEMBER_JOINED = "member.joined";
     public static final String MEMBER_MODIFIED = "member.modified";
 
-
     // Market events
     public static final String MARKET_ORDER_PAYMENT_REQUESTED = "market.order.payment.requested"; // Listener : payment, PG 결제 필요
     public static final String MARKET_ORDER_PAYMENT_COMPLETED = "market.order.payment.completed"; // Listener : payment, 예치금으로만 결제 가능
@@ -17,6 +16,9 @@ public class KafkaTopics {
     public static final String MARKET_ORDER_DELETED = "market.order.deleted"; //  Listener : payment, Payment 삭제 알림
     public static final String MARKET_ORDER_SETTLEMENT = "market.order.settlement"; // Listener : settlement, 정산 이벤트 (결제완료/구매확정/환불완료)
     public static final String MARKET_ORDER_STOCK_CHANGED = "market.order.stock.changed"; // Listener : product, 재고 예약/해제/확정 이벤트
+
+    // Product events
+    public static final String PRODUCT_CHANGED = "product.changed";
 
     // Payment events
     public static final String PAYMENT_REFUND_COMPLETED = "payment.refund.completed";
