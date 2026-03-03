@@ -6,6 +6,7 @@ import com.thock.back.shared.member.event.MemberJoinedEvent;
 import com.thock.back.shared.member.event.MemberModifiedEvent;
 import com.thock.back.shared.payment.event.PaymentCompletedEvent;
 import com.thock.back.shared.payment.event.PaymentRefundCompletedEvent;
+import com.thock.back.shared.product.event.ProductEvent;
 import com.thock.back.shared.settlement.event.SettlementCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,8 @@ public class KafkaEventPublisher {
             return KafkaTopics.MEMBER_JOINED;
         } else if (event instanceof MemberModifiedEvent) {
             return KafkaTopics.MEMBER_MODIFIED;
+        } else if (event instanceof ProductEvent) {
+            return KafkaTopics.PRODUCT_CHANGED;
         } else if (event instanceof MarketOrderPaymentRequestedEvent) {
             return KafkaTopics.MARKET_ORDER_PAYMENT_REQUESTED;
         } else if (event instanceof MarketOrderPaymentCompletedEvent) {
