@@ -1,5 +1,7 @@
 package com.thock.back.global.security;
 
+import com.thock.back.global.exception.CustomException;
+import com.thock.back.global.exception.ErrorCode;
 import com.thock.back.shared.member.domain.MemberRole;
 import com.thock.back.shared.member.domain.MemberState;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,27 +44,25 @@ public class AuthUserArgumentResolver implements HandlerMethodArgumentResolver {
         String roleStr = request.getHeader(HEADER_ROLE);
         String stateStr = request.getHeader(HEADER_STATE);
 
-        if (memberIdStr == null) {
-            log.warn("X-Member-Id header is missing. Returning null AuthenticatedUser.");
-            return null;
+        // 인증 헤더 필수 검증
+        if (memberIdStr == null || roleStr == null || stateStr == null) {
+            log.warn("Missing auth headers. memberId={}, role={}, state={}", memberIdStr, roleStr, stateStr);
+            throw new CustomException(ErrorCode.AUTH_CONTEXT_NOT_FOUND);
         }
 
         try {
             Long memberId = Long.parseLong(memberIdStr);
-            MemberRole role = roleStr != null ? MemberRole.valueOf(roleStr) : null;
-            MemberState state = stateStr != null ? MemberState.valueOf(stateStr) : null;
+            MemberRole role = MemberRole.valueOf(roleStr);
+            MemberState state = MemberState.valueOf(stateStr);
 
             log.debug("Resolved AuthenticatedUser - memberId: {}, role: {}, state: {}",
                      memberId, role, state);
 
             return AuthenticatedUser.of(memberId, role, state);
 
-        } catch (NumberFormatException e) {
-            log.error("Failed to parse memberId: {}", memberIdStr, e);
-            return null;
         } catch (IllegalArgumentException e) {
-            log.error("Failed to parse role or state. role: {}, state: {}", roleStr, stateStr, e);
-            return null;
+            log.warn("Invalid auth headers. memberId={}, role={}, state={}", memberIdStr, roleStr, stateStr, e);
+            throw new CustomException(ErrorCode.AUTH_CONTEXT_NOT_FOUND);
         }
     }
 }
