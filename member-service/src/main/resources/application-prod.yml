@@ -16,7 +16,9 @@ spring:
 
   # Production JPA 설정
   jpa:
-    show-sql: false  # SQL 로그 끄기 (ddl-auto는 application.yml의 update 사용)
+    hibernate:
+      ddl-auto: validate
+    show-sql: false  # SQL 로그 끄기
 
 # Custom 설정
 custom:
