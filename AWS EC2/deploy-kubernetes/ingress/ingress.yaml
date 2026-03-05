@@ -43,13 +43,3 @@ spec:
             name: redpanda-console
             port:
               number: 8090
-  - http:
-      paths:
-      # EC2 퍼블릭 IP 접속용 fallback (도메인 미설정 시)
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: api-gateway
-            port:
-              number: 8080
