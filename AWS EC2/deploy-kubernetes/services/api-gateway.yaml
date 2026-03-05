@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: sang234/api-gateway:latest
+          image: sang234/api-gateway:${IMAGE_TAG}
           ports:
             - containerPort: 8080
               name: http

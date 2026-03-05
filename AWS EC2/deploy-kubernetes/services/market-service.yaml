@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: market-service
-          image: sang234/market-service:latest
+          image: sang234/market-service:${IMAGE_TAG}
           ports:
             - containerPort: 8083
               name: http

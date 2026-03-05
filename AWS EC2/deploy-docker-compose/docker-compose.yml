@@ -1,7 +1,7 @@
   services:
     # ==================== API Gateway (외부 진입점) ====================
     api-gateway:
-      image: sang234/api-gateway:latest
+      image: sang234/api-gateway:${IMAGE_TAG}
       container_name: api-gateway
       expose:
         - "8080"
@@ -36,7 +36,7 @@
 
     # ==================== Application Services ====================
     member-service:
-      image: sang234/member-service:latest
+      image: sang234/member-service:${IMAGE_TAG}
       container_name: member-service
       expose:
         - "8081"
@@ -65,7 +65,7 @@
       restart: unless-stopped
 
     product-service:
-      image: sang234/product-service:latest
+      image: sang234/product-service:${IMAGE_TAG}
       container_name: product-service
       expose:
         - "8082"
@@ -94,7 +94,7 @@
       restart: unless-stopped
 
     market-service:
-      image: sang234/market-service:latest
+      image: sang234/market-service:${IMAGE_TAG}
       container_name: market-service
       expose:
         - "8083"
@@ -129,7 +129,7 @@
       restart: unless-stopped
 
     payment-service:
-      image: sang234/payment-service:latest
+      image: sang234/payment-service:${IMAGE_TAG}
       container_name: payment-service
       expose:
         - "8084"
@@ -158,7 +158,7 @@
       restart: unless-stopped
 
     settlement-service:
-      image: sang234/settlement-service:latest
+      image: sang234/settlement-service:${IMAGE_TAG}
       container_name: settlement-service
       expose:
         - "8085"
@@ -315,7 +315,7 @@
 
     # ==================== Nginx (Reverse Proxy) ====================
     nginx:
-      image: nginx:latest
+      image: nginx:1.27.4
       container_name: nginx
       ports:
         - "80:80"

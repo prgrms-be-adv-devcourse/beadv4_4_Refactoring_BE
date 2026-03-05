@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: product-service
-          image: sang234/product-service:latest
+          image: sang234/product-service:${IMAGE_TAG}
           ports:
             - containerPort: 8082
               name: http

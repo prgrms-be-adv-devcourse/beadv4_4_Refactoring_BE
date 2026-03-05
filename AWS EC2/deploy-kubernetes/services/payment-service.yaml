@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: payment-service
-          image: sang234/payment-service:latest
+          image: sang234/payment-service:${IMAGE_TAG}
           ports:
             - containerPort: 8084
               name: http

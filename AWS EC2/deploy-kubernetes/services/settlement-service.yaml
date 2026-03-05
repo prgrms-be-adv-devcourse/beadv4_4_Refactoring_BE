@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: settlement-service
-          image: sang234/settlement-service:latest
+          image: sang234/settlement-service:${IMAGE_TAG}
           ports:
             - containerPort: 8085
               name: http
