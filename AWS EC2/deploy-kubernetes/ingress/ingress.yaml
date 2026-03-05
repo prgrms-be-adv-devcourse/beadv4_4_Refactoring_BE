@@ -25,21 +25,3 @@ spec:
             name: api-gateway
             port:
               number: 8080
-
-      # Grafana
-      - path: /grafana
-        pathType: Prefix
-        backend:
-          service:
-            name: grafana
-            port:
-              number: 3000
-
-      # Redpanda Console
-      - path: /redpanda
-        pathType: Prefix
-        backend:
-          service:
-            name: redpanda-console
-            port:
-              number: 8090
