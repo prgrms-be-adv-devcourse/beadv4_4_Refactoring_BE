@@ -2,7 +2,7 @@
 백엔드 단기 심화 4기 Refactoring 팀의 BE 레포지토리입니다.
 
 ## 운영 문서
-- 통합 운영 Runbook: [`AWS EC2/OPERATIONS_RUNBOOK.md`](AWS%20EC2/OPERATIONS_RUNBOOK.md)
+- 통합 운영 Runbook: [`AWS EC2/OPERATIONS_RUNBOOK.md`](AWS%20EC2/deploy-runbook/OPERATIONS_RUNBOOK.md)
 
 # 키보드 마니아를 위한 키보드 이커머스 플랫폼
 
