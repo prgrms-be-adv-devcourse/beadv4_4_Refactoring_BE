@@ -43,25 +43,32 @@ public enum ErrorCode {
     AUTH_CONTEXT_NOT_FOUND("AUTH-401-9", "인증 정보를 찾을 수 없습니다. 로그인이 필요합니다.", HttpStatus.UNAUTHORIZED),
 
     // ===== 회원 =====
+
+    INVALID_ROLE_PROMOTION("MEMBER-400-1", "일반 회원만 판매자로 전환할 수 있습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_EMAIL_FORMAT("MEMBER-400-2", "올바른 이메일 형식이 아닙니다.", HttpStatus.BAD_REQUEST),
+    INVALID_PASSWORD_FORMAT("MEMBER-400-3", "비밀번호는 8자 이상, 영문과 숫자를 포함해야 합니다.", HttpStatus.BAD_REQUEST),
+    INVALID_NAME_LENGTH("MEMBER-400-4", "이름은 2-50자 사이여야 합니다.", HttpStatus.BAD_REQUEST),
+    MISSING_BANKING_INFORMATION("MEMBER-400-5", "은행 계좌 정보가 누락되었습니다.", HttpStatus.BAD_REQUEST),
+
     MEMBER_NOT_FOUND("MEMBER-404-1", "회원을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     CREDENTIAL_NOT_FOUND("MEMBER-404-2", "인증 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 
     MEMBER_EMAIL_ALREADY_EXISTS("MEMBER-409-1", "이미 사용 중인 이메일입니다.", HttpStatus.CONFLICT),
 
-    INVALID_ROLE_PROMOTION("MEMBER-400-1", "일반 회원만 판매자로 전환할 수 있습니다.", HttpStatus.BAD_REQUEST),
-    INVALID_EMAIL_FORMAT("MEMBER-400-3", "올바른 이메일 형식이 아닙니다.", HttpStatus.BAD_REQUEST),
-    INVALID_PASSWORD_FORMAT("MEMBER-400-4", "비밀번호는 8자 이상, 영문과 숫자를 포함해야 합니다.", HttpStatus.BAD_REQUEST),
-    INVALID_NAME_LENGTH("MEMBER-400-5", "이름은 2-50자 사이여야 합니다.", HttpStatus.BAD_REQUEST),
-
-    MISSING_BANKING_INFORMATION("MEMBER-400-6", "은행 계좌 정보가 누락되었습니다.", HttpStatus.BAD_REQUEST),
     // ===== 상품 =====
+
     SELLER_REQUIRED("PRODUCT-400-1", "판매자 ID는 필수입니다", HttpStatus.BAD_REQUEST),
     PRODUCT_NAME_REQUIRED("PRODUCT-400-2", "상품명은 필수입니다.", HttpStatus.BAD_REQUEST),
     PRODUCT_PRICE_INVALID("PRODUCT-400-3", "상품가격은 0원 이상이어야 합니다", HttpStatus.BAD_REQUEST),
     PRODUCT_CATEGORY_REQUIRED("PRODUCT-400-4", "카테고리 설정은 필수입니다.", HttpStatus.BAD_REQUEST),
-    PRODUCT_NOT_FOUND("PRODUCT-400-1", "존재하지 않는 상품입니다.", HttpStatus.NOT_FOUND),
+    PRODUCT_NOT_FOUND("PRODUCT-400-5", "존재하지 않는 상품입니다.", HttpStatus.NOT_FOUND),
+    PRODUCT_STOCK_QUANTITY_INVALID("PRODUCT-400-6", "재고 수량은 1 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
+
     USER_FORBIDDEN("PRODUCT-403-1", "판매자만 상품을 등록할 수 있습니다.", HttpStatus.FORBIDDEN),
     SELLER_FORBIDDEN("PRODUCT-403-2", "본인의 상품만 수정/삭제할 수 있습니다.", HttpStatus.FORBIDDEN),
+
+    PRODUCT_STOCK_NOT_ENOUGH("PRODUCT-409-1", "재고가 부족합니다.", HttpStatus.CONFLICT),
+    PRODUCT_RESERVED_STOCK_NOT_ENOUGH("PRODUCT-409-2", "예약 재고가 부족합니다.", HttpStatus.CONFLICT),
 
     // ===== 장바구니 =====
     CART_PRODUCT_OUT_OF_STOCK("CART-400-1", "선택하신 상품의 재고가 부족합니다.", HttpStatus.BAD_REQUEST),

@@ -36,7 +36,8 @@ public class Product extends BaseIdAndTime {
     private Long price;
     private Long salePrice;
     private Integer stock;
-    // @Column(columnDefinition = "TEXT")
+    @Column(nullable = false)
+    private Integer reservedStock;
     private String imageUrl;
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -75,6 +76,7 @@ public class Product extends BaseIdAndTime {
         this.price = price;
         this.salePrice = (salePrice != null) ? salePrice : price;
         this.stock = (stock != null) ? stock : 0;
+        this.reservedStock = 0;
         this.imageUrl = imageUrl;
         this.detail = detail;
 
@@ -84,8 +86,13 @@ public class Product extends BaseIdAndTime {
         this.viewCount = 0L;
     }
 
-    public void modify(String name, Long price, Long salePrice, Integer stock,
-                       Category category, String description, String imageUrl,
+    public void modify(String name,
+                       Long price,
+                       Long salePrice,
+                       Integer stock,
+                       Category category,
+                       String description,
+                       String imageUrl,
                        Map<String, Object> detail){
 
         if (name == null || name.isBlank()) {
@@ -108,5 +115,71 @@ public class Product extends BaseIdAndTime {
         this.description = description;
         this.imageUrl = imageUrl;
         this.detail = detail;
+    }
+
+    // 재고 관리 메서드
+    public void reserve(Integer quantity) {
+
+        // 수량 유효성 검사
+        validateQuantity(quantity);
+
+        // 사용 가능한 재고 계산 (총 재고 - 이미 예약된 재고)
+        int available = this.stock - this.reservedStock;
+
+        // 사용 가능한 재고가 요청된 수량보다 적으면 예외 발생
+        if (available < quantity) {
+            throw new CustomException(ErrorCode.PRODUCT_STOCK_NOT_ENOUGH);
+        }
+
+        // 예약된 재고 증가
+        this.reservedStock += quantity;
+    }
+
+    // 예약 해제 메서드
+    public void release(Integer quantity) {
+
+        // 수량 유효성 검사
+        validateQuantity(quantity);
+
+        // 예약된 재고가 요청된 수량보다 적으면 예외 발생
+        if (this.reservedStock < quantity) {
+            throw new CustomException(ErrorCode.PRODUCT_RESERVED_STOCK_NOT_ENOUGH);
+        }
+
+        // 예약된 재고 감소
+        this.reservedStock -= quantity;
+    }
+
+    // 구매 확정 메서드
+    public void commit(Integer quantity) {
+
+        // 수량 유효성 검사
+        validateQuantity(quantity);
+
+        // 예약된 재고가 요청된 수량보다 적으면 예외 발생
+        if (this.reservedStock < quantity) {
+            throw new CustomException(ErrorCode.PRODUCT_RESERVED_STOCK_NOT_ENOUGH);
+        }
+
+        // 실제 재고가 요청된 수량보다 적으면 예외 발생 (이론적으로는 발생하지 않아야 함)
+        if (this.stock < quantity) {
+            throw new CustomException(ErrorCode.PRODUCT_STOCK_NOT_ENOUGH);
+        }
+
+        // 예약된 재고와 실제 재고 모두에서 요청된 수량만큼 감소
+        this.reservedStock -= quantity;
+        this.stock -= quantity;
+
+        // 재고가 0이 되면 품절 상태로 변경
+        if (this.stock == 0) {
+            this.state = ProductState.SOLD_OUT;
+        }
+    }
+
+    // 재고 수량 유효성 검사 메서드
+    private void validateQuantity(Integer quantity) {
+        if (quantity == null || quantity <= 0) {
+            throw new CustomException(ErrorCode.PRODUCT_STOCK_QUANTITY_INVALID);
+        }
     }
 }

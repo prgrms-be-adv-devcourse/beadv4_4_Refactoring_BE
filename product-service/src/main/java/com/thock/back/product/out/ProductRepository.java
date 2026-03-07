@@ -2,9 +2,13 @@ package com.thock.back.product.out;
 
 import com.thock.back.product.domain.Category;
 import com.thock.back.product.domain.entity.Product;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,18 +16,20 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    // Pageable 객체를 다루는 기능. 리스트 반환 대신 Page로 반환
-    Page<Product> findByCategory(Category category, Pageable pageable);
-
-    // 이름에 keyword가 포함된 것 찾기 (ex: 브랜드 이름, 키보드 등등)
-    // select * from products where name like %keyword% 와 같음
+    // 상품명으로 검색 (부분 일치)
     List<Product> findByNameContaining(String keyword);
 
-    // 이름이나 설명에 keword가 포함된 것 찾기 (ex: 무접점, 적축, 갈축 등등)
-    List<Product> findByNameContainingOrDescriptionContaining(String name, String keyword);
+    // 카테고리로 검색 (페이징)
+    Page<Product> findByCategory(Category category, Pageable pageable);
 
+    // 여러 상품 ID로 조회
     List<Product> findAllByIdIn(List<Long> ids);
 
-    // 판매자가 등록한 자신의 상품 조회 - 판매자 페이지에서 이용
+    // 여러 상품 ID로 조회하면서 PESSIMISTIC_WRITE 락을 거는 메서드
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Product p where p.id in :ids")
+    List<Product> findAllByIdInForUpdate(@Param("ids") List<Long> ids);
+
+    // 판매자 ID로 상품 조회 (페이징)
     Page<Product> findBySellerId(Long sellerId, Pageable pageable);
 }

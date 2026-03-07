@@ -20,7 +20,7 @@
 
 ## 운영 Runbook
 
-- 통합 운영 절차: [`../OPERATIONS_RUNBOOK.md`](../OPERATIONS_RUNBOOK.md)
+- 통합 운영 절차: [`../OPERATIONS_RUNBOOK.md`](../deploy-runbook/OPERATIONS_RUNBOOK.md)
 - Ingress 적용 순서: [`ingress/INGRESS_GUIDE.md`](ingress/INGRESS_GUIDE.md)
 
 ---

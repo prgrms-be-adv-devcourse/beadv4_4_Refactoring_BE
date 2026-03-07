@@ -23,3 +23,6 @@ swagger:
   server:
     url: ${SWAGGER_SERVER_URL:https://api.thock.site}
     description: Production API Gateway
+
+inbox:
+  enabled: true

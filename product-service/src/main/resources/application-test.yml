@@ -15,3 +15,6 @@ jwt:
   access-token-exp-seconds: 1800
   refresh-token-exp-seconds: 1209600
   issuer: "thock-test"
+
+inbox:
+  enabled: false
