@@ -107,15 +107,12 @@ k3s/
 ├── ingress/                 # 외부 접근 설정
 │   ├── ingress.yaml
 │   └── cert-issuer.yaml
-├── deploy.sh                # 자동 배포 스크립트
 └── README.md                # 이 문서
 ```
 
 ---
 
 ## 빠른 시작 (K3s - 권장)
-
-**완전 초보자는 [SINGLE_EC2_SETUP.md](SINGLE_EC2_SETUP.md)를 먼저 읽으세요!**
 
 ### 1. EC2에 K3s 설치 (1분)
 
@@ -139,10 +136,10 @@ kubectl get nodes
 
 ```bash
 # 로컬 PC에서
-scp -r k3s ubuntu@your-ec2-ip:~/
+scp -r "AWS EC2/deploy-kubernetes" ubuntu@your-ec2-ip:~/
 
 # EC2에서
-cd ~/k3s
+cd ~/deploy-kubernetes
 ```
 
 ### 3. Secret 파일 생성
@@ -155,12 +152,64 @@ vim base/secrets.yaml  # 비밀번호 입력
 ### 4. 배포 실행
 
 ```bash
-# 전체 배포
-./deploy.sh
+# 1. 네임스페이스
+kubectl apply -f base/namespace.yaml
 
-# 또는 모니터링 제외 (리소스 절약)
-./deploy.sh --skip-monitoring
+# 2. ConfigMap & Secret
+kubectl apply -f base/configmap.yaml
+kubectl apply -f database/mysql-configmap.yaml
+kubectl apply -f base/secrets.yaml
+
+# 3. 데이터베이스
+kubectl apply -f database/mysql-statefulset.yaml
+kubectl wait --for=condition=ready pod -l app=mysql -n thock-prod --timeout=300s
+
+# 4. 메시징
+kubectl apply -f messaging/redpanda-statefulset.yaml
+kubectl apply -f messaging/redpanda-console.yaml
+kubectl wait --for=condition=ready pod -l app=redpanda -n thock-prod --timeout=300s
+
+# 5. 애플리케이션 서비스
+kubectl apply -f services/member-service.yaml
+kubectl apply -f services/product-service.yaml
+kubectl apply -f services/payment-service.yaml
+kubectl apply -f services/settlement-service.yaml
+kubectl apply -f services/market-service.yaml
+kubectl apply -f services/api-gateway.yaml
+
+# 6. 서비스별 이미지 태그 지정 (필수)
+NS=thock-prod
+kubectl -n $NS set image deployment/member-service member-service=sang234/member-service:<member-service_SHA>
+kubectl -n $NS set image deployment/product-service product-service=sang234/product-service:<product-service_SHA>
+kubectl -n $NS set image deployment/payment-service payment-service=sang234/payment-service:<payment-service_SHA>
+kubectl -n $NS set image deployment/settlement-service settlement-service=sang234/settlement-service:<settlement-service_SHA>
+kubectl -n $NS set image deployment/market-service market-service=sang234/market-service:<market-service_SHA>
+kubectl -n $NS set image deployment/api-gateway api-gateway=sang234/api-gateway:<api-gateway_SHA>
+
+# 7. 롤아웃 확인
+kubectl rollout status deployment/member-service -n thock-prod --timeout=300s
+kubectl rollout status deployment/product-service -n thock-prod --timeout=300s
+kubectl rollout status deployment/payment-service -n thock-prod --timeout=300s
+kubectl rollout status deployment/settlement-service -n thock-prod --timeout=300s
+kubectl rollout status deployment/market-service -n thock-prod --timeout=300s
+kubectl rollout status deployment/api-gateway -n thock-prod --timeout=300s
+
+# 8. 모니터링 (선택)
+kubectl apply -f monitoring/prometheus-config.yaml
+kubectl apply -f monitoring/loki-config.yaml
+kubectl apply -f monitoring/promtail-config.yaml
+kubectl apply -f monitoring/prometheus.yaml
+kubectl apply -f monitoring/loki.yaml
+kubectl apply -f monitoring/promtail.yaml
+kubectl apply -f monitoring/grafana.yaml
+
+# 9. Ingress (선택)
+kubectl apply -f ingress/ingress.yaml
 ```
+
+참고:
+- `services/*.yaml`의 `${IMAGE_TAG}`는 placeholder입니다.
+- 초기 생성 후와 이후 업데이트 모두 실제 이미지 배포는 `kubectl set image`로 완료합니다.
 
 ### 5. 접근
 
@@ -220,7 +269,7 @@ kubectl wait --for=condition=ready pod -l app=redpanda -n thock-prod --timeout=3
 ### Step 6: 애플리케이션 서비스 배포
 
 ```bash
-# 순서대로 배포 (의존성 고려)
+# 순서대로 리소스 생성 (의존성 고려)
 kubectl apply -f services/member-service.yaml
 kubectl apply -f services/product-service.yaml
 kubectl apply -f services/payment-service.yaml
@@ -228,7 +277,21 @@ kubectl apply -f services/settlement-service.yaml
 kubectl apply -f services/market-service.yaml
 kubectl apply -f services/api-gateway.yaml
 
+# 서비스별 실제 이미지 태그 지정
+NS=thock-prod
+kubectl -n $NS set image deployment/member-service member-service=sang234/member-service:<member-service_SHA>
+kubectl -n $NS set image deployment/product-service product-service=sang234/product-service:<product-service_SHA>
+kubectl -n $NS set image deployment/payment-service payment-service=sang234/payment-service:<payment-service_SHA>
+kubectl -n $NS set image deployment/settlement-service settlement-service=sang234/settlement-service:<settlement-service_SHA>
+kubectl -n $NS set image deployment/market-service market-service=sang234/market-service:<market-service_SHA>
+kubectl -n $NS set image deployment/api-gateway api-gateway=sang234/api-gateway:<api-gateway_SHA>
+
 # 모든 서비스가 준비될 때까지 대기
+kubectl rollout status deployment/member-service -n thock-prod
+kubectl rollout status deployment/product-service -n thock-prod
+kubectl rollout status deployment/payment-service -n thock-prod
+kubectl rollout status deployment/settlement-service -n thock-prod
+kubectl rollout status deployment/market-service -n thock-prod
 kubectl rollout status deployment/api-gateway -n thock-prod
 ```
 
@@ -520,7 +583,3 @@ eksctl create addon \
 5. **보안 강화**: Network Policy, Pod Security Policy 적용
 
 ---
-
-## 문의
-
-문제가 발생하거나 질문이 있으시면 팀에 문의하세요.

@@ -6,18 +6,20 @@
 ## 문서 메타정보
 | 항목 | 값 |
 |---|---|
-| 문서 버전 | v1.0.0 |
-| 최종 수정일 | 2026-03-05 |
+| 문서 버전 | v1.1.2 |
+| 최종 수정일 | 2026-03-09 |
 | 수정자 | ops-admin |
 
-## 빠른 검색 키워드
-`runbook`, `kubernetes`, `docker-compose`, `rollout`, `rollback`, `ingress`, `probe`, `smoke-test`, `troubleshooting`, `severities`
+---
 
 ## 0. 공통 원칙
 - 운영 기본 실행 환경은 Kubernetes(K3s)입니다.
 - Docker Compose는 점검/대체 실행 시에만 사용합니다.
+- Compose 실행 시 고정 설정은 `.env`, 서비스별 이미지 태그는 `release-state.env`에서 관리합니다.
 - 앱 이미지는 `latest` 대신 고정 태그(SHA)를 사용합니다.
 - 수동 배포 시 태그를 반드시 명시합니다.
+- GitHub Actions 자동 배포는 변경된 서비스만 대상으로 수행합니다.
+- `common/`, `gradle/`, `settings.gradle`, `gradlew` 변경 시에는 전체 서비스를 배포 대상으로 간주합니다.
 - 설정 변경(ingress/configmap/secret) 후에는 필요한 재시작/검증을 반드시 수행합니다.
 
 ## 0-1. 경로 보안 정책 표 (공통 기준)
@@ -54,71 +56,115 @@ kubectl -n thock-prod get pods
 ## 2. 정상 배포 (Kubernetes, 권장)
 
 ### 2-1. CI/CD 자동 배포
-- PR merge 후 GitHub Actions가 이미지 빌드/배포를 수행합니다.
-- 배포 후 아래 검증만 수행합니다.
+- PR merge 후 GitHub Actions가 영향받는 서비스만 이미지 빌드/배포를 수행합니다.
+- 변경 감지 기준:
+  - 서비스별 디렉터리 변경: 해당 서비스만 배포
+  - `common/`, `gradle/`, `settings.gradle`, `settings.gradle.kts`, `build.gradle`, `build.gradle.kts`, `gradlew`, `gradlew.bat`, `gradle.properties` 변경: 전체 서비스 배포
+  - 서비스와 무관한 변경만 있는 경우: 빌드/배포 job skip
+- 자동 배포가 수행하는 검증:
+  - 변경된 deployment만 `kubectl set image`
+  - 변경된 deployment만 `rollout status`, `wait --for=condition=ready`
+  - 변경된 서비스 컨테이너 내부 `127.0.0.1:<port>/actuator/health` self-check
+  - 변경된 deployment 이미지 태그 일치 여부 확인
+- 운영자는 배포 후 아래 수동 검증을 변경 서비스 기준으로 수행합니다.
 
 ### 2-2. 수동 배포 (이미지 태그 지정 필수)
 ```bash
-IMAGE_TAG=<배포할_SHA>
 NS=thock-prod
 
-kubectl -n $NS set image deployment/api-gateway api-gateway=sang234/api-gateway:$IMAGE_TAG
-kubectl -n $NS set image deployment/member-service member-service=sang234/member-service:$IMAGE_TAG
-kubectl -n $NS set image deployment/product-service product-service=sang234/product-service:$IMAGE_TAG
-kubectl -n $NS set image deployment/market-service market-service=sang234/market-service:$IMAGE_TAG
-kubectl -n $NS set image deployment/payment-service payment-service=sang234/payment-service:$IMAGE_TAG
-kubectl -n $NS set image deployment/settlement-service settlement-service=sang234/settlement-service:$IMAGE_TAG
+# 예: member-service만 배포
+kubectl -n $NS set image deployment/member-service \
+  member-service=sang234/member-service:<member-service_SHA>
+
+# 예: api-gateway와 member-service를 함께 배포
+kubectl -n $NS set image deployment/api-gateway \
+  api-gateway=sang234/api-gateway:<api-gateway_SHA>
+kubectl -n $NS set image deployment/member-service \
+  member-service=sang234/member-service:<member-service_SHA>
+```
+
+운영 규칙:
+- 일반 배포: 실제 변경 서비스만 `kubectl set image`로 갱신
+- 서비스별 이미지 태그는 서로 달라도 됩니다. 공통 릴리스인 경우에만 같은 SHA를 반복 사용합니다.
+- 공유 모듈/빌드 인프라 변경 배포: 6개 전체 서비스에 대해 각각 `kubectl set image`를 수행
+- `services/*.yaml`의 `${IMAGE_TAG}`는 placeholder이므로 `kubectl apply -f services/...`만으로 이미지 배포를 완료했다고 판단하지 않습니다.
+```bash
+kubectl -n $NS set image deployment/api-gateway api-gateway=sang234/api-gateway:<api-gateway_SHA>
+kubectl -n $NS set image deployment/member-service member-service=sang234/member-service:<member-service_SHA>
+kubectl -n $NS set image deployment/product-service product-service=sang234/product-service:<product-service_SHA>
+kubectl -n $NS set image deployment/market-service market-service=sang234/market-service:<market-service_SHA>
+kubectl -n $NS set image deployment/payment-service payment-service=sang234/payment-service:<payment-service_SHA>
+kubectl -n $NS set image deployment/settlement-service settlement-service=sang234/settlement-service:<settlement-service_SHA>
 ```
 
 ### 2-3. 롤아웃 확인
 ```bash
-kubectl -n thock-prod rollout status deploy/api-gateway --timeout=300s
-kubectl -n thock-prod rollout status deploy/member-service --timeout=300s
-kubectl -n thock-prod rollout status deploy/product-service --timeout=300s
-kubectl -n thock-prod rollout status deploy/market-service --timeout=300s
-kubectl -n thock-prod rollout status deploy/payment-service --timeout=300s
-kubectl -n thock-prod rollout status deploy/settlement-service --timeout=300s
+SERVICES="member-service"
+
+for svc in $SERVICES; do
+  kubectl -n $NS rollout status deploy/$svc --timeout=300s
+  kubectl -n $NS wait --for=condition=ready pod -l app=$svc --timeout=180s
+done
 ```
 
 ### 2-4. 필수 검증
 ```bash
 # 실행 이미지 확인 (latest 금지)
-kubectl -n thock-prod get deploy api-gateway member-service product-service market-service payment-service settlement-service \
-  -o=jsonpath='{range .items[*]}{.metadata.name}{" => "}{.spec.template.spec.containers[0].image}{"\n"}{end}'
+for svc in $SERVICES; do
+  kubectl -n $NS get deploy $svc \
+    -o=jsonpath='{.metadata.name}{" => "}{.spec.template.spec.containers[0].image}{"\n"}'
+done
 
 # Pod 상태
-kubectl -n thock-prod get pods
+kubectl -n $NS get pods
 
-# 내부 헬스체크
-kubectl -n thock-prod exec deploy/api-gateway -- sh -lc 'wget -qO- http://member-service:8081/actuator/health'
-kubectl -n thock-prod exec deploy/api-gateway -- sh -lc 'wget -qO- http://product-service:8082/actuator/health'
-kubectl -n thock-prod exec deploy/api-gateway -- sh -lc 'wget -qO- http://market-service:8083/actuator/health'
-kubectl -n thock-prod exec deploy/api-gateway -- sh -lc 'wget -qO- http://payment-service:8084/actuator/health'
-kubectl -n thock-prod exec deploy/api-gateway -- sh -lc 'wget -qO- http://settlement-service:8085/actuator/health'
+# 변경 서비스 self health-check
+for svc in $SERVICES; do
+  case "$svc" in
+    api-gateway) port=8080 ;;
+    member-service) port=8081 ;;
+    product-service) port=8082 ;;
+    market-service) port=8083 ;;
+    payment-service) port=8084 ;;
+    settlement-service) port=8085 ;;
+    *) echo "unknown service: $svc" && exit 1 ;;
+  esac
+
+  kubectl -n $NS exec deploy/$svc -- sh -lc "wget -qO- http://127.0.0.1:$port/actuator/health"
+done
 ```
+
+추가 검증 권장:
+- `api-gateway` 변경 시: 외부 주요 API 1건 이상 호출
+- 서비스 간 계약 변경 시: 호출 주체 서비스에서 대상 서비스로 연동 smoke test 1건 이상 수행
+- 공유 모듈 변경 시: 6개 전체 서비스 이미지 태그와 핵심 내부 연동을 모두 확인
 
 ---
 
 ## 3. 긴급 롤백
 ```bash
-kubectl -n thock-prod rollout undo deploy/api-gateway
-kubectl -n thock-prod rollout undo deploy/member-service
-kubectl -n thock-prod rollout undo deploy/product-service
-kubectl -n thock-prod rollout undo deploy/market-service
-kubectl -n thock-prod rollout undo deploy/payment-service
-kubectl -n thock-prod rollout undo deploy/settlement-service
+NS=thock-prod
+SERVICES="member-service"
+
+for svc in $SERVICES; do
+  kubectl -n $NS rollout undo deploy/$svc
+done
 ```
+
+롤백 원칙:
+- 선택 배포 장애: 변경 서비스만 우선 롤백
+- `common/` 또는 빌드 인프라 영향 배포 장애: 전체 서비스 롤백 여부를 함께 판단
 
 또는 특정 태그로 즉시 되돌리기:
 ```bash
-IMAGE_TAG=<이전_정상_SHA>
-# 2-2의 set image 절차 재실행
+kubectl -n $NS set image deployment/member-service \
+  member-service=sang234/member-service:<이전_정상_SHA>
 ```
 
 롤백 후 필수 확인:
 ```bash
-kubectl -n thock-prod get pods
-kubectl -n thock-prod get events --sort-by=.lastTimestamp | tail -n 30
+kubectl -n $NS get pods
+kubectl -n $NS get events --sort-by=.lastTimestamp | tail -n 30
 ```
 
 ---
@@ -131,15 +177,15 @@ sudo systemctl stop k3s
 sudo systemctl status k3s
 
 cd ~/deploy-docker-compose
-docker compose down
-docker compose up -d
-docker compose ps
+./compose.sh down
+./compose.sh up -d
+./compose.sh ps
 ```
 
 ### 4-2. Compose -> Kubernetes
 ```bash
 cd ~/deploy-docker-compose
-docker compose down
+./compose.sh down
 docker ps
 
 sudo systemctl start k3s
@@ -192,6 +238,8 @@ curl -Ik https://api.thock.site/redpanda/
 ## 7. 자주 발생하는 실수
 - `kubectl apply`만 하고 `set image`를 생략함
 - `latest` 이미지를 다시 사용함
+- `common/`, `gradle/`, `settings.gradle`, `gradlew` 변경인데 일부 서비스만 배포함
+- 변경 서비스만 배포한 뒤 연관 API smoke test를 생략함
 - Ingress를 개별/무순서로 적용함
 - ConfigMap/Secret 변경 후 재시작 검증을 생략함
 - k3s/compose 동시 실행 상태로 테스트함
@@ -222,13 +270,15 @@ kubectl -n thock-prod get pods -o wide
 
 3. Kubernetes 롤아웃 상태
 ```bash
-kubectl -n thock-prod rollout status deploy/api-gateway
+SERVICE=member-service
+kubectl -n thock-prod rollout status deploy/$SERVICE
 ```
 
 4. Kubernetes 실행 이미지 태그 확인
 ```bash
-kubectl -n thock-prod get deploy api-gateway member-service product-service market-service payment-service settlement-service \
-  -o=jsonpath='{range .items[*]}{.metadata.name}{" => "}{.spec.template.spec.containers[0].image}{"\n"}{end}'
+SERVICE=member-service
+kubectl -n thock-prod get deploy $SERVICE \
+  -o=jsonpath='{.metadata.name}{" => "}{.spec.template.spec.containers[0].image}{"\n"}'
 ```
 
 5. Kubernetes 이벤트 최근 확인
@@ -236,15 +286,17 @@ kubectl -n thock-prod get deploy api-gateway member-service product-service mark
 kubectl -n thock-prod get events --sort-by=.lastTimestamp | tail -n 30
 ```
 
-6. Kubernetes 서비스 간 헬스체크
+6. Kubernetes 변경 서비스 self health-check
 ```bash
-kubectl -n thock-prod exec deploy/api-gateway -- sh -lc 'wget -qO- http://member-service:8081/actuator/health'
+SERVICE=member-service
+PORT=8081
+kubectl -n thock-prod exec deploy/$SERVICE -- sh -lc "wget -qO- http://127.0.0.1:$PORT/actuator/health"
 ```
 
 7. Compose 컨테이너 상태
 ```bash
 cd ~/deploy-docker-compose
-docker compose ps
+./compose.sh ps
 ```
 
 8. Compose 실행 이미지 확인
@@ -326,13 +378,13 @@ kubectl -n thock-prod top pod
 - 정상
   - 모든 핵심 Pod가 `READY 1/1`, `STATUS Running`
   - 롤아웃 명령이 모두 `successfully rolled out`
-  - 내부 헬스체크 응답이 모두 `{"status":"UP"...}`
+  - 배포 대상 서비스와 연관 smoke test 대상 서비스의 헬스체크 응답이 `{"status":"UP"...}`
   - 배포 대상 서비스 이미지 태그가 의도한 태그와 일치
 - 비정상
   - `CrashLoopBackOff`, `ImagePullBackOff`, `Error`, `Pending` 지속
   - `rollout status` 타임아웃 또는 실패
   - `startupProbe/livenessProbe/readinessProbe failed`가 반복
-  - 내부 헬스체크 실패(연결 거부, 타임아웃, 5xx)
+  - 배포 대상 서비스 또는 연관 smoke test 대상 서비스 헬스체크 실패(연결 거부, 타임아웃, 5xx)
 
 ---
 
@@ -350,16 +402,18 @@ kubectl -n thock-prod get pods -o wide
 kubectl -n thock-prod get events --sort-by=.lastTimestamp | tail -n 50
 
 # 2) 즉시 롤백(최근 변경이 원인으로 의심될 때)
-kubectl -n thock-prod rollout undo deploy/api-gateway
-kubectl -n thock-prod rollout undo deploy/member-service
-kubectl -n thock-prod rollout undo deploy/product-service
-kubectl -n thock-prod rollout undo deploy/market-service
-kubectl -n thock-prod rollout undo deploy/payment-service
-kubectl -n thock-prod rollout undo deploy/settlement-service
+NS=thock-prod
+SERVICES="api-gateway member-service product-service market-service payment-service settlement-service"
+# 단일 서비스 장애로 좁혀지면 해당 서비스만 지정
+for svc in $SERVICES; do
+  kubectl -n $NS rollout undo deploy/$svc
+done
 
 # 3) 롤백 결과 확인
-kubectl -n thock-prod rollout status deploy/api-gateway --timeout=300s
-kubectl -n thock-prod get pods
+for svc in $SERVICES; do
+  kubectl -n $NS rollout status deploy/$svc --timeout=300s
+done
+kubectl -n $NS get pods
 ```
 - 에스컬레이션:
   - 5분 내 정상화 실패 시 즉시 롤백 유지 + 원인 분석 전담 전환
@@ -421,12 +475,16 @@ kubectl -n thock-prod logs deploy/<대상서비스> --tail=200
 - 배포 직후 5분 이내 실행
 - 동일한 시나리오를 반복해서 비교 가능하게 유지
 - 실패 시 즉시 `11. 장애 의심 시 1분 트리아지`로 전환
+- GitHub Actions 자동 배포는 변경 서비스만 `rollout`, `pod ready`, self health, 이미지 태그를 검증합니다.
+- 운영자는 아래 수동 스모크를 변경 서비스 기준으로 수행하고, 공유 모듈 변경 배포 시 전체 서비스로 확장합니다.
 
 ### 15-1. 공통 변수
 ```bash
 BASE_URL="https://api.thock.site"
 ACCESS_TOKEN="<유효한_토큰>"
 ADMIN_IP_EXPECTED_CODE="200_or_302"
+NS="thock-prod"
+SERVICES="member-service"
 ```
 
 ### 15-2. 핵심 스모크 시나리오
@@ -472,16 +530,32 @@ curl -Ik "$BASE_URL/redpanda/"
 - 관리자 허용 IP: `200` 또는 `302`
 - 비허용 IP: `403`
 
-6. 내부 서비스 헬스(클러스터 내부)
+6. 변경 서비스 self health-check(클러스터 내부)
 ```bash
-kubectl -n thock-prod exec deploy/api-gateway -- sh -lc 'wget -qO- http://member-service:8081/actuator/health'
-kubectl -n thock-prod exec deploy/api-gateway -- sh -lc 'wget -qO- http://product-service:8082/actuator/health'
-kubectl -n thock-prod exec deploy/api-gateway -- sh -lc 'wget -qO- http://market-service:8083/actuator/health'
-kubectl -n thock-prod exec deploy/api-gateway -- sh -lc 'wget -qO- http://payment-service:8084/actuator/health'
-kubectl -n thock-prod exec deploy/api-gateway -- sh -lc 'wget -qO- http://settlement-service:8085/actuator/health'
+for svc in $SERVICES; do
+  case "$svc" in
+    api-gateway) port=8080 ;;
+    member-service) port=8081 ;;
+    product-service) port=8082 ;;
+    market-service) port=8083 ;;
+    payment-service) port=8084 ;;
+    settlement-service) port=8085 ;;
+    *) echo "unknown service: $svc" && exit 1 ;;
+  esac
+
+  kubectl -n $NS exec deploy/$svc -- sh -lc "wget -qO- http://127.0.0.1:$port/actuator/health"
+done
 ```
 기대:
 - 모든 응답 `status=UP`
+
+7. 연관 서비스 smoke test(필요 시)
+```bash
+# 예: api-gateway 변경 또는 member-service 연동 확인이 필요한 경우
+kubectl -n $NS exec deploy/api-gateway -- sh -lc 'wget -qO- http://member-service:8081/actuator/health'
+```
+기대:
+- 호출 경계의 대상 서비스가 정상 응답
 
 ### 15-3. 실패 시 즉시 확인 명령어
 ```bash
@@ -495,11 +569,13 @@ kubectl -n thock-prod top pod
 - 통과:
   - 핵심 API 인증 호출 성공
   - 관리자 경로 접근 정책 기대값 충족
-  - 내부 헬스체크 전부 `UP`
+  - 변경 서비스 self health-check 전부 `UP`
+  - 필요 시 연관 서비스 smoke test 성공
 - 실패:
   - 인증 API 연속 실패(401/403/5xx 비정상)
   - 관리자 경로 정책 불일치(허용 IP인데 403 또는 비허용 IP인데 200/302)
-  - 내부 헬스체크 실패 1개 이상
+  - 변경 서비스 self health-check 실패 1개 이상
+  - 연관 서비스 smoke test 실패
 
 ---
 
@@ -534,23 +610,26 @@ kubectl -n thock-prod top pod
 
 ### 16-3. 변경 시 검증 절차
 ```bash
+NS=thock-prod
+SERVICES="member-service"
+# 공통 정책을 일괄 변경한 경우 6개 전체 서비스 지정
+
 # 1) 배포 반영
-kubectl -n thock-prod apply -f ~/deploy-kubernetes/services/
-kubectl -n thock-prod rollout restart deploy/api-gateway deploy/member-service deploy/product-service deploy/market-service deploy/payment-service deploy/settlement-service
+kubectl -n $NS apply -f ~/deploy-kubernetes/services/
+for svc in $SERVICES; do
+  kubectl -n $NS rollout restart deploy/$svc
+done
 
 # 2) 롤아웃 확인
-kubectl -n thock-prod rollout status deploy/api-gateway --timeout=300s
-kubectl -n thock-prod rollout status deploy/member-service --timeout=300s
-kubectl -n thock-prod rollout status deploy/product-service --timeout=300s
-kubectl -n thock-prod rollout status deploy/market-service --timeout=300s
-kubectl -n thock-prod rollout status deploy/payment-service --timeout=300s
-kubectl -n thock-prod rollout status deploy/settlement-service --timeout=300s
+for svc in $SERVICES; do
+  kubectl -n $NS rollout status deploy/$svc --timeout=300s
+done
 
 # 3) 실패 이벤트 확인
-kubectl -n thock-prod get events --sort-by=.lastTimestamp | tail -n 50
+kubectl -n $NS get events --sort-by=.lastTimestamp | tail -n 50
 
 # 4) 리소스 여유 확인
-kubectl -n thock-prod top pod
+kubectl -n $NS top pod
 ```
 
 판정 기준:
@@ -624,22 +703,11 @@ kubectl -n thock-prod top pod
 
 ---
 
-## 관련 문서 (공통 링크)
-- `AWS EC2/README.md`
-- `AWS EC2/OPERATIONS_RUNBOOK.md`
-- `AWS EC2/OPS_CHECK_TEMPLATE.md`
-- `AWS EC2/OPS_CHANGELOG.md`
-- `AWS EC2/OPS_ONBOARDING.md`
-- `AWS EC2/OPS_ALIASES.md`
-- `AWS EC2/OPS_MONITORING_ALERTS.md`
-- `AWS EC2/OPS_DB_MIGRATION_GUIDE.md`
-- `AWS EC2/OPS_SECURITY_SECRETS_POLICY.md`
-- `AWS EC2/OPS_DOCUMENTATION_GUIDE.md`
-
----
-
 ## 개정 이력
 | 버전 | 일자 | 수정자 | 변경 요약 |
 |---|---|---|---|
 | v1.0.0 | 2026-03-05 | ops-admin | 운영 표준 절차 문서 통합 및 섹션 표준화 |
 | v1.0.1 | 2026-03-05 | ops-admin | 신규 정책 문서(모니터링/DB/보안) 공통 링크 반영 |
+| v1.1.0 | 2026-03-09 | ops-admin | 변경 서비스 기준 선택 배포/롤백 절차와 자동 검증 기준 반영 |
+| v1.1.1 | 2026-03-09 | ops-admin | Compose release-state.env 및 compose.sh 실행 기준 반영 |
+| v1.1.2 | 2026-03-09 | ops-admin | Kubernetes 수동 배포를 서비스별 태그 지정 기준으로 정리하고 관련 링크 갱신 |

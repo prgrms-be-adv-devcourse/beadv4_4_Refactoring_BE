@@ -6,20 +6,9 @@
 ## 문서 메타정보
 | 항목 | 값 |
 |---|---|
-| 문서 버전 | v1.0.0 |
-| 최종 수정일 | 2026-03-05 |
+| 문서 버전 | v1.0.3 |
+| 최종 수정일 | 2026-03-09 |
 | 수정자 | ops-admin |
-
-## 빠른 검색 키워드
-`ops-changelog`, `change-history`, `deployment-log`, `rollback-record`, `incident-record`, `audit-trail`, `ops-journal`
-
----
-
-## 기록 규칙
-- 시간은 KST 기준으로 작성
-- 변경 단위 1건당 1개 항목 작성
-- 장애 대응성 변경(보안, ingress, probe, 리소스, 이미지 태그)은 반드시 기록
-- 관련 PR/커밋/이슈 링크를 함께 기록
 
 ---
 
@@ -54,6 +43,64 @@
 ---
 
 ## 변경 이력
+
+### [2026-03-09 00:30] Compose release-state.env 및 Kubernetes 수동 배포 문서 정리
+- 변경 유형: `설정`
+- 대상 환경: `kubernetes + docker-compose`
+- 대상 컴포넌트: 운영 문서, Compose 대체 실행 절차, Kubernetes 수동 배포 절차
+- 작업자: ops-admin
+- 목적/배경:
+  - 선택 배포 기준으로 전환된 뒤 Compose와 Kubernetes 문서에 남은 전체 배포/단일 태그 전제를 제거
+- 변경 내용:
+  - Compose 문서에 `.env`와 `release-state.env` 분리 운영, `compose.sh` 실행 기준 반영
+  - Kubernetes 문서에 `kubectl set image` 기반 서비스별 태그 지정 절차 반영
+  - 삭제된 `OPS_MONITORING_ALERTS.md` 참조를 `deploy-kubernetes/README.md` 기준으로 정리
+- 검증 방법:
+  - 배포/운영 문서 간 절차 대조 검토
+  - 구식 스크립트/삭제 문서/단일 IMAGE_TAG 참조 여부 점검
+- 결과:
+  - `성공`
+  - 상세: 운영 문서가 현재 배포 모델과 동일한 기준으로 정렬됨
+- 영향도:
+  - 사용자 영향: `없음`
+  - 장애 등급: `해당없음`
+- 롤백 여부:
+  - `불필요`
+- 후속 TODO:
+  - 실제 선택 배포 이슈 종료 시 최종 운영 점검 기록 1건 추가
+- 참조:
+  - PR:
+  - Commit/Image Tag:
+  - 이슈: 배포 문서 최신화
+
+### [2026-03-09 00:00] GitHub Actions 선택 서비스 배포 기준 반영
+- 변경 유형: `설정`
+- 대상 환경: `kubernetes`
+- 대상 컴포넌트: GitHub Actions CD, 운영 배포 절차 문서
+- 작업자: ops-admin
+- 목적/배경:
+  - PR merge 시 전체 서비스가 아닌 변경 서비스만 이미지 빌드/배포하도록 CD를 최적화
+- 변경 내용:
+  - `deploy.yml`에서 PR 변경 파일 기준으로 영향 서비스만 `build/push/set image` 수행
+  - `common/`, `gradle/`, `settings.gradle`, `settings.gradle.kts`, `build.gradle`, `build.gradle.kts`, `gradlew`, `gradlew.bat`, `gradle.properties` 변경 시 전체 서비스 배포로 처리
+  - `OPERATIONS_RUNBOOK.md`, `OPS_CHECK_TEMPLATE.md`에 선택 배포/검증 기준 반영
+- 검증 방법:
+  - 워크플로우와 운영 문서 간 절차 대조 검토
+  - 선택 배포/전체 배포 분기 조건 확인
+- 결과:
+  - `성공`
+  - 상세: 운영 기준 문서를 현재 CD 동작과 일치하도록 정렬
+- 영향도:
+  - 사용자 영향: `없음`
+  - 장애 등급: `해당없음`
+- 롤백 여부:
+  - `불필요`
+- 후속 TODO:
+  - 최초 선택 배포 PR에서 matrix 대상 서비스와 배포 검증 로그 확인
+- 참조:
+  - PR:
+  - Commit/Image Tag:
+  - 이슈: 선택 배포 최적화
 
 ### [2026-03-05 00:00] 초기 템플릿 생성
 - 변경 유형: `설정`
@@ -174,22 +221,10 @@
 
 ---
 
-## 관련 문서 (공통 링크)
-- `AWS EC2/README.md`
-- `AWS EC2/OPERATIONS_RUNBOOK.md`
-- `AWS EC2/OPS_CHECK_TEMPLATE.md`
-- `AWS EC2/OPS_CHANGELOG.md`
-- `AWS EC2/OPS_ONBOARDING.md`
-- `AWS EC2/OPS_ALIASES.md`
-- `AWS EC2/OPS_MONITORING_ALERTS.md`
-- `AWS EC2/OPS_DB_MIGRATION_GUIDE.md`
-- `AWS EC2/OPS_SECURITY_SECRETS_POLICY.md`
-- `AWS EC2/OPS_DOCUMENTATION_GUIDE.md`
-
----
-
 ## 개정 이력
 | 버전 | 일자 | 수정자 | 변경 요약 |
 |---|---|---|---|
 | v1.0.0 | 2026-03-05 | ops-admin | 변경 이력 템플릿 및 작성 예시 추가 |
 | v1.0.1 | 2026-03-05 | ops-admin | 공통 링크에 신규 정책 문서(보안) 반영 |
+| v1.0.2 | 2026-03-09 | ops-admin | 선택 서비스 배포 기준 운영 변경 이력 추가 |
+| v1.0.3 | 2026-03-09 | ops-admin | Compose/Kubernetes 최신 운영 방식 기준 문서 정리 이력 추가 |

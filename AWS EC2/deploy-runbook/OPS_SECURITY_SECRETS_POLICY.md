@@ -5,12 +5,9 @@
 ## 문서 메타정보
 | 항목 | 값 |
 |---|---|
-| 문서 버전 | v1.0.0 |
-| 최종 수정일 | 2026-03-05 |
+| 문서 버전 | v1.0.3 |
+| 최종 수정일 | 2026-03-09 |
 | 수정자 | ops-admin |
-
-## 빠른 검색 키워드
-`secrets`, `security`, `credential-rotation`, `access-control`, `least-privilege`, `incident-response`, `token`, `password`, `key-rotation`
 
 ---
 
@@ -56,8 +53,9 @@
 
 ### 4-2. Docker Compose
 - 민감값은 `.env`로 주입하되 저장소 커밋 금지
+- 서비스별 이미지 태그는 `release-state.env`로 분리 관리
 - 서버에만 보관, 권한 제한(`chmod 600`) 권장
-- 값 변경 후 `docker compose down && docker compose up -d` 및 로그 검증
+- 값 변경 후 `./compose.sh down && ./compose.sh up -d` 및 로그 검증
 
 ---
 
@@ -111,22 +109,10 @@
 
 ---
 
-## 관련 문서 (공통 링크)
-- `AWS EC2/README.md`
-- `AWS EC2/OPERATIONS_RUNBOOK.md`
-- `AWS EC2/OPS_CHECK_TEMPLATE.md`
-- `AWS EC2/OPS_CHANGELOG.md`
-- `AWS EC2/OPS_ONBOARDING.md`
-- `AWS EC2/OPS_ALIASES.md`
-- `AWS EC2/OPS_MONITORING_ALERTS.md`
-- `AWS EC2/OPS_DB_MIGRATION_GUIDE.md`
-- `AWS EC2/OPS_SECURITY_SECRETS_POLICY.md`
-- `AWS EC2/OPS_DOCUMENTATION_GUIDE.md`
-
----
-
 ## 개정 이력
 | 버전 | 일자 | 수정자 | 변경 요약 |
 |---|---|---|---|
 | v1.0.0 | 2026-03-05 | ops-admin | 운영 비밀정보/접근권한 정책 문서 초안 작성 |
 | v1.0.1 | 2026-03-05 | ops-admin | 공통 링크 포맷 통일 및 자기참조 링크 추가 |
+| v1.0.2 | 2026-03-09 | ops-admin | Compose release-state.env 분리 운영 기준 반영 |
+| v1.0.3 | 2026-03-09 | ops-admin | 삭제된 모니터링 문서 링크를 Kubernetes 가이드 링크로 대체 |

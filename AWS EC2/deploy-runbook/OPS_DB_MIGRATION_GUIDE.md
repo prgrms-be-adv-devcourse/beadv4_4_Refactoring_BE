@@ -5,12 +5,9 @@
 ## 문서 메타정보
 | 항목 | 값 |
 |---|---|
-| 문서 버전 | v1.0.0 |
-| 최종 수정일 | 2026-03-05 |
+| 문서 버전 | v1.0.2 |
+| 최종 수정일 | 2026-03-09 |
 | 수정자 | ops-admin |
-
-## 빠른 검색 키워드
-`db-migration`, `ddl-auto=validate`, `schema-change`, `sql-migration`, `rollback`, `flyway`, `liquibase`, `release-order`
 
 ---
 
@@ -117,22 +114,9 @@ kubectl -n thock-prod logs deploy/<문제서비스> --tail=300
 
 ---
 
-## 관련 문서 (공통 링크)
-- `AWS EC2/README.md`
-- `AWS EC2/OPERATIONS_RUNBOOK.md`
-- `AWS EC2/OPS_CHECK_TEMPLATE.md`
-- `AWS EC2/OPS_CHANGELOG.md`
-- `AWS EC2/OPS_ONBOARDING.md`
-- `AWS EC2/OPS_ALIASES.md`
-- `AWS EC2/OPS_MONITORING_ALERTS.md`
-- `AWS EC2/OPS_DB_MIGRATION_GUIDE.md`
-- `AWS EC2/OPS_SECURITY_SECRETS_POLICY.md`
-- `AWS EC2/OPS_DOCUMENTATION_GUIDE.md`
-
----
-
 ## 개정 이력
 | 버전 | 일자 | 수정자 | 변경 요약 |
 |---|---|---|---|
 | v1.0.0 | 2026-03-05 | ops-admin | ddl-auto=validate 기반 DB 스키마 변경 운영 절차 초안 작성 |
 | v1.0.1 | 2026-03-05 | ops-admin | 공통 링크에 신규 정책 문서(보안) 반영 |
+| v1.0.2 | 2026-03-09 | ops-admin | 삭제된 모니터링 문서 링크를 Kubernetes 가이드 링크로 대체 |
