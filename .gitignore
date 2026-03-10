@@ -49,6 +49,7 @@ logs/
 ### Custom ###
 .env
 .env.*
+*.env
 *.mv.db
 *.trace.db
 .DS_store
