@@ -23,8 +23,12 @@ public class ProductKafkaListener {
     private final ObjectProvider<InboxGuard> inboxGuardProvider;
     private final ProductInboundEventIdempotencyKeyResolver keyResolver;
 
-    // Kafka 토픽에서 재고 변경 이벤트를 수신하여 처리하는 메서드
-    @KafkaListener(topics = KafkaTopics.MARKET_ORDER_STOCK_CHANGED, groupId = PRODUCT_CONSUMER_GROUP)
+    // Kafka 토픽에서 재고 변경 이벤트를 수신하여 처리하는 메서드 -> DLQ 설정이 적용된 KafkaListener로, 이벤트 처리 중 예외가 발생하면 자동으로 DLQ로 이동
+    @KafkaListener(
+            topics = KafkaTopics.MARKET_ORDER_STOCK_CHANGED,
+            groupId = PRODUCT_CONSUMER_GROUP,
+            containerFactory = "productKafkaListenerContainerFactory"
+    )
     @Transactional
     public void handle(MarketOrderStockChangedEvent event) {
         String key = keyResolver.stockChanged(event);
