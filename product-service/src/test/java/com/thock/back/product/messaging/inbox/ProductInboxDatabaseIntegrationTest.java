@@ -1,6 +1,5 @@
-package com.thock.back.global.inbox;
+package com.thock.back.product.messaging.inbox;
 
-import com.thock.back.global.inbox.repository.InboxEventRepository;
 import com.thock.back.product.ProductServiceApplication;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,24 +17,24 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest(
         classes = {
                 ProductServiceApplication.class,
-                InboxDatabaseIntegrationTest.TestConfig.class
+                ProductInboxDatabaseIntegrationTest.TestConfig.class
         },
         properties = {
-                "inbox.enabled=true",
+                "product.inbox.enabled=true",
                 "spring.kafka.listener.auto-startup=false"
         }
 )
 @ActiveProfiles("test")
-class InboxDatabaseIntegrationTest {
+class ProductInboxDatabaseIntegrationTest {
 
     private static final String TOPIC = "market.order.stock.changed";
     private static final String CONSUMER_GROUP = "product-service";
 
     @Autowired
-    private InboxGuard inboxGuard;
+    private ProductInboxGuard inboxGuard;
 
     @Autowired
-    private InboxEventRepository inboxEventRepository;
+    private ProductInboxEventRepository inboxEventRepository;
 
     @Autowired
     private ClaimAndFailService claimAndFailService;
@@ -67,7 +66,6 @@ class InboxDatabaseIntegrationTest {
         assertThat(inboxEventRepository.count()).isEqualTo(2);
     }
 
-    // InBox 중복 확인과 비즈니스 로직 원자성 검증
     @Test
     @DisplayName("claim is rolled back when the outer transaction fails")
     void tryClaim_whenOuterTransactionRollsBack_canClaimAgain() {
@@ -85,16 +83,16 @@ class InboxDatabaseIntegrationTest {
     static class TestConfig {
 
         @Bean
-        ClaimAndFailService claimAndFailService(InboxGuard inboxGuard) {
+        ClaimAndFailService claimAndFailService(ProductInboxGuard inboxGuard) {
             return new ClaimAndFailService(inboxGuard);
         }
     }
 
     static class ClaimAndFailService {
 
-        private final InboxGuard inboxGuard;
+        private final ProductInboxGuard inboxGuard;
 
-        ClaimAndFailService(InboxGuard inboxGuard) {
+        ClaimAndFailService(ProductInboxGuard inboxGuard) {
             this.inboxGuard = inboxGuard;
         }
 

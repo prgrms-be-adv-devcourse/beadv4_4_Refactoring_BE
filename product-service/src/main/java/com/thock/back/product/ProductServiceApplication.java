@@ -13,11 +13,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableJpaAuditing
 @EnableJpaRepositories(basePackages = {
         "com.thock.back.product",
-        "com.thock.back.global.inbox.repository"
 })
 @EntityScan(basePackages = {
         "com.thock.back.product",
-        "com.thock.back.global.inbox.entity"
 })
 public class ProductServiceApplication {
 

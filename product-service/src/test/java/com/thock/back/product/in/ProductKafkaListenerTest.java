@@ -1,9 +1,9 @@
 package com.thock.back.product.in;
 
-import com.thock.back.global.inbox.InboxGuard;
 import com.thock.back.global.kafka.KafkaTopics;
 import com.thock.back.product.app.ProductStockService;
 import com.thock.back.product.in.idempotency.ProductInboundEventIdempotencyKeyResolver;
+import com.thock.back.product.messaging.inbox.ProductInboxGuard;
 import com.thock.back.shared.market.domain.StockEventType;
 import com.thock.back.shared.market.dto.StockOrderItemDto;
 import com.thock.back.shared.market.event.MarketOrderStockChangedEvent;
@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -35,10 +36,10 @@ class ProductKafkaListenerTest {
     private ProductStockService productStockService;
 
     @Mock
-    private ObjectProvider<InboxGuard> inboxGuardProvider;
+    private ObjectProvider<ProductInboxGuard> inboxGuardProvider;
 
     @Mock
-    private InboxGuard inboxGuard;
+    private ProductInboxGuard inboxGuard;
 
     @Mock
     private ProductInboundEventIdempotencyKeyResolver keyResolver;
@@ -48,6 +49,7 @@ class ProductKafkaListenerTest {
     @BeforeEach
     void setUp() {
         listener = new ProductKafkaListener(productStockService, inboxGuardProvider, keyResolver);
+        ReflectionTestUtils.setField(listener, "consumerGroup", CONSUMER_GROUP);
     }
 
     @Test

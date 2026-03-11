@@ -1,13 +1,10 @@
 package com.thock.back.product.app;
 
-import com.thock.back.global.eventPublisher.EventPublisher;
-import com.thock.back.global.exception.CustomException;
-import com.thock.back.global.exception.ErrorCode;
 import com.thock.back.product.domain.command.ProductCreateCommand;
 import com.thock.back.product.domain.entity.Product;
 import com.thock.back.product.domain.service.ProductAuthorizationValidator;
+import com.thock.back.product.messaging.publisher.ProductEventPublisher;
 import com.thock.back.product.out.ProductRepository;
-import com.thock.back.shared.member.domain.MemberRole;
 import com.thock.back.shared.product.event.ProductEvent;
 import com.thock.back.shared.product.event.ProductEventType;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ProductCreateService {
     private final ProductRepository productRepository;
-    private final EventPublisher eventPublisher;
+    private final ProductEventPublisher productEventPublisher;
     private final ProductAuthorizationValidator authorizationValidator;
 
     public Long createProduct(ProductCreateCommand command) {
@@ -40,7 +37,7 @@ public class ProductCreateService {
 
         Product saved = productRepository.save(product);
 
-        eventPublisher.publish(ProductEvent.builder()
+        productEventPublisher.publish(ProductEvent.builder()
                 .productId(saved.getId())
                 .sellerId(saved.getSellerId())
                 .eventType(ProductEventType.CREATE)

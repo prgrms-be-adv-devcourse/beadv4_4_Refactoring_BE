@@ -1,10 +1,11 @@
-package com.thock.back.product.config;
+package com.thock.back.product.config.kafka;
 
 import com.thock.back.global.exception.CustomException;
 import com.thock.back.global.kafka.KafkaTopics;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.TopicPartition;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -22,19 +23,17 @@ import org.springframework.util.backoff.FixedBackOff;
  **/
 
 @Configuration
-@RequiredArgsConstructor
 public class ProductKafkaDlqConfig {
 
     private final ConsumerFactory<String, Object> consumerFactory;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    // DLQ 전용 토픽 생성
-    @Bean
-    public NewTopic marketOrderStockChangedDlqTopic() {
-        return TopicBuilder.name(KafkaTopics.MARKET_ORDER_STOCK_CHANGED_DLQ)
-                .partitions(1)
-                .replicas(1)
-                .build();
+    public ProductKafkaDlqConfig(
+            @Qualifier("productConsumerFactory") ConsumerFactory<String, Object> consumerFactory,
+            @Qualifier("productKafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate
+    ) {
+        this.consumerFactory = consumerFactory;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     // 메시지 배달 사고 처리기 (Recoverer)

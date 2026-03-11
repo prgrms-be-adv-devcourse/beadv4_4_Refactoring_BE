@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -50,7 +51,7 @@ import static org.mockito.Mockito.verify;
                 "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
                 "spring.kafka.listener.auto-startup=true",
                 "spring.kafka.consumer.auto-offset-reset=earliest",
-                "inbox.enabled=false"
+                "product.inbox.enabled=false"
         }
 )
 @EmbeddedKafka(
@@ -68,6 +69,7 @@ class ProductKafkaDlqIntegrationTest {
     private ProductStockService productStockService;
 
     @Autowired
+    @Qualifier("productKafkaTemplate")
     private KafkaTemplate<String, Object> kafkaTemplate;
 
     @Autowired

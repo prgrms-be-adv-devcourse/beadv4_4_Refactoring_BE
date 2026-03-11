@@ -1,11 +1,11 @@
 package com.thock.back.product.app;
 
-import com.thock.back.global.eventPublisher.EventPublisher;
 import com.thock.back.global.exception.CustomException;
 import com.thock.back.global.exception.ErrorCode;
 import com.thock.back.product.domain.command.ProductUpdateCommand;
 import com.thock.back.product.domain.entity.Product;
 import com.thock.back.product.domain.service.ProductAuthorizationValidator;
+import com.thock.back.product.messaging.publisher.ProductEventPublisher;
 import com.thock.back.product.out.ProductRepository;
 import com.thock.back.shared.member.domain.MemberRole;
 import com.thock.back.shared.product.event.ProductEvent;
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductManageService {
 
     private final ProductRepository productRepository;
-    private final EventPublisher eventPublisher;
+    private final ProductEventPublisher productEventPublisher;
     private final ProductAuthorizationValidator authorizationValidator;
 
     public Long updateProduct(ProductUpdateCommand command) {
@@ -40,7 +40,7 @@ public class ProductManageService {
                 command.detail()
         );
 
-        eventPublisher.publish(ProductEvent.builder()
+        productEventPublisher.publish(ProductEvent.builder()
                 .productId(product.getId())
                 .sellerId(product.getSellerId())
                 .name(product.getName())
@@ -66,7 +66,7 @@ public class ProductManageService {
 
         productRepository.delete(product);
 
-        eventPublisher.publish(ProductEvent.builder()
+        productEventPublisher.publish(ProductEvent.builder()
                 .productId(deletedId)
                 .sellerId(sellerId)
                 .eventType(ProductEventType.DELETE)

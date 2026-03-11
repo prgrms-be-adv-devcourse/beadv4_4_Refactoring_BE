@@ -57,5 +57,6 @@ logs/
 
 ### AWS EC2 Environment/Sensitive Files ###
 AWS EC2/deploy-kubernetes/base/secrets.yaml
+AWS EC2/deploy-kubernetes/ingress/ip-whitelist-middleware.yaml
 AWS EC2/deploy-docker-compose/nginx/ssl/*.key
 AWS EC2/deploy-docker-compose/nginx/ssl/*.crt

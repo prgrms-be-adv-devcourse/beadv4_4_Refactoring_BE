@@ -23,5 +23,6 @@ jwt:
   refresh-token-exp-seconds: 1209600
   issuer: "thock-test"
 
-inbox:
-  enabled: false
+product:
+  inbox:
+    enabled: false
