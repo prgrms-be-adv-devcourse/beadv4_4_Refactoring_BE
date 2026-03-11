@@ -27,4 +27,6 @@ public class KafkaTopics {
     // Settlement events
     public static final String SETTLEMENT_COMPLETED = "settlement.completed";
 
+    // Dead Letter Queue (DLQ) topics
+    public static final String MARKET_ORDER_STOCK_CHANGED_DLQ = "market.order.stock.changed.dlq";
 }
