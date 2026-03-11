@@ -9,6 +9,7 @@ import com.thock.back.shared.market.domain.StockEventType;
 import com.thock.back.shared.market.dto.StockOrderItemDto;
 import com.thock.back.shared.market.event.MarketOrderStockChangedEvent;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +17,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.test.annotation.DirtiesContext;
@@ -44,6 +49,7 @@ import static org.mockito.Mockito.verify;
         properties = {
                 "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
                 "spring.kafka.listener.auto-startup=true",
+                "spring.kafka.consumer.auto-offset-reset=earliest",
                 "inbox.enabled=false"
         }
 )
@@ -66,6 +72,19 @@ class ProductKafkaDlqIntegrationTest {
 
     @Autowired
     private DlqProbe dlqProbe;
+
+    @Autowired
+    private KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry;
+
+    @Autowired
+    private EmbeddedKafkaBroker embeddedKafkaBroker;
+
+    @BeforeEach
+    void setUp() {
+        for (MessageListenerContainer container : kafkaListenerEndpointRegistry.getListenerContainers()) {
+            ContainerTestUtils.waitForAssignment(container, embeddedKafkaBroker.getPartitionsPerTopic());
+        }
+    }
 
     @AfterEach
     void tearDown() {
