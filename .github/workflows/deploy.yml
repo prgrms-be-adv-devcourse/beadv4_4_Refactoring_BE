@@ -283,4 +283,12 @@ jobs:
 
               echo "\$svc => \$actual_image"
             done
+
+            if docker ps --format '{{.Names}}' | grep -qx 'nginx'; then
+              docker exec nginx nginx -s reload
+              sleep 3
+              curl -fsS http://127.0.0.1/swagger-ui/index.html >/dev/null
+            else
+              echo "[WARN] nginx container is not running. Skipping nginx reload."
+            fi
           EOF
