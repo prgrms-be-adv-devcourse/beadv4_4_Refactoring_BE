@@ -40,7 +40,7 @@ import org.springframework.context.annotation.FilterType;
 public class GatewayApplication {
 
     public static void main(String[] args) {
-        // Gateway is stateless, so DB/JPA auto-configuration stays disabled here.
+        // Gateway remains stateless, so DB/JPA auto-configuration stays disabled here.
         SpringApplication.run(GatewayApplication.class, args);
     }
 }
