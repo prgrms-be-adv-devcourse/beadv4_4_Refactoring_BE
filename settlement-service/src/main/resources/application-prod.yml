@@ -23,5 +23,5 @@ logging:
 
 swagger:
   server:
-    url: ${SWAGGER_SERVER_URL:https://api.thock.site}
+    url: ${SWAGGER_SERVER_URL:http://13.209.190.62}
     description: Production API Gateway

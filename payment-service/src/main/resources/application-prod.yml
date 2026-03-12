@@ -17,7 +17,7 @@ spring:
 # 내부 백엔드 URL (Production)
 custom:
   global:
-    internalBackUrl: https://api.thock.site
+    internalBackUrl: ${INTERNAL_BACK_URL:http://13.209.190.62}
 
 logging:
   level:
@@ -26,5 +26,5 @@ logging:
 
 swagger:
   server:
-    url: ${SWAGGER_SERVER_URL:https://api.thock.site}
+    url: ${SWAGGER_SERVER_URL:http://13.209.190.62}
     description: Production API Gateway

@@ -29,8 +29,8 @@ spring:
 # Custom 설정
 custom:
   global:
-    # Production에서는 실제 도메인 사용
-    internalBackUrl: https://api.thock.site
+    # Production 외부 게이트웨이 URL
+    internalBackUrl: ${INTERNAL_BACK_URL:http://13.209.190.62}
 
 # Logging (운영 환경)
 logging:
@@ -40,10 +40,10 @@ logging:
 
 swagger:
   server:
-    url: ${SWAGGER_SERVER_URL:https://api.thock.site}
+    url: ${SWAGGER_SERVER_URL:http://13.209.190.62}
     description: Production API Gateway
 
 # 핵심 포인트:
 #  - ddl-auto: validate - 운영에서는 스키마 자동 변경 금지
 #  - show-sql: false - SQL 로그 비활성화
-#  - Gateway URL: https://api.thock.site (실제 도메인)
+#  - Gateway URL: 환경에 맞는 외부 주소 사용

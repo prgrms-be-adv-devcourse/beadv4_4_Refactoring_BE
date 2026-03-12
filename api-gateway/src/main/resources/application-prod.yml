@@ -9,12 +9,12 @@
 # Swagger Production 설정
 swagger:
   server:
-    url: ${SWAGGER_SERVER_URL:https://api.thock.site}
+    url: ${SWAGGER_SERVER_URL:http://13.209.190.62}
     description: Production API Gateway
 
 # CORS Production 설정
 cors:
-  allowed.origins: ${CORS_ALLOWED_ORIGINS:https://thock.site,https://www.thock.site,https://api.thock.site}
+  allowed.origins: ${CORS_ALLOWED_ORIGINS:http://13.209.190.62}
 
 # 운영 보안: Swagger는 ingress IP allowlist로 제어 (애플리케이션 레벨은 활성 유지)
 springdoc:

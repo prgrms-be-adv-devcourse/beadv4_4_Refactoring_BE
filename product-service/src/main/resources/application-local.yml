@@ -25,8 +25,9 @@ jwt:
   refresh-token-exp-seconds: 1209600
   issuer: thock-local
 
-inbox:
-  enabled: true
+product:
+  inbox:
+    enabled: true
 
 swagger:
   server:

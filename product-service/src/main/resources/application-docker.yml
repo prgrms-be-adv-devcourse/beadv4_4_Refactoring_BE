@@ -23,5 +23,6 @@ swagger:
     url: http://localhost:8080
     description: Docker API Gateway
 
-inbox:
-  enabled: true
+product:
+  inbox:
+    enabled: true
