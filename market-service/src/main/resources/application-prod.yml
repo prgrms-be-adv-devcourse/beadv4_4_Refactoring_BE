@@ -8,6 +8,13 @@ spring:
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: true       # 절대로 데이터 삭제 불가
+    baseline-on-migrate: false # 운영 DB에 history 테이블이 없으면 서버가 안 뜨게 해서 사고 방지, cli로 실행
+
   # Production JPA 설정
   jpa:
     hibernate:
