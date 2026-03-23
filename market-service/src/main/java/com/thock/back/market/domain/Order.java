@@ -23,26 +23,38 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static jakarta.persistence.CascadeType.PERSIST;
 import static jakarta.persistence.CascadeType.REMOVE;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
-@Table(name = "market_orders")
+@Table(name = "market_orders",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_orders_buyer_id_idempotency_key",
+                        columnNames = {"buyer_id", "idempotency_key"}
+                )
+})
 @Getter
 @NoArgsConstructor
 @Slf4j
 public class Order extends BaseIdAndTime {
     @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "buyer_id", nullable = false)
     private MarketMember buyer;
 
     @Column(unique = true, nullable = false, length = 50)
     private String orderNumber;
+
+    @Column(name = "idempotency_key", length = 100)
+    private String idempotencyKey;
 
     @OneToMany(mappedBy = "order", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
@@ -222,16 +234,10 @@ public class Order extends BaseIdAndTime {
         if (isPaid()) {
             log.info("💸 환불 필요: orderId={}, refundAmount={}", getId(), totalSalePrice);
 
-            String cancelReason = cancelReasonType == CancelReasonType.ETC && cancelReasonDetail != null
-                    ? String.format("%s: %s", cancelReasonType.getDescription(), cancelReasonDetail)
-                    : cancelReasonType.getDescription();
-
-            PaymentCancelRequestDto cancelDto = new PaymentCancelRequestDto(
-                    this.orderNumber,
-                    String.format("주문 전체 취소 (사유: %s)", cancelReason),
-                    this.totalSalePrice  // 전액 환불
+            publishPaymentCancelRequest(
+                    String.format("주문 전체 취소 (사유: %s)", formatCancelReason(cancelReasonType, cancelReasonDetail)),
+                    this.totalSalePrice
             );
-            publishEvent(new MarketOrderPaymentRequestCanceledEvent(cancelDto));
         }
     }
 
@@ -239,26 +245,10 @@ public class Order extends BaseIdAndTime {
      * 부분 취소
      */
     public void cancelItems(List<Long> orderItemIds, CancelReasonType cancelReasonType, String cancelReasonDetail) {
-        // 1. 취소할 아이템들 조회 및 검증
-        // TODO : id가 unique이긴 하지만 findFirst가 뭔가 조금 어색함
-        List<OrderItem> orderItems = orderItemIds.stream()
-                .map(id -> items.stream()
-                        .filter(item -> item.getId().equals(id))
-                        .findFirst()
-                        .orElseThrow(() -> new CustomException(ErrorCode.ORDER_ITEM_NOT_FOUND)))
-                .toList();
+        List<OrderItem> orderItems = findOrderItemsByIds(orderItemIds);
+        validateCancellableItems(orderItems);
 
-        // 2. 취소 가능 상태 확인
-        orderItems.forEach(item -> {
-            if (!item.getState().isCancellable()) {
-                throw new CustomException(ErrorCode.ORDER_CANNOT_CANCEL);
-            }
-        });
-
-        // 3. 부분 환불 금액 계산
-        Long refundAmount = orderItems.stream()
-                .mapToLong(OrderItem::getTotalSalePrice)
-                .sum();
+        Long refundAmount = calculateRefundAmount(orderItems);
 
         // 4. 각 아이템 취소 처리
         orderItems.forEach(item -> item.cancel(cancelReasonType, cancelReasonDetail));
@@ -269,17 +259,14 @@ public class Order extends BaseIdAndTime {
 
         // 5. 결제 완료 후에만 환불 이벤트 (한 번만 발행)
         if (this.isPaid()) {
-            // ETC인 경우에만 사용자가 취소 사유 직접 입력 가능(선택)
-            String cancelReason = cancelReasonType == CancelReasonType.ETC && cancelReasonDetail != null
-                    ? String.format("%s: %s", cancelReasonType.getDescription(), cancelReasonDetail)
-                    : cancelReasonType.getDescription();
-
-            PaymentCancelRequestDto cancelDto = new PaymentCancelRequestDto(
-                    this.orderNumber,
-                    String.format("주문 상품 부분 취소 (%d개, 사유: %s)", orderItems.size(), cancelReason),
+            publishPaymentCancelRequest(
+                    String.format(
+                            "주문 상품 부분 취소 (%d개, 사유: %s)",
+                            orderItems.size(),
+                            formatCancelReason(cancelReasonType, cancelReasonDetail)
+                    ),
                     refundAmount
             );
-            publishEvent(new MarketOrderPaymentRequestCanceledEvent(cancelDto));
 
             log.info("💸 부분 환불 요청: orderId={}, refundAmount={}", getId(), refundAmount);
         }
@@ -377,20 +364,9 @@ public class Order extends BaseIdAndTime {
      * 부분 구매 확정
      */
     public void confirmItems(List<Long> orderItemIds) {
-        // 1. 확정할 아이템들 조회 및 검증
-        List<OrderItem> targetItems = orderItemIds.stream()
-                .map(id -> items.stream()
-                        .filter(item -> item.getId().equals(id))
-                        .findFirst()
-                        .orElseThrow(() -> new CustomException(ErrorCode.ORDER_ITEM_NOT_FOUND)))
-                .toList();
-        // 2. 각 아이템이 구매 확정 가능한 상태인지 확인
-        targetItems.forEach(item -> {
-            if (!item.getState().isConfirmable()) {
-                throw new CustomException(ErrorCode.ORDER_INVALID_STATE);
-            }
-        });
-        // 3. 각 아이템 구매 확정 처리
+        List<OrderItem> targetItems = findOrderItemsByIds(orderItemIds);
+        validateConfirmableItems(targetItems);
+
         targetItems.forEach(OrderItem::confirm);
 
         // 4. Order 상태 업데이트
@@ -421,15 +397,14 @@ public class Order extends BaseIdAndTime {
         }
 
         int totalItems = items.size();
-
-        // 각 상태별 카운트
-        long confirmedCount = countItemsByState(OrderItemState.CONFIRMED);
-        long cancelledCount = countItemsByState(OrderItemState.CANCELLED);
-        long refundedCount = countItemsByState(OrderItemState.REFUNDED);
-        long deliveredCount = countItemsByState(OrderItemState.DELIVERED);
-        long shippingCount = countItemsByState(OrderItemState.SHIPPING);
-        long preparingCount = countItemsByState(OrderItemState.PREPARING);
-        long paymentCompletedCount = countItemsByState(OrderItemState.PAYMENT_COMPLETED);
+        Map<OrderItemState, Long> stateCounts = buildStateCounts();
+        long confirmedCount = getStateCount(stateCounts, OrderItemState.CONFIRMED);
+        long cancelledCount = getStateCount(stateCounts, OrderItemState.CANCELLED);
+        long refundedCount = getStateCount(stateCounts, OrderItemState.REFUNDED);
+        long deliveredCount = getStateCount(stateCounts, OrderItemState.DELIVERED);
+        long shippingCount = getStateCount(stateCounts, OrderItemState.SHIPPING);
+        long preparingCount = getStateCount(stateCounts, OrderItemState.PREPARING);
+        long paymentCompletedCount = getStateCount(stateCounts, OrderItemState.PAYMENT_COMPLETED);
 
         // 취소/환불된 아이템 수
         long cancelledOrRefundedCount = cancelledCount + refundedCount;
@@ -473,8 +448,70 @@ public class Order extends BaseIdAndTime {
         }
     }
 
-    private long countItemsByState(OrderItemState state) {
-        return items.stream().filter(item -> item.getState() == state).count();
+    private List<OrderItem> findOrderItemsByIds(List<Long> orderItemIds) {
+        Map<Long, OrderItem> itemById = this.items.stream()
+                .collect(Collectors.toMap(OrderItem::getId, item -> item));
+
+        return orderItemIds.stream()
+                .map(id -> {
+                    OrderItem orderItem = itemById.get(id);
+                    if (orderItem == null) {
+                        throw new CustomException(ErrorCode.ORDER_ITEM_NOT_FOUND);
+                    }
+                    return orderItem;
+                })
+                .toList();
+    }
+
+    private void validateCancellableItems(List<OrderItem> orderItems) {
+        orderItems.forEach(item -> {
+            if (!item.getState().isCancellable()) {
+                throw new CustomException(ErrorCode.ORDER_CANNOT_CANCEL);
+            }
+        });
+    }
+
+    private void validateConfirmableItems(List<OrderItem> orderItems) {
+        orderItems.forEach(item -> {
+            if (!item.getState().isConfirmable()) {
+                throw new CustomException(ErrorCode.ORDER_INVALID_STATE);
+            }
+        });
+    }
+
+    private Long calculateRefundAmount(List<OrderItem> orderItems) {
+        return orderItems.stream()
+                .mapToLong(OrderItem::getTotalSalePrice)
+                .sum();
+    }
+
+    private String formatCancelReason(CancelReasonType cancelReasonType, String cancelReasonDetail) {
+        if (cancelReasonType == CancelReasonType.ETC && cancelReasonDetail != null) {
+            return String.format("%s: %s", cancelReasonType.getDescription(), cancelReasonDetail);
+        }
+        return cancelReasonType.getDescription();
+    }
+
+    private void publishPaymentCancelRequest(String cancelReasonMessage, Long cancelAmount) {
+        PaymentCancelRequestDto cancelDto = new PaymentCancelRequestDto(
+                this.orderNumber,
+                cancelReasonMessage,
+                cancelAmount
+        );
+        publishEvent(new MarketOrderPaymentRequestCanceledEvent(cancelDto));
+    }
+
+    private Map<OrderItemState, Long> buildStateCounts() {
+        return this.items.stream()
+                .collect(Collectors.groupingBy(
+                        OrderItem::getState,
+                        () -> new EnumMap<>(OrderItemState.class),
+                        Collectors.counting()
+                ));
+    }
+
+    private long getStateCount(Map<OrderItemState, Long> stateCounts, OrderItemState state) {
+        return stateCounts.getOrDefault(state, 0L);
     }
 
     public boolean isPaymentInProgress() {
@@ -527,5 +564,9 @@ public class Order extends BaseIdAndTime {
                 getOrderNumber(),
                 getTotalSalePrice()
         );
+    }
+
+    public void assignIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 }
