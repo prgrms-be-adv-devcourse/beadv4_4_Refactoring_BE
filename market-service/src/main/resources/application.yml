@@ -1,0 +1,119 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: market-service
+
+  jackson:
+    time-zone: Asia/Seoul
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true                   # Feign 호출에 Resilience4j 서킷브레이커 연동 활성화
+      client:
+        config:
+          default:
+            connectTimeout: 700         # 연결을 700ms 안에 못 하면 실패
+            readTimeout: 1200           # 연결 후 응답 읽기를 1.2초 안에 못받으면 실패
+            loggerLevel: basic          # 요청 메서드/URL, 응답 상태/시간 정도만 로그
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      product-client:
+        sliding-window-size: 20                 # 최근 20번의 호출을 기준으로 판단
+        minimum-number-of-calls: 10             # 최소 10건이 쌓이 전에는 서킷을 열지 않는다(초기 오판 방지)
+        failure-rate-threshold: 50              # 20번 중 1번 (50%) 실패 시 서킷 OPEN
+        wait-duration-in-open-state: 10s        # OPEN 후 10초 동안 호출 차단 / 이후 HALF_OPEN(일부 호출 허용, 테스트)
+        permitted-number-of-calls-in-half-open-state: 3   # HALF_OPEN에서 3건만 시험 호출해 복구 여부를 판단
+        automatic-transition-from-open-to-half-open-enabled: true   # 외부 트리거 없이 시간 지나면 자동으로 OPEN -> HALF_OPEN 전환
+      payment-wallet-client:
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+
+# 상품 정산 비율 (공통)
+custom:
+  market:
+    product:
+      payoutRate: 80
+
+market:
+  order:
+    payment-timeout-minutes: 30
+    timeout-check-interval-ms: 60000
+    auto-confirm-days: 7
+    auto-confirm-cron: "0 0 3 * * *"
+    cleanup-retention-days: 30
+    cleanup-cron: "0 0 3 * * *"
+  retry:
+    optimistic-lock:
+      max-attempts: 3
+      backoff-ms: 100
+  feign:
+    retry:
+      period-ms: 100
+      max-period-ms: 300
+      max-attempts: 3
+  metrics:
+    enabled: true
+    collect-interval-ms: 10000
+    consumer-group-id: market-service
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  access-token-exp-seconds: 1800
+  refresh-token-exp-seconds: 1209600
+  issuer: "thock"
+
+# Actuator & Prometheus
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# SpringDoc
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: false
+
+outbox:
+  enabled: true
+  poller:
+    enabled: true
+    interval-ms: 5000
+    batch-size: 100
+    max-retry: 5
+  cleanup:
+    cron: "0 0 3 * * *"
+
+inbox:
+  enabled: true
+
+logging:
+  level:
+    io.github.resilience4j.circuitbreaker: DEBUG
+    io.github.resilience4j.retry: DEBUG
+    org.springframework.cloud.openfeign: DEBUG
+    com.thock.back.market.out.client.ProductClient: DEBUG
+    com.thock.back.market.out.client.PaymentWalletClient: DEBUG
+    feign: DEBUG

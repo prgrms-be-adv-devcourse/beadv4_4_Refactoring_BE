@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <property name="LOG_PATH" value="${LOG_PATH:-./logs/product}"/>
+
+    <include resource="logback-base.xml"/>
+
+    <!-- API Logger -->
+    <logger name="com.thock.back.product.in.ProductController" level="INFO" additivity="false">
+        <appender-ref ref="API_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Root Logger -->
+    <root level="INFO">
+        <appender-ref ref="APP_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

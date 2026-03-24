@@ -1,0 +1,27 @@
+spring:
+  config:
+    import:
+      - optional:file:./settlement-service/.env[.properties]
+
+  application:
+    name: settlement_service
+
+  datasource:
+    url: jdbc:mysql://${SETTLEMENT_TEST_MYSQL_HOST:${SETTLEMENT_MYSQL_HOST:127.0.0.1}}:${SETTLEMENT_TEST_MYSQL_PORT:${SETTLEMENT_MYSQL_PORT:3306}}/${SETTLEMENT_TEST_MYSQL_DATABASE:${SETTLEMENT_MYSQL_DATABASE:settlement_test_db}}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&createDatabaseIfNotExist=true
+    username: ${SETTLEMENT_TEST_MYSQL_USER:${SETTLEMENT_MYSQL_USER:root}}
+    password: ${SETTLEMENT_TEST_MYSQL_PASSWORD:${SETTLEMENT_MYSQL_PASSWORD:}}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+jwt:
+  secret: "thock-2026-backend-authentication-jwt-secret-key-very-very-long-256bit"
+  access-token-exp-seconds: 1800
+  refresh-token-exp-seconds: 1209600
+  issuer: "thock"

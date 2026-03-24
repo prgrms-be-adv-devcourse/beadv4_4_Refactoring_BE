@@ -1,12 +1,166 @@
 name: CD
 
 on:
-  push:
-    branches: [ "main", "dev" ]
+  pull_request:
+    branches: ["main", "dev"]
+    types: [ closed ]
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+
+    outputs:
+      any_changed: ${{ steps.filter.outputs.any_changed }}
+      services_json: ${{ steps.filter.outputs.services_json }}
+      services_space: ${{ steps.filter.outputs.services_space }}
+
+    steps:
+      - name: Determine changed services
+        id: filter
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const services = [
+              'api-gateway',
+              'member-service',
+              'product-service',
+              'market-service',
+              'payment-service',
+              'settlement-service',
+            ];
+
+            const setDefaultOutputs = (selectedServices) => {
+              core.setOutput('any_changed', selectedServices.length > 0 ? 'true' : 'false');
+              core.setOutput('services_json', JSON.stringify(selectedServices));
+              core.setOutput('services_space', selectedServices.join(' '));
+            };
+
+            const pr = context.payload.pull_request;
+            if (!pr.merged) {
+              core.info('Pull request was closed without merge. Skipping build and deploy.');
+              setDefaultOutputs([]);
+              return;
+            }
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+
+            const changedFiles = files.map((file) => file.filename);
+            core.info(`Changed files (${changedFiles.length}):\n${changedFiles.join('\n')}`);
+
+            const servicePaths = {
+              'api-gateway': ['api-gateway/'],
+              'member-service': ['member-service/'],
+              'product-service': ['product-service/'],
+              'market-service': ['market-service/'],
+              'payment-service': ['payment-service/'],
+              'settlement-service': ['settlement-service/'],
+            };
+
+            const globalPrefixes = [
+              'common/',
+              'gradle/',
+              'buildSrc/',
+            ];
+
+            const globalFiles = new Set([
+              'settings.gradle',
+              'settings.gradle.kts',
+              'build.gradle',
+              'build.gradle.kts',
+              'gradle.properties',
+              'gradlew',
+              'gradlew.bat',
+            ]);
+
+            const impacted = new Set();
+            const impactsAllServices = changedFiles.some((file) => {
+              if (globalFiles.has(file)) {
+                return true;
+              }
+
+              return globalPrefixes.some((prefix) => file.startsWith(prefix));
+            });
+
+            if (impactsAllServices) {
+              services.forEach((service) => impacted.add(service));
+            }
+
+            for (const [service, prefixes] of Object.entries(servicePaths)) {
+              const isChanged = changedFiles.some((file) =>
+                prefixes.some((prefix) => file.startsWith(prefix))
+              );
+
+              if (isChanged) {
+                impacted.add(service);
+              }
+            }
+
+            const selectedServices = services.filter((service) => impacted.has(service));
+            core.info(
+              selectedServices.length > 0
+                ? `Impacted services: ${selectedServices.join(', ')}`
+                : 'No service image changes detected.'
+            );
+
+            setDefaultOutputs(selectedServices);
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: github.event.pull_request.merged == true && needs.detect-changes.outputs.any_changed == 'true'
+
+    # CHANGED: merge된 PR의 커밋 SHA를 이미지 태그로 사용
+    env:
+      IMAGE_TAG: ${{ github.event.pull_request.merge_commit_sha }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services_json) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push ${{ matrix.service }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.service }}/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            sang234/${{ matrix.service }}:${{ env.IMAGE_TAG }}
+
   deploy:
     runs-on: ubuntu-latest
+    needs: [detect-changes, build-and-push]
+    if: github.event.pull_request.merged == true && needs.detect-changes.outputs.any_changed == 'true'
+
+    # CHANGED: deploy job에서도 동일 태그 사용
+    env:
+      IMAGE_TAG: ${{ github.event.pull_request.merge_commit_sha }}
+      CHANGED_SERVICES: ${{ needs.detect-changes.outputs.services_space }}
 
     steps:
       - name: Load SSH key
@@ -14,31 +168,127 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Add known hosts (with debug)
+      - name: Add known hosts
         run: |
-          echo "Testing connection to host..."
-          nc -zv ${{ secrets.EC2_HOST }} 22 -w 5 || echo "Port 22 not reachable"
-          echo "Scanning SSH host key..."
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Create .env file locally
+      - name: Deploy to EC2 with Docker Compose
         run: |
-          cat > .env << 'EOF'
-          TOSS_PAYMENTS_SECRET_KEY=${{ secrets.TOSS_PAYMENTS_SECRET_KEY }}
-          JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
-          EOF
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            set -euo pipefail
 
-      - name: Copy .env to EC2
-        run: |
-          scp .env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/deploy/.env
-          rm .env
+            CHANGED_SERVICES="${CHANGED_SERVICES}"
+            IMAGE_TAG="${IMAGE_TAG}"
+            DEPLOY_DIR="\$HOME/deploy-docker-compose"
 
-      - name: Deploy to EC2
-        run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd ~/deploy
-            chmod 600 .env
-            docker compose pull
-            docker compose up -d
+            if [ -z "\$CHANGED_SERVICES" ]; then
+              echo "No service image changes detected."
+              exit 0
+            fi
+
+            if [ ! -d "\$DEPLOY_DIR" ]; then
+              echo "[ERROR] deploy directory not found: \$DEPLOY_DIR"
+              exit 1
+            fi
+
+            cd "\$DEPLOY_DIR"
+
+            if [ ! -f docker-compose.yml ] || [ ! -f .env ] || [ ! -f release-state.env ]; then
+              echo "[ERROR] deploy-docker-compose is missing required files."
+              exit 1
+            fi
+
+            compose() {
+              docker compose --env-file .env --env-file release-state.env -f docker-compose.yml "\$@"
+            }
+
+            for svc in \$CHANGED_SERVICES; do
+              case "\$svc" in
+                api-gateway)
+                  port=8080
+                  tag_var=API_GATEWAY_IMAGE_TAG
+                  ;;
+                member-service)
+                  port=8081
+                  tag_var=MEMBER_SERVICE_IMAGE_TAG
+                  ;;
+                product-service)
+                  port=8082
+                  tag_var=PRODUCT_SERVICE_IMAGE_TAG
+                  ;;
+                market-service)
+                  port=8083
+                  tag_var=MARKET_SERVICE_IMAGE_TAG
+                  ;;
+                payment-service)
+                  port=8084
+                  tag_var=PAYMENT_SERVICE_IMAGE_TAG
+                  ;;
+                settlement-service)
+                  port=8085
+                  tag_var=SETTLEMENT_SERVICE_IMAGE_TAG
+                  ;;
+                *)
+                  echo "[ERROR] unknown service: \$svc"
+                  exit 1
+                  ;;
+              esac
+
+              if grep -q "^\${tag_var}=" release-state.env; then
+                sed -i "s|^\${tag_var}=.*|\${tag_var}=\${IMAGE_TAG}|" release-state.env
+              else
+                echo "\${tag_var}=\${IMAGE_TAG}" >> release-state.env
+              fi
+            done
+
+            compose config >/dev/null
+            compose pull \$CHANGED_SERVICES
+            compose up -d --no-deps \$CHANGED_SERVICES
+
+            for svc in \$CHANGED_SERVICES; do
+              case "\$svc" in
+                api-gateway) port=8080 ;;
+                member-service) port=8081 ;;
+                product-service) port=8082 ;;
+                market-service) port=8083 ;;
+                payment-service) port=8084 ;;
+                settlement-service) port=8085 ;;
+                *)
+                  echo "[ERROR] unknown service: \$svc"
+                  exit 1
+                  ;;
+              esac
+
+              actual_image=\$(docker inspect --format '{{.Config.Image}}' "\$svc")
+              expected_image="sang234/\$svc:\${IMAGE_TAG}"
+              if [ "\$actual_image" != "\$expected_image" ]; then
+                echo "[ERROR] image tag mismatch for \$svc"
+                echo "  expected: \$expected_image"
+                echo "  actual  : \$actual_image"
+                exit 1
+              fi
+
+              elapsed=0
+              until docker exec "\$svc" sh -lc "wget -qO- http://127.0.0.1:\$port/actuator/health" >/dev/null 2>&1; do
+                elapsed=\$((elapsed + 5))
+                if [ "\$elapsed" -ge 180 ]; then
+                  echo "[ERROR] health check timed out for \$svc"
+                  docker logs --tail=120 "\$svc" || true
+                  exit 1
+                fi
+
+                sleep 5
+              done
+
+              echo "\$svc => \$actual_image"
+            done
+
+            if docker ps --format '{{.Names}}' | grep -qx 'nginx'; then
+              docker exec nginx nginx -t
+              docker exec nginx nginx -s reload
+              sleep 3
+            else
+              echo "[WARN] nginx container is not running. Skipping nginx reload."
+            fi
           EOF

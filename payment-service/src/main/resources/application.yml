@@ -1,0 +1,68 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: payment-service
+
+  jackson:
+    time-zone: Asia/Seoul
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+# Toss Payments (공통)
+custom:
+  payment:
+    toss:
+      payments:
+        secretKey: ${TOSS_PAYMENTS_SECRET_KEY}
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  access-token-exp-seconds: 1800
+  refresh-token-exp-seconds: 1209600
+  issuer: "thock"
+
+# Actuator & Prometheus
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# SpringDoc
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: false
+
+outbox:
+  enabled: true
+  poller:
+    enabled: true
+    interval-ms: 5000
+    batch-size: 100
+    max-retry: 5
+  cleanup:
+    cron: "0 0 3 * * *"
+
+inbox:
+  enabled: true

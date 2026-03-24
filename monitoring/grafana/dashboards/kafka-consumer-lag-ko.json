@@ -1,0 +1,279 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 200 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "payment-service",
+          "expr": "sum(clamp_min(max by (topic, partition) (vectorized_cluster_partition_last_stable_offset{namespace=\"kafka\",topic!=\"__consumer_offsets\"}) - on(topic, partition) max by (topic, partition) (vectorized_kafka_group_offset{group=\"payment-service\"}), 0))"
+        }
+      ],
+      "title": "payment-service 총 Lag",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 200 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 8, "y": 0 },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "market-service",
+          "expr": "sum(clamp_min(max by (topic, partition) (vectorized_cluster_partition_last_stable_offset{namespace=\"kafka\",topic!=\"__consumer_offsets\"}) - on(topic, partition) max by (topic, partition) (vectorized_kafka_group_offset{group=\"market-service\"}), 0))"
+        }
+      ],
+      "title": "market-service 총 Lag",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 200 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 0 },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "settlement-service",
+          "expr": "sum(clamp_min(max by (topic, partition) (vectorized_cluster_partition_last_stable_offset{namespace=\"kafka\",topic!=\"__consumer_offsets\"}) - on(topic, partition) max by (topic, partition) (vectorized_kafka_group_offset{group=\"settlement-service\"}), 0))"
+        }
+      ],
+      "title": "settlement-service 총 Lag",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 200 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 5 },
+      "id": 4,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "payment-service",
+          "expr": "sum(clamp_min(max by (topic, partition) (vectorized_cluster_partition_last_stable_offset{namespace=\"kafka\",topic!=\"__consumer_offsets\"}) - on(topic, partition) max by (topic, partition) (vectorized_kafka_group_offset{group=\"payment-service\"}), 0))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "market-service",
+          "expr": "sum(clamp_min(max by (topic, partition) (vectorized_cluster_partition_last_stable_offset{namespace=\"kafka\",topic!=\"__consumer_offsets\"}) - on(topic, partition) max by (topic, partition) (vectorized_kafka_group_offset{group=\"market-service\"}), 0))"
+        },
+        {
+          "refId": "C",
+          "legendFormat": "settlement-service",
+          "expr": "sum(clamp_min(max by (topic, partition) (vectorized_cluster_partition_last_stable_offset{namespace=\"kafka\",topic!=\"__consumer_offsets\"}) - on(topic, partition) max by (topic, partition) (vectorized_kafka_group_offset{group=\"settlement-service\"}), 0))"
+        }
+      ],
+      "title": "그룹별 총 Lag 추이",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 20 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 11, "w": 12, "x": 0, "y": 14 },
+      "id": 5,
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "Lag" }]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "instant": true,
+          "expr": "sum by (topic, partition) (clamp_min(max by (topic, partition) (vectorized_cluster_partition_last_stable_offset{namespace=\"kafka\",topic!=\"__consumer_offsets\"}) - on(topic, partition) max by (topic, partition) (vectorized_kafka_group_offset{group=~\"$consumer_group\"}), 0))"
+        }
+      ],
+      "title": "현재 토픽별 Lag (선택 그룹)",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": { "Time": 0, "topic": 1, "partition": 2, "Value": 3 },
+            "renameByName": { "Value": "Lag", "partition": "파티션", "topic": "토픽" }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 20 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 11, "w": 12, "x": 12, "y": 14 },
+      "id": 6,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{topic}}",
+          "expr": "topk(5, avg_over_time((sum by (topic) (clamp_min(max by (topic, partition) (vectorized_cluster_partition_last_stable_offset{namespace=\"kafka\",topic!=\"__consumer_offsets\"}) - on(topic, partition) max by (topic, partition) (vectorized_kafka_group_offset{group=~\"$consumer_group\"}), 0)))[${lag_bucket}:10s]))"
+        }
+      ],
+      "title": "토픽별 최대 Lag TOP5 (봉: $lag_bucket)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["kafka", "redpanda", "lag", "msa", "ko"],
+  "templating": {
+    "list": [
+      {
+        "name": "consumer_group",
+        "label": "컨슈머 그룹",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+        "definition": "label_values(vectorized_kafka_group_offset, group)",
+        "query": { "query": "label_values(vectorized_kafka_group_offset, group)", "refId": "var-consumer-group" },
+        "refresh": 1,
+        "multi": false,
+        "includeAll": false,
+        "current": { "selected": true, "text": "payment-service", "value": "payment-service" }
+      },
+      {
+        "name": "lag_bucket",
+        "label": "봉 간격",
+        "type": "custom",
+        "query": "10s,1m,10m,1h",
+        "current": { "selected": true, "text": "10s", "value": "10s" }
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "Asia/Seoul",
+  "title": "Kafka Consumer Lag 대시보드 (한국어)",
+  "uid": "kafka-consumer-lag-ko",
+  "version": 3,
+  "weekStart": ""
+}

@@ -1,0 +1,19 @@
+spring:
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+
+# 내부 백엔드 URL (Docker)
+custom:
+  global:
+    internalBackUrl: http://api-gateway:8080
+
+swagger:
+  server:
+    url: http://localhost:8080
+    description: Docker API Gateway

@@ -14,7 +14,7 @@ jobs:
           echo "PR Title: $TITLE"
           
           # 예) [FEAT] #1 회원가입 기능 구현 
-          REGEX='^\[(FEAT|FIX|DOCS|STYLE|REFACTOR|TEST|CHORE|COMMENT|RENAME|REMOVE|HOTFIX)\]'
+          REGEX='^\[(FEAT|TASK|FIX|DOCS|STYLE|REFACTOR|TEST|CHORE|COMMENT|RENAME|REMOVE|HOTFIX)\]'
           
           if [[ ! "$TITLE" =~ $REGEX ]]; then
             echo "::error::❌ PR 제목이 규칙을 만족하지 않습니다."
@@ -54,7 +54,7 @@ jobs:
           
           # type/이슈번호-도메인-작업요약 형식
           # 예) feat/1-member-login, fix/5-auth-token
-          REGEX='^(feat|fix|docs|style|refactor|test|chore|comment|rename|remove|hotfix)\/[1-9][0-9]*-[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*$'
+          REGEX='^(feat|task|fix|docs|style|refactor|test|chore|comment|rename|remove|hotfix)\/[1-9][0-9]*-[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*$'
           
           if [[ ! "$BRANCH" =~ $REGEX ]]; then
             echo "::error::❌ 브랜치명이 규칙을 만족하지 않습니다."

@@ -1,0 +1,39 @@
+spring:
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: true       # 절대로 데이터 삭제 불가
+    baseline-on-migrate: false # 운영 DB에 history 테이블이 없으면 서버가 안 뜨게 해서 사고 방지, cli로 실행
+
+  # Production JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false  # SQL 로그 끄기
+
+
+# 다른 서비스 URL (Production)
+custom:
+  global:
+    productServiceUrl: ${PRODUCT_SERVICE_URL}
+    paymentServiceUrl: ${PAYMENT_SERVICE_URL}
+
+logging:
+  level:
+    root: INFO
+    com.thock.back: INFO
+
+swagger:
+  server:
+    url: ${SWAGGER_SERVER_URL:http://13.209.190.62}
+    description: Production API Gateway

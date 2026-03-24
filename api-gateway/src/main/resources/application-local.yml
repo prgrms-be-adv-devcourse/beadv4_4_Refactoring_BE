@@ -1,0 +1,20 @@
+# ============================================
+# Local 환경 (IDE 직접 실행)
+# ============================================
+
+# Local 환경에서는 각 서비스가 localhost:808X에서 실행됨
+MEMBER_SERVICE_URL: http://localhost:8081
+PRODUCT_SERVICE_URL: http://localhost:8082
+MARKET_SERVICE_URL: http://localhost:8083
+PAYMENT_SERVICE_URL: http://localhost:8084
+SETTLEMENT_SERVICE_URL: http://localhost:8085
+
+# Swagger Local 설정
+swagger:
+  server:
+    url: http://localhost:8080
+    description: Local API Gateway
+
+# CORS Local 설정
+cors:
+  allowed.origins: http://localhost:8080

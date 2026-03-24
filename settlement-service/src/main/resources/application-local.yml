@@ -1,0 +1,15 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:29092
+  datasource:
+    url: jdbc:mysql://localhost:3307/thock_settlement_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: root
+
+swagger:
+  server:
+    url: http://localhost:8080
+    description: Local API Gateway
+
+## 서버 -> IntelliJ
+## DB -> 도커

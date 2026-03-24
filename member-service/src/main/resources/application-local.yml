@@ -1,0 +1,48 @@
+# 설명: IDE에서 직접 실행할 때 사용하는 설정
+# member-service/src/main/resources/application-local.yml
+# ============================================
+# Local 환경 (IDE 직접 실행)
+# ============================================
+spring:
+  # Local Kafka (Docker Compose로 띄운 Kafka 사용)
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  # Local MySQL (Docker Compose로 띄운 MySQL 사용)
+  datasource:
+    url: jdbc:mysql://localhost:3307/thock_member_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: root
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+# Local JWT fallback
+jwt:
+  secret: thock-local-jwt-secret-key-which-is-long-enough-32chars
+  access-token-exp-seconds: 1800
+  refresh-token-exp-seconds: 1209600
+  issuer: "thock-local"
+
+# Custom 설정
+custom:
+  global:
+    # Local에서는 모든 서비스가 localhost에서 직접 실행됨
+    internalBackUrl: http://localhost:8080
+
+swagger:
+  server:
+    url: http://localhost:8080
+    description: Local API Gateway
+
+# 핵심 포인트:
+#  - Kafka: localhost:9092
+#  - MySQL: localhost:3307 (Docker Compose의 외부 포트)
+#  - Gateway: localhost:8080

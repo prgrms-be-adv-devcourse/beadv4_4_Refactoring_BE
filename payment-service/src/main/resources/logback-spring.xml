@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <property name="LOG_PATH" value="${LOG_PATH:-./logs/payment}"/>
+
+    <include resource="logback-base.xml"/>
+
+    <!-- Kafka Event Logger -->
+    <logger name="com.thock.back.payment.in.PaymentKafkaListener" level="INFO" additivity="false">
+        <appender-ref ref="KAFKA_EVENT_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Spring Event Logger -->
+    <logger name="com.thock.back.payment.in.PaymentEventListener" level="INFO" additivity="false">
+        <appender-ref ref="SPRING_EVENT_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- API Logger -->
+    <logger name="com.thock.back.payment.in.ApiV1PaymentController" level="INFO" additivity="false">
+        <appender-ref ref="API_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Service Logger (Info/Error 분리) -->
+    <logger name="com.thock.back.payment.app" level="INFO" additivity="false">
+        <appender-ref ref="SERVICE_INFO_FILE"/>
+        <appender-ref ref="SERVICE_ERROR_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Root Logger -->
+    <root level="INFO">
+        <appender-ref ref="APP_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

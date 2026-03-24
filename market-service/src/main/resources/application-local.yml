@@ -1,0 +1,39 @@
+spring:
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  datasource:
+    url: jdbc:mysql://localhost:3307/thock_market_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: root
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: false       # 개발 중엔 DB를 밀어야 할 수도 있으니 허용
+    baseline-on-migrate: true   # 팀원들 로컬 DB에 장부 자동 생성
+    baseline-version: 0
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+# Local JWT fallback
+jwt:
+  secret: thock-local-jwt-secret-key-which-is-long-enough-32chars
+  access-token-exp-seconds: 1800
+  refresh-token-exp-seconds: 1209600
+  issuer: "thock-local"
+
+# 다른 서비스 URL (Local 환경)
+custom:
+  global:
+    productServiceUrl: http://localhost:8082
+    paymentServiceUrl: http://localhost:8084
+
+swagger:
+  server:
+    url: http://localhost:8080
+    description: Local API Gateway

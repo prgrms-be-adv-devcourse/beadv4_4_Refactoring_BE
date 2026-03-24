@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <property name="LOG_PATH" value="${LOG_PATH:-./logs/market}"/>
+
+    <include resource="logback-base.xml"/>
+
+    <!-- Kafka Event Logger -->
+    <logger name="com.thock.back.market.in.MarketKafkaListener" level="INFO" additivity="false">
+        <appender-ref ref="KAFKA_EVENT_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Spring Event Logger -->
+    <logger name="com.thock.back.market.in.MarketEventListener" level="INFO" additivity="false">
+        <appender-ref ref="SPRING_EVENT_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- API Logger -->
+    <logger name="com.thock.back.market.in.ApiV1OrderController" level="INFO" additivity="false">
+        <appender-ref ref="API_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <logger name="com.thock.back.market.in.ApiV1CartController" level="INFO" additivity="false">
+        <appender-ref ref="API_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Root Logger -->
+    <root level="INFO">
+        <appender-ref ref="APP_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

@@ -49,6 +49,14 @@ logs/
 ### Custom ###
 .env
 .env.*
-db_dev.mv.db
-db_dev.trace.db
+*.env
+*.mv.db
+*.trace.db
 .DS_store
+.claude
+
+### AWS EC2 Environment/Sensitive Files ###
+AWS EC2/deploy-kubernetes/base/secrets.yaml
+AWS EC2/deploy-kubernetes/ingress/ip-whitelist-middleware.yaml
+AWS EC2/deploy-docker-compose/nginx/ssl/*.key
+AWS EC2/deploy-docker-compose/nginx/ssl/*.crt

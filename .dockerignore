@@ -1,0 +1,48 @@
+# Build outputs
+**/build/
+**/out/
+!**/src/main/**/out/
+**/target/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Logs
+*.log
+
+# Test files
+**/src/test/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Database files
+*.mv.db
+*.trace.db
+
+# Documentation
+*.md
+!README.md
+
+# Temporary files
+*.tmp
+*.bak
+*.swp

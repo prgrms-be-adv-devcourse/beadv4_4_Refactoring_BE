@@ -1,0 +1,51 @@
+# member-service/src/main/resources/application.yml
+# ============================================
+# 공통 설정 (모든 환경에서 동일)
+# ============================================
+server:
+  port: 8081
+
+spring:
+
+  application:
+    name: member-service
+
+  jackson:
+    time-zone: Asia/Seoul
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+# JWT 설정 (공통)
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  access-token-exp-seconds: 1800
+  refresh-token-exp-seconds: 1209600
+  issuer: "thock"
+
+# Actuator & Prometheus (공통)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# SpringDoc (공통)
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: false  # Gateway에서만 제공

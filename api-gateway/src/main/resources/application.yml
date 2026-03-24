@@ -1,0 +1,171 @@
+server:
+  port: 8080
+  # Netty 서버 설정 (HTTP 헤더 크기 제한 증가)
+  netty:
+    max-initial-line-length: 16KB
+    max-header-size: 64KB
+
+spring:
+
+  application:
+    name: api-gateway
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+    gateway:
+      # 라우트 정의
+      routes:
+        # 각 서비스의 API Docs 엔드포인트
+        - id: member-service-api-docs
+          uri: ${MEMBER_SERVICE_URL:http://member-service:8081}
+          predicates:
+            - Path=/member-service/v3/api-docs
+          filters:
+            - RewritePath=/member-service/v3/api-docs, /v3/api-docs
+
+        - id: product-service-api-docs
+          uri: ${PRODUCT_SERVICE_URL:http://product-service:8082}
+          predicates:
+            - Path=/product-service/v3/api-docs
+          filters:
+            - RewritePath=/product-service/v3/api-docs, /v3/api-docs
+
+        - id: market-service-api-docs
+          uri: ${MARKET_SERVICE_URL:http://market-service:8083}
+          predicates:
+            - Path=/market-service/v3/api-docs
+          filters:
+            - RewritePath=/market-service/v3/api-docs, /v3/api-docs
+
+        - id: payment-service-api-docs
+          uri: ${PAYMENT_SERVICE_URL:http://payment-service:8084}
+          predicates:
+            - Path=/payment-service/v3/api-docs
+          filters:
+            - RewritePath=/payment-service/v3/api-docs, /v3/api-docs
+
+        - id: settlement-service-api-docs
+          uri: ${SETTLEMENT_SERVICE_URL:http://settlement-service:8085}
+          predicates:
+            - Path=/settlement-service/v3/api-docs
+          filters:
+            - RewritePath=/settlement-service/v3/api-docs, /v3/api-docs
+
+        # 1. Member Service (회원, 인증)
+        - id: member-service-auth
+          uri: ${MEMBER_SERVICE_URL:http://member-service:8081}
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - name: GatewayJwt
+              args:
+                excludePaths:
+                  - /api/v1/auth/login
+                  - /api/v1/auth/refresh
+
+        - id: member-service-members
+          uri: ${MEMBER_SERVICE_URL:http://member-service:8081}
+          predicates:
+            - Path=/api/v1/members/**
+          filters:
+            - name: GatewayJwt
+              args:
+                excludePaths:
+                  - /api/v1/members/signup
+
+        # 2. Product Service (상품)
+        - id: product-service
+          uri: ${PRODUCT_SERVICE_URL:http://product-service:8082}
+          predicates:
+            - Path=/api/v1/products/**
+          filters:
+            - name: GatewayJwt
+              args:
+                # 상품 조회는 인증 불필요, 등록/수정/삭제는 인증 필요
+                excludePaths:
+                  - /api/v1/products
+                  - /api/v1/products/search
+                excludeGetPaths:
+                  - /api/v1/products/*
+
+        # 3. Market Service (장바구니, 주문)
+        - id: market-service
+          uri: ${MARKET_SERVICE_URL:http://market-service:8083}
+          predicates:
+            - Path=/api/v1/carts/**,/api/v1/orders/**
+          filters:
+            - name: GatewayJwt
+
+        # 4. Payment Service (결제, 지갑)
+        - id: payment-service
+          uri: ${PAYMENT_SERVICE_URL:http://payment-service:8084}
+          predicates:
+            - Path=/api/v1/payments/**
+          filters:
+            - name: GatewayJwt
+              args:
+                excludePaths:
+                  - /api/v1/payments/confirm/toss
+
+        # 5. Settlement Service (정산)
+        - id: settlement-service
+          uri: ${SETTLEMENT_SERVICE_URL:http://settlement-service:8085}
+          predicates:
+            - Path=/api/v1/settlements/**
+          filters:
+            - name: GatewayJwt
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET_KEY:thock-2026-backend-authentication-jwt-secret-key-very-very-long-256bit}
+  access-token-exp-seconds: 1800
+  refresh-token-exp-seconds: 1209600
+  issuer: "thock"
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    com.thock.back.gateway: DEBUG
+    reactor.netty: INFO
+
+# SpringDoc (Swagger) 설정
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    urls:
+      - name: "Member Service"
+        url: /member-service/v3/api-docs
+      - name: "Product Service"
+        url: /product-service/v3/api-docs
+      - name: "Market Service"
+        url: /market-service/v3/api-docs
+      - name: "Payment Service"
+        url: /payment-service/v3/api-docs
+      - name: "Settlement Service"
+        url: /settlement-service/v3/api-docs
+    display-request-duration: true
+    operations-sorter: alpha
+    disable-swagger-default-url: true
+    urls-primary-name: "Member Service"
+  # Gateway 전용 설정
+  show-actuator: false
+  use-management-port: false

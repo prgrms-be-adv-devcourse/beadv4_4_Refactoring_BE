@@ -1,0 +1,28 @@
+services:
+  # ==================== Kafka ====================
+  redpanda:
+    image: redpandadata/redpanda:v24.1.1
+    container_name: redpanda
+    command:
+      - redpanda start
+      - --smp=1
+      - --memory=256M
+      - --reserve-memory=0M
+      - --overprovisioned
+      - --node-id=0
+      - --check=false
+      - --kafka-addr=PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr=PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+
+  redpanda-console:
+    image: redpandadata/console:v2.5.2
+    container_name: redpanda-console
+    depends_on:
+      - redpanda
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_BROKERS: redpanda:29092

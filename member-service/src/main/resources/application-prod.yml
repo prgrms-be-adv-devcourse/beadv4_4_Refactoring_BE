@@ -1,0 +1,49 @@
+# 설명: EC2 운영 환경에서 사용하는 설정
+# member-service/src/main/resources/application-prod.yml
+# ============================================
+# Production 환경 (AWS EC2 배포)
+# ============================================
+spring:
+  # Production Kafka (환경 변수로 주입)
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:redpanda:29092}
+
+  # Production MySQL (환경 변수로 주입 - 향후 RDS로 변경 가능)
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:thock_member_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USER:thock_member_db_user}
+    password: ${MYSQL_PASSWORD:thock_member_db_password}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: true
+
+  # Production JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false  # SQL 로그 끄기
+
+# Custom 설정
+custom:
+  global:
+    # Production 외부 게이트웨이 URL
+    internalBackUrl: ${INTERNAL_BACK_URL:http://13.209.190.62}
+
+# Logging (운영 환경)
+logging:
+  level:
+    root: INFO
+    com.thock.back: INFO
+
+swagger:
+  server:
+    url: ${SWAGGER_SERVER_URL:http://13.209.190.62}
+    description: Production API Gateway
+
+# 핵심 포인트:
+#  - ddl-auto: validate - 운영에서는 스키마 자동 변경 금지
+#  - show-sql: false - SQL 로그 비활성화
+#  - Gateway URL: 환경에 맞는 외부 주소 사용

@@ -1,0 +1,405 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [{ "expr": "market_order_total_count{job=\"market-service\"}", "refId": "A" }],
+      "title": "주문 총 건수",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 0 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [{ "expr": "market_outbox_total_count{job=\"market-service\"}", "refId": "A" }],
+      "title": "Outbox 총 건수",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 0 }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 0 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [{ "expr": "market_outbox_failed_ratio_percent{job=\"market-service\"}", "refId": "A" }],
+      "title": "FAILED 비율",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 0 }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 4, "x": 12, "y": 0 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [{ "expr": "market_outbox_backlog_ratio_percent{job=\"market-service\"}", "refId": "A" }],
+      "title": "미처리 비율",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 4, "x": 16, "y": 0 },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [{ "expr": "max((market_kafka_consumer_lag_total{job=\"market-service\"}) or (market_kafka_consumer_lag{job=\"market-service\"}))", "refId": "A" }],
+      "title": "Kafka Lag Total",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 4, "x": 20, "y": 0 },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [{ "expr": "market_outbox_status_count{job=\"market-service\",status=\"FAILED\"}", "refId": "A" }],
+      "title": "FAILED 건수",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": { "mode": "continuous-BlYlRd" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
+      "id": 7,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showUnfilled": true
+      },
+      "targets": [
+        {
+          "expr": "market_order_state_count{job=\"market-service\"}",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "title": "주문 상태별 현재 건수",
+      "type": "bargauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": { "mode": "continuous-BlYlRd" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
+      "id": 8,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showUnfilled": true
+      },
+      "targets": [
+        {
+          "expr": "market_outbox_status_count{job=\"market-service\"}",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Outbox 상태별 현재 건수",
+      "type": "bargauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1 }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "id": 9,
+      "options": {
+        "displayLabels": ["name", "percent"],
+        "legend": { "displayMode": "list", "placement": "bottom", "values": ["percent"] },
+        "pieType": "pie",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [
+        {
+          "expr": "market_outbox_status_ratio_percent{job=\"market-service\"}",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Outbox 상태별 비율(%)",
+      "type": "piechart"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 18,
+            "showPoints": "never",
+            "pointSize": 3,
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "id": 10,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max"]
+        },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "market_kafka_consumer_lag_topic{job=\"market-service\",topic=~\"$topic\"}",
+          "legendFormat": "{{topic}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Kafka Topic별 Lag 추이",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 22 },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(market_kafka_inbound_received_total{job=\"market-service\"}[$__range]))",
+          "refId": "A"
+        }
+      ],
+      "title": "Inbound 수신 건수(기간)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 22 },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(market_kafka_inbound_processed_total{job=\"market-service\"}[$__range]))",
+          "refId": "A"
+        }
+      ],
+      "title": "Inbound 처리 건수(기간)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 22 },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(market_kafka_inbound_duplicate_total{job=\"market-service\"}[$__range]))",
+          "refId": "A"
+        }
+      ],
+      "title": "Inbound 중복 스킵 건수(기간)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 22 },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(market_kafka_inbound_failed_total{job=\"market-service\"}[$__range]))",
+          "refId": "A"
+        }
+      ],
+      "title": "Inbound 실패 건수(기간)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "pointSize": 3,
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 27 },
+      "id": 15,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "mean", "max"]
+        },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "increase(market_kafka_inbound_received_total{job=\"market-service\",topic=~\"$topic\"}[$__interval])",
+          "legendFormat": "RECEIVED {{topic}}",
+          "refId": "A"
+        },
+        {
+          "expr": "increase(market_kafka_inbound_processed_total{job=\"market-service\",topic=~\"$topic\"}[$__interval])",
+          "legendFormat": "PROCESSED {{topic}}",
+          "refId": "B"
+        },
+        {
+          "expr": "increase(market_kafka_inbound_duplicate_total{job=\"market-service\",topic=~\"$topic\"}[$__interval])",
+          "legendFormat": "DUPLICATE {{topic}}",
+          "refId": "C"
+        },
+        {
+          "expr": "increase(market_kafka_inbound_failed_total{job=\"market-service\",topic=~\"$topic\"}[$__interval])",
+          "legendFormat": "FAILED {{topic}}",
+          "refId": "D"
+        }
+      ],
+      "title": "Inbound 이벤트 처리 추이 (topic별)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["market", "prometheus", "kafka", "outbox", "inbound", "inbox"],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values(market_kafka_consumer_lag_topic{job=\"market-service\"}, topic)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Topic",
+        "multi": true,
+        "name": "topic",
+        "options": [],
+        "query": "label_values(market_kafka_consumer_lag_topic{job=\"market-service\"}, topic)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-24h", "to": "now" },
+  "timepicker": {},
+  "timezone": "Asia/Seoul",
+  "title": "Market Service Dashboard",
+  "uid": "market-service-dashboard",
+  "version": 3,
+  "weekStart": ""
+}
