@@ -2,9 +2,15 @@ package com.thock.back.market.app;
 
 import com.thock.back.global.exception.CustomException;
 import com.thock.back.global.exception.ErrorCode;
+import com.thock.back.market.domain.Cart;
 import com.thock.back.market.domain.MarketMember;
+import com.thock.back.market.domain.MarketPolicy;
+import com.thock.back.market.domain.Order;
 import com.thock.back.market.domain.OrderState;
 import com.thock.back.market.in.dto.req.OrderCreateRequest;
+import com.thock.back.market.in.dto.res.OrderCreateResponse;
+import com.thock.back.market.out.api.dto.ProductInfo;
+import com.thock.back.market.out.api.dto.WalletInfo;
 import com.thock.back.market.out.repository.CartRepository;
 import com.thock.back.market.out.repository.MarketMemberRepository;
 import com.thock.back.market.out.repository.OrderRepository;
@@ -15,6 +21,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -137,6 +145,93 @@ class MarketCreateOrderUseCaseTest {
                         assertThat(customException.getErrorCode().getMessage())
                                 .isEqualTo("이미 결제 대기 중인 주문이 있습니다.");
                     });
+        }
+
+        @Test
+        @DisplayName("같은 멱등 키 재요청이면 기존 주문을 반환한다")
+        void createOrder_sameIdempotencyKey_returnsExistingOrder() {
+            Long memberId = 1L;
+            String idempotencyKey = "order-create-1";
+            OrderCreateRequest request = new OrderCreateRequest(
+                    List.of(1L),
+                    "12345",
+                    "서울시 강남구",
+                    "101호"
+            );
+
+            Order existingOrder = new Order(buyer, "12345", "서울시 강남구", "101호");
+            existingOrder.assignIdempotencyKey(idempotencyKey);
+
+            given(marketMemberRepository.findByIdForUpdate(memberId)).willReturn(Optional.of(buyer));
+            given(orderRepository.findByBuyerIdAndIdempotencyKey(memberId, idempotencyKey))
+                    .willReturn(Optional.of(existingOrder));
+            given(marketSupport.getWallet(memberId)).willReturn(new WalletInfo(1_000L));
+
+            OrderCreateResponse response = marketCreateOrderUseCase.createOrder(memberId, request, idempotencyKey);
+
+            assertThat(response.orderNumber()).isEqualTo(existingOrder.getOrderNumber());
+            assertThat(response.pgAmount()).isEqualTo(0L);
+            verify(orderRepository, never()).existsByBuyerIdAndState(any(), any());
+            verify(cartRepository, never()).findByBuyer(any());
+        }
+
+        @Test
+        @DisplayName("동시 요청으로 유니크 충돌이 나면 기존 주문을 반환한다")
+        void createOrder_uniqueConstraintConflict_returnsExistingOrder() {
+            Long memberId = 1L;
+            String idempotencyKey = "order-create-1";
+            MarketPolicy.PRODUCT_PAYOUT_RATE = 90.0;
+            OrderCreateRequest request = new OrderCreateRequest(
+                    List.of(1L),
+                    "12345",
+                    "서울시 강남구",
+                    "101호"
+            );
+
+            given(buyer.getId()).willReturn(memberId);
+
+            Cart cart = new Cart(buyer);
+            cart.addItem(10L, 1);
+            ReflectionTestUtils.setField(cart.getItems().get(0), "id", 1L);
+
+            ProductInfo productInfo = new ProductInfo(
+                    10L,
+                    2L,
+                    "기계식 키보드",
+                    "keyboard.jpg",
+                    50_000L,
+                    40_000L,
+                    10,
+                    "ON_SALE"
+            );
+
+            Order existingOrder = new Order(buyer, "12345", "서울시 강남구", "101호");
+            existingOrder.assignIdempotencyKey(idempotencyKey);
+            existingOrder.addItem(
+                    2L,
+                    10L,
+                    "기계식 키보드",
+                    "keyboard.jpg",
+                    50_000L,
+                    40_000L,
+                    1
+            );
+
+            given(marketMemberRepository.findByIdForUpdate(memberId)).willReturn(Optional.of(buyer));
+            given(orderRepository.findByBuyerIdAndIdempotencyKey(memberId, idempotencyKey))
+                    .willReturn(Optional.empty(), Optional.of(existingOrder));
+            given(orderRepository.existsByBuyerIdAndState(memberId, OrderState.PENDING_PAYMENT))
+                    .willReturn(false);
+            given(cartRepository.findByBuyer(buyer)).willReturn(Optional.of(cart));
+            given(marketSupport.getProducts(List.of(10L))).willReturn(List.of(productInfo));
+            given(orderRepository.saveAndFlush(any(Order.class)))
+                    .willThrow(new DataIntegrityViolationException("unique constraint violation"));
+            given(marketSupport.getWallet(memberId)).willReturn(new WalletInfo(5_000L));
+
+            OrderCreateResponse response = marketCreateOrderUseCase.createOrder(memberId, request, idempotencyKey);
+
+            assertThat(response.orderNumber()).isEqualTo(existingOrder.getOrderNumber());
+            assertThat(response.pgAmount()).isEqualTo(35_000L);
         }
     }
 

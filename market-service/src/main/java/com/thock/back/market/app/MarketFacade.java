@@ -53,7 +53,12 @@ public class MarketFacade {
 
     @Transactional
     public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request) {
-        return marketCreateOrderUseCase.createOrder(memberId, request);
+        return marketCreateOrderUseCase.createOrder(memberId, request, null);
+    }
+
+    @Transactional
+    public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request, String idempotencyKey) {
+        return marketCreateOrderUseCase.createOrder(memberId, request, idempotencyKey);
     }
 
     @Transactional

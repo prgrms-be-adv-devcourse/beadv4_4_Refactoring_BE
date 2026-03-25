@@ -85,10 +85,12 @@ public class ApiV1OrderController {
     @PostMapping
     public ResponseEntity<OrderCreateResponse> createOrder(
             @AuthUser AuthenticatedUser user,
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody OrderCreateRequest request) {
         Long memberId = user.memberId();
-        log.info("Market Order API : createOrder / memberId = {}", memberId);
-        OrderCreateResponse response = marketFacade.createOrder(memberId, request);
+        log.info("Market Order API : createOrder / memberId = {}, hasIdempotencyKey = {}",
+                memberId, idempotencyKey != null && !idempotencyKey.isBlank());
+        OrderCreateResponse response = marketFacade.createOrder(memberId, request, idempotencyKey);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

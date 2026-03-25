@@ -25,14 +25,7 @@ public class MarketCancelOrderPaymentUseCase {
 
     @Transactional
     public void cancelOrder(Long memberId, Long orderId, CancelReasonType cancelReasonType, String cancelReasonDetail){
-        // 1. 주문 조회
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
-
-        // 2. 본인 주문인지 확인
-        if (!order.getBuyer().getId().equals(memberId)) {
-            throw new CustomException(ErrorCode.ORDER_USER_FORBIDDEN);
-        }
+        Order order = getOwnedOrder(memberId, orderId);
 
         // 3. 도메인 메서드 호출 (이벤트 발행은 도메인이 처리)
         if (order.isPaymentInProgress()) {
@@ -42,9 +35,12 @@ public class MarketCancelOrderPaymentUseCase {
         }
 
         // 4. 취소 히스토리 저장 (각 아이템별로)
-        List<OrderCancelHistory> histories = order.getItems().stream()
-                .map(item -> OrderCancelHistory.ofUserCancel(order, item, cancelReasonType, cancelReasonDetail))
-                .toList();
+        List<OrderCancelHistory> histories = buildUserCancelHistories(
+                order,
+                order.getItems(),
+                cancelReasonType,
+                cancelReasonDetail
+        );
         orderCancelHistoryRepository.saveAll(histories);
     }
 
@@ -57,14 +53,7 @@ public class MarketCancelOrderPaymentUseCase {
             CancelReasonType cancelReasonType,
             String cancelReasonDetail)
     {
-        // 1. 주문 조회
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
-
-        // 2. 본인 주문인지 확인
-        if (!order.getBuyer().getId().equals(memberId)) {
-            throw new CustomException(ErrorCode.USER_FORBIDDEN);
-        }
+        Order order = getOwnedOrder(memberId, orderId);
 
         // 3. 취소할 아이템 조회 (히스토리 저장용) - 취소 대상 아이템들 미리 확보
         List<OrderItem> itemsToCancel = order.getItems().stream()
@@ -75,9 +64,33 @@ public class MarketCancelOrderPaymentUseCase {
         order.cancelItems(orderItemIds, cancelReasonType, cancelReasonDetail);
 
         // 5. 취소 히스토리 저장 (취소된 아이템들만)
-        List<OrderCancelHistory> histories = itemsToCancel.stream()
+        List<OrderCancelHistory> histories = buildUserCancelHistories(
+                order,
+                itemsToCancel,
+                cancelReasonType,
+                cancelReasonDetail
+        );
+        orderCancelHistoryRepository.saveAll(histories);
+    }
+
+    private Order getOwnedOrder(Long memberId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+
+        if (!order.getBuyer().getId().equals(memberId)) {
+            throw new CustomException(ErrorCode.ORDER_USER_FORBIDDEN);
+        }
+        return order;
+    }
+
+    private List<OrderCancelHistory> buildUserCancelHistories(
+            Order order,
+            List<OrderItem> items,
+            CancelReasonType cancelReasonType,
+            String cancelReasonDetail
+    ) {
+        return items.stream()
                 .map(item -> OrderCancelHistory.ofUserCancel(order, item, cancelReasonType, cancelReasonDetail))
                 .toList();
-        orderCancelHistoryRepository.saveAll(histories);
     }
 }

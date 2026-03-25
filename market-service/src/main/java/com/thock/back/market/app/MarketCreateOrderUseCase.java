@@ -16,6 +16,7 @@ import com.thock.back.market.out.repository.MarketMemberRepository;
 import com.thock.back.market.out.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,102 +37,58 @@ public class MarketCreateOrderUseCase {
     // 주문 생성 - 장바구니 내 선택한 상품들만 주문에 들어감
     @Transactional
     public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request) {
-        /**
-         *  1. 회원 조회
-         *  같은 회원의 주문 생성 동시 요청을 직렬화해 TOCTOU(확인 시점, 사용 시점 사이 상태가 바뀌는 문제)를 방지한다.
-         *  동시 주문 요청이 들어와도 먼저 들어온 트랜잭션이 끝날 때까지 뒤 요청은 대기
-         *  대기 후 existsByBuyerIdAndState 에서 걸리므로 중복 생성 차단
-         */
-        MarketMember buyer = marketMemberRepository.findByIdForUpdate(memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
+        return createOrder(memberId, request, null);
+    }
 
-        // 2. 미결제 주문 존재 여부 확인 (1인 1주문 제한)
-        if (orderRepository.existsByBuyerIdAndState(memberId, OrderState.PENDING_PAYMENT)) {
-            throw new CustomException(ErrorCode.ORDER_PENDING_EXISTS);
+    @Transactional
+    public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request, String idempotencyKey) {
+        String normalizedIdempotencyKey = normalizeIdempotencyKey(idempotencyKey);
+        MarketMember buyer = getBuyerForUpdate(memberId);
+
+        OrderCreateResponse idempotentResponse = findExistingOrderByIdempotencyKey(memberId, normalizedIdempotencyKey);
+        if (idempotentResponse != null) {
+            return idempotentResponse;
         }
 
-        // 3. 장바구니 조회
-        Cart cart = cartRepository.findByBuyer(buyer)
-                .orElseThrow(() -> new CustomException(ErrorCode.CART_ITEM_NOT_FOUND));
+        validateNoPendingOrder(memberId);
 
-        // 4. 선택한 CartItem들만 필터링
-        List<Long> selectedCartItemIds = request.cartItemIds();
+        Cart cart = getCartByBuyer(buyer);
+        List<CartItem> selectedCartItems = getSelectedCartItems(cart, request.cartItemIds());
+        Map<Long, ProductInfo> productMap = getProductMap(selectedCartItems);
 
-        if (selectedCartItemIds == null || selectedCartItemIds.isEmpty()) {
-            throw new CustomException(ErrorCode.ORDER_NO_ITEMS_SELECTED);
-        }
+        Order order = createOrderAggregate(buyer, request, normalizedIdempotencyKey);
+        appendOrderItems(order, selectedCartItems, productMap);
 
-        // 선택된 CartItem만 추출
-        List<CartItem> selectedCartItems = cart.getItems().stream()
-                .filter(item -> selectedCartItemIds.contains(item.getId()))
-                .toList();
+        Order savedOrder;
 
-        // 선택된 상품이 실제로 장바구니에 있는지 확인
-        if (selectedCartItems.isEmpty()) {
-            throw new CustomException(ErrorCode.CART_EMPTY);
-        }
-
-        // 4. 장바구니에 들어있는 상품 정보 조회 - 스냅샷 저장용
-        List<Long> productsId = selectedCartItems.stream()
-                .map(CartItem::getProductId)
-                .toList();
-        List<ProductInfo> products = marketSupport.getProducts(productsId);
-
-        // ProductInfo를 Map으로 변환 (빠른 조회)
-        Map<Long, ProductInfo> productMap = products.stream()
-                .collect(Collectors.toMap(ProductInfo::getId, Function.identity()));
-
-        // 5. Order 생성
-        Order order = new Order(
-                buyer,
-                request.zipCode(),
-                request.baseAddress(),
-                request.detailAddress()
-        );
-
-        // 6. OrderItem 추가 (상품 정보 스냅샷, 변경되면 안됨)
-        for (CartItem cartItem : selectedCartItems) {
-            ProductInfo product = productMap.get(cartItem.getProductId());
-
-            // 상품 정보가 없는 경우 (삭제된 상품 등)
-            if (product == null) {
-                log.warn("상품 정보를 찾을 수 없음: productId={}", cartItem.getProductId());
-                throw new CustomException(ErrorCode.CART_PRODUCT_INFO_NOT_FOUND);
+        try {
+            savedOrder = orderRepository.saveAndFlush(order);
+        } catch (DataIntegrityViolationException e) {
+            if (normalizedIdempotencyKey == null) {
+                throw e;
             }
 
-            // 재고 확인
-            if (product.getStock() < cartItem.getQuantity()) {
-                throw new CustomException(
-                        ErrorCode.CART_PRODUCT_OUT_OF_STOCK,
-                        String.format("%s 상품의 재고가 부족합니다. (필요: %d개, 재고: %d개)",
-                                product.getName(), cartItem.getQuantity(), product.getStock())
-                );
-            }
+            log.info("멱등 키 유니크 충돌 감지: memberId={}, idempotencyKey={}",
+                    memberId, normalizedIdempotencyKey);
 
-            // 주문 아이템 추가 (스냅샷 저장)
-            order.addItem(
-                    product.getSellerId(),
-                    product.getId(),
-                    product.getName(),
-                    product.getImageUrl(),
-                    product.getPrice(),
-                    product.getSalePrice(),
-                    cartItem.getQuantity()
-            );
+            return orderRepository.findByBuyerIdAndIdempotencyKey(memberId,
+                            normalizedIdempotencyKey)
+                    .map(existingOrder -> {
+                        WalletInfo wallet = marketSupport.getWallet(buyer.getId());
+                        Long balance = wallet.getBalance();
+                        Long pgAmount = Math.max(0L, existingOrder.getTotalSalePrice() -
+                                balance);
+                        return OrderCreateResponse.from(existingOrder, pgAmount);
+                    })
+                    .orElseThrow(() -> e);
         }
-        // 7. 주문 저장 (OrderItem도 Casecade로 함께 저장됨)
-        Order savedOrder = orderRepository.save(order);
 
 
-        // 8. 예치금 조회 및 pgAmount 계산
+
         WalletInfo wallet = marketSupport.getWallet(buyer.getId());
         Long balance = wallet.getBalance();
-
         Long pgAmount = Math.max(0L, savedOrder.getTotalSalePrice() - balance);
 
-        // 9. 결제 요청 (Order 내부에서 pgAmount 계산 후 조건부 이벤트 발행)
-        // - pgAmount <= 0: MarketOrderPaymentCompletedEvent 발행 (예치금만)
-        // - pgAmount > 0: MarketOrderPaymentRequestedEvent 발행 (PG 필요)
         savedOrder.requestPayment(balance);
 
         log.info("✅ 주문 생성 완료: orderId={}, orderNumber={}, buyerId={}, totalAmount={}, itemCount={}",
@@ -143,5 +100,110 @@ public class MarketCreateOrderUseCase {
 
         // 11. 응답 생성 및 반환
         return OrderCreateResponse.from(savedOrder, pgAmount);
+    }
+
+    private String normalizeIdempotencyKey(String idempotencyKey) {
+        if (idempotencyKey == null) {
+            return null;
+        }
+        String trimmed = idempotencyKey.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private MarketMember getBuyerForUpdate(Long memberId) {
+        return marketMemberRepository.findByIdForUpdate(memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
+    }
+
+    private OrderCreateResponse findExistingOrderByIdempotencyKey(Long memberId, String normalizedIdempotencyKey) {
+        if (normalizedIdempotencyKey == null) {
+            return null;
+        }
+
+        return orderRepository.findByBuyerIdAndIdempotencyKey(memberId, normalizedIdempotencyKey)
+                .map(order -> {
+                    log.info("멱등 키 재요청 감지: memberId={}, orderId={}, orderNumber={}",
+                            memberId, order.getId(), order.getOrderNumber());
+                    WalletInfo wallet = marketSupport.getWallet(memberId);
+                    Long balance = wallet.getBalance();
+                    Long pgAmount = Math.max(0L, order.getTotalSalePrice() - balance);
+                    return OrderCreateResponse.from(order, pgAmount);
+                })
+                .orElse(null);
+    }
+
+    private void validateNoPendingOrder(Long memberId) {
+        if (orderRepository.existsByBuyerIdAndState(memberId, OrderState.PENDING_PAYMENT)) {
+            throw new CustomException(ErrorCode.ORDER_PENDING_EXISTS);
+        }
+    }
+
+    private Cart getCartByBuyer(MarketMember buyer) {
+        return cartRepository.findByBuyer(buyer)
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_ITEM_NOT_FOUND));
+    }
+
+    private List<CartItem> getSelectedCartItems(Cart cart, List<Long> selectedCartItemIds) {
+        if (selectedCartItemIds == null || selectedCartItemIds.isEmpty()) {
+            throw new CustomException(ErrorCode.ORDER_NO_ITEMS_SELECTED);
+        }
+
+        List<CartItem> selectedCartItems = cart.getItems().stream()
+                .filter(item -> selectedCartItemIds.contains(item.getId()))
+                .toList();
+
+        if (selectedCartItems.isEmpty()) {
+            throw new CustomException(ErrorCode.CART_EMPTY);
+        }
+        return selectedCartItems;
+    }
+
+    private Map<Long, ProductInfo> getProductMap(List<CartItem> selectedCartItems) {
+        List<Long> productsId = selectedCartItems.stream()
+                .map(CartItem::getProductId)
+                .toList();
+
+        return marketSupport.getProducts(productsId).stream()
+                .collect(Collectors.toMap(ProductInfo::getId, Function.identity()));
+    }
+
+    private Order createOrderAggregate(MarketMember buyer, OrderCreateRequest request, String normalizedIdempotencyKey) {
+        Order order = new Order(
+                buyer,
+                request.zipCode(),
+                request.baseAddress(),
+                request.detailAddress()
+        );
+        order.assignIdempotencyKey(normalizedIdempotencyKey);
+        return order;
+    }
+
+    private void appendOrderItems(Order order, List<CartItem> selectedCartItems, Map<Long, ProductInfo> productMap) {
+        for (CartItem cartItem : selectedCartItems) {
+            ProductInfo product = productMap.get(cartItem.getProductId());
+
+            if (product == null) {
+                log.warn("상품 정보를 찾을 수 없음: productId={}", cartItem.getProductId());
+                throw new CustomException(ErrorCode.CART_PRODUCT_INFO_NOT_FOUND);
+            }
+
+            if (product.getStock() < cartItem.getQuantity()) {
+                throw new CustomException(
+                        ErrorCode.CART_PRODUCT_OUT_OF_STOCK,
+                        String.format("%s 상품의 재고가 부족합니다. (필요: %d개, 재고: %d개)",
+                                product.getName(), cartItem.getQuantity(), product.getStock())
+                );
+            }
+
+            order.addItem(
+                    product.getSellerId(),
+                    product.getId(),
+                    product.getName(),
+                    product.getImageUrl(),
+                    product.getPrice(),
+                    product.getSalePrice(),
+                    cartItem.getQuantity()
+            );
+        }
     }
 }
