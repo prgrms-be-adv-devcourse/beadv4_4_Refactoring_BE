@@ -4,6 +4,7 @@ import com.thock.back.global.exception.CustomException;
 import com.thock.back.global.exception.ErrorCode;
 import com.thock.back.market.domain.Cart;
 import com.thock.back.market.domain.MarketMember;
+import com.thock.back.market.domain.MarketPolicy;
 import com.thock.back.market.domain.Order;
 import com.thock.back.market.domain.OrderState;
 import com.thock.back.market.in.dto.req.OrderCreateRequest;
@@ -21,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -160,7 +162,6 @@ class MarketCreateOrderUseCaseTest {
             Order existingOrder = new Order(buyer, "12345", "서울시 강남구", "101호");
             existingOrder.assignIdempotencyKey(idempotencyKey);
 
-            given(buyer.getId()).willReturn(memberId);
             given(marketMemberRepository.findByIdForUpdate(memberId)).willReturn(Optional.of(buyer));
             given(orderRepository.findByBuyerIdAndIdempotencyKey(memberId, idempotencyKey))
                     .willReturn(Optional.of(existingOrder));
@@ -179,6 +180,7 @@ class MarketCreateOrderUseCaseTest {
         void createOrder_uniqueConstraintConflict_returnsExistingOrder() {
             Long memberId = 1L;
             String idempotencyKey = "order-create-1";
+            MarketPolicy.PRODUCT_PAYOUT_RATE = 90.0;
             OrderCreateRequest request = new OrderCreateRequest(
                     List.of(1L),
                     "12345",
@@ -186,8 +188,11 @@ class MarketCreateOrderUseCaseTest {
                     "101호"
             );
 
+            given(buyer.getId()).willReturn(memberId);
+
             Cart cart = new Cart(buyer);
             cart.addItem(10L, 1);
+            ReflectionTestUtils.setField(cart.getItems().get(0), "id", 1L);
 
             ProductInfo productInfo = new ProductInfo(
                     10L,
@@ -212,7 +217,6 @@ class MarketCreateOrderUseCaseTest {
                     1
             );
 
-            given(buyer.getId()).willReturn(memberId);
             given(marketMemberRepository.findByIdForUpdate(memberId)).willReturn(Optional.of(buyer));
             given(orderRepository.findByBuyerIdAndIdempotencyKey(memberId, idempotencyKey))
                     .willReturn(Optional.empty(), Optional.of(existingOrder));
