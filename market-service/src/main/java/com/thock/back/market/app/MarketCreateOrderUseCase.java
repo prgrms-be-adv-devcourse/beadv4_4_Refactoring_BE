@@ -16,7 +16,6 @@ import com.thock.back.market.out.repository.MarketMemberRepository;
 import com.thock.back.market.out.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,22 +33,36 @@ public class MarketCreateOrderUseCase {
     private final CartRepository cartRepository;
     private final MarketSupport marketSupport; // 조회 전용
 
-    // 주문 생성 - 장바구니 내 선택한 상품들만 주문에 들어감
-    @Transactional
-    public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request) {
-        return createOrder(memberId, request, null);
-    }
-
-    @Transactional
-    public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request, String idempotencyKey) {
+    // Facade에서 접근해야 하므로 public으로 열고 읽기 전용 트랜잭션 적용
+    @Transactional(readOnly = true)
+    public OrderCreateResponse findExistingOrderByIdempotencyKey(Long memberId, String idempotencyKey) {
+        // 조회 시에는 키가 없으면 그냥 null 반환 (예외 X)
         String normalizedIdempotencyKey = normalizeIdempotencyKey(idempotencyKey);
-        MarketMember buyer = getBuyerForUpdate(memberId);
-
-        OrderCreateResponse idempotentResponse = findExistingOrderByIdempotencyKey(memberId, normalizedIdempotencyKey);
-        if (idempotentResponse != null) {
-            return idempotentResponse;
+        if (normalizedIdempotencyKey == null) {
+            return null;
         }
 
+        return orderRepository.findByBuyerIdAndIdempotencyKey(memberId, normalizedIdempotencyKey)
+                .map(order -> {
+                    log.info("멱등 키 재요청 감지: memberId={}, orderId={}, orderNumber={}",
+                            memberId, order.getId(), order.getOrderNumber());
+
+                    // TODO: 향후 Order 엔티티에 결제 금액을 캐싱하여 지갑(Wallet) 외부 API 호출 의존성 제거 고려
+                    WalletInfo wallet = marketSupport.getWallet(memberId);
+                    Long balance = wallet.getBalance();
+                    Long pgAmount = Math.max(0L, order.getTotalSalePrice() - balance);
+                    return OrderCreateResponse.from(order, pgAmount);
+                })
+                .orElse(null);
+    }
+
+    // Facade에서 호출하는 실제 생성 로직
+    @Transactional
+    public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request, String idempotencyKey) {
+        // 생성 진입점에서는 멱등성 키 필수 검증 (없으면 예외)
+        String normalizedIdempotencyKey = validateAndNormalizeIdempotencyKey(idempotencyKey);
+
+        MarketMember buyer = getBuyerForUpdate(memberId);
         validateNoPendingOrder(memberId);
 
         Cart cart = getCartByBuyer(buyer);
@@ -59,31 +72,7 @@ public class MarketCreateOrderUseCase {
         Order order = createOrderAggregate(buyer, request, normalizedIdempotencyKey);
         appendOrderItems(order, selectedCartItems, productMap);
 
-        Order savedOrder;
-
-        try {
-            savedOrder = orderRepository.saveAndFlush(order);
-        } catch (DataIntegrityViolationException e) {
-            if (normalizedIdempotencyKey == null) {
-                throw e;
-            }
-
-            log.info("멱등 키 유니크 충돌 감지: memberId={}, idempotencyKey={}",
-                    memberId, normalizedIdempotencyKey);
-
-            return orderRepository.findByBuyerIdAndIdempotencyKey(memberId,
-                            normalizedIdempotencyKey)
-                    .map(existingOrder -> {
-                        WalletInfo wallet = marketSupport.getWallet(buyer.getId());
-                        Long balance = wallet.getBalance();
-                        Long pgAmount = Math.max(0L, existingOrder.getTotalSalePrice() -
-                                balance);
-                        return OrderCreateResponse.from(existingOrder, pgAmount);
-                    })
-                    .orElseThrow(() -> e);
-        }
-
-
+        Order savedOrder = orderRepository.saveAndFlush(order);
 
         WalletInfo wallet = marketSupport.getWallet(buyer.getId());
         Long balance = wallet.getBalance();
@@ -98,38 +87,29 @@ public class MarketCreateOrderUseCase {
                 savedOrder.getTotalSalePrice(),
                 savedOrder.getItems().size());
 
-        // 11. 응답 생성 및 반환
         return OrderCreateResponse.from(savedOrder, pgAmount);
     }
 
+    // 단순 정규화 (null 반환 허용 - 조회용)
     private String normalizeIdempotencyKey(String idempotencyKey) {
-        if (idempotencyKey == null) {
+        if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
             return null;
         }
-        String trimmed = idempotencyKey.trim();
-        return trimmed.isEmpty() ? null : trimmed;
+        return idempotencyKey.trim();
+    }
+
+    // 정규화 + 필수값 검증 (예외 발생 - 생성용)
+    private String validateAndNormalizeIdempotencyKey(String idempotencyKey) {
+        String normalized = normalizeIdempotencyKey(idempotencyKey);
+        if (normalized == null) {
+            throw new CustomException(ErrorCode.ORDER_IDEMPOTENCY_KEY_REQUIRED);
+        }
+        return normalized;
     }
 
     private MarketMember getBuyerForUpdate(Long memberId) {
         return marketMemberRepository.findByIdForUpdate(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_USER_NOT_FOUND));
-    }
-
-    private OrderCreateResponse findExistingOrderByIdempotencyKey(Long memberId, String normalizedIdempotencyKey) {
-        if (normalizedIdempotencyKey == null) {
-            return null;
-        }
-
-        return orderRepository.findByBuyerIdAndIdempotencyKey(memberId, normalizedIdempotencyKey)
-                .map(order -> {
-                    log.info("멱등 키 재요청 감지: memberId={}, orderId={}, orderNumber={}",
-                            memberId, order.getId(), order.getOrderNumber());
-                    WalletInfo wallet = marketSupport.getWallet(memberId);
-                    Long balance = wallet.getBalance();
-                    Long pgAmount = Math.max(0L, order.getTotalSalePrice() - balance);
-                    return OrderCreateResponse.from(order, pgAmount);
-                })
-                .orElse(null);
     }
 
     private void validateNoPendingOrder(Long memberId) {

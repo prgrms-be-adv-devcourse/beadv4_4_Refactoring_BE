@@ -85,7 +85,7 @@ public class ApiV1OrderController {
     @PostMapping
     public ResponseEntity<OrderCreateResponse> createOrder(
             @AuthUser AuthenticatedUser user,
-            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey,
+            @RequestHeader(value = "X-Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody OrderCreateRequest request) {
         Long memberId = user.memberId();
         log.info("Market Order API : createOrder / memberId = {}, hasIdempotencyKey = {}",
