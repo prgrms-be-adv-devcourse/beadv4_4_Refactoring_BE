@@ -59,6 +59,8 @@ class MarketCreateOrderUseCaseTest {
     @DisplayName("주문 무한 생성 방지 테스트")
     class PreventInfiniteOrderCreationTest {
 
+        private final String idempotencyKey = "order-create-1";
+
         @Test
         @DisplayName("미결제 주문이 이미 존재하면 ORDER_PENDING_EXISTS 예외가 발생한다")
         void createOrder_pendingOrderExists_throwsException() {
@@ -76,7 +78,7 @@ class MarketCreateOrderUseCaseTest {
                     .willReturn(true); // 이미 미결제 주문 존재
 
             // when & then
-            assertThatThrownBy(() -> marketCreateOrderUseCase.createOrder(memberId, request))
+            assertThatThrownBy(() -> marketCreateOrderUseCase.createOrder(memberId, request, idempotencyKey))
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException customException = (CustomException) ex;
@@ -105,7 +107,7 @@ class MarketCreateOrderUseCaseTest {
             given(cartRepository.findByBuyer(buyer)).willReturn(Optional.empty());
 
             // when & then - 장바구니 없음 예외 발생 (정상 흐름 진행 확인용)
-            assertThatThrownBy(() -> marketCreateOrderUseCase.createOrder(memberId, request))
+            assertThatThrownBy(() -> marketCreateOrderUseCase.createOrder(memberId, request, idempotencyKey))
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException customException = (CustomException) ex;
@@ -137,7 +139,7 @@ class MarketCreateOrderUseCaseTest {
 
             // when - 두 번째 주문 시도
             // then - 차단됨
-            assertThatThrownBy(() -> marketCreateOrderUseCase.createOrder(memberId, request))
+            assertThatThrownBy(() -> marketCreateOrderUseCase.createOrder(memberId, request, idempotencyKey))
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException customException = (CustomException) ex;
@@ -148,10 +150,9 @@ class MarketCreateOrderUseCaseTest {
         }
 
         @Test
-        @DisplayName("같은 멱등 키 재요청이면 기존 주문을 반환한다")
-        void createOrder_sameIdempotencyKey_returnsExistingOrder() {
+        @DisplayName("멱등성 키가 없으면 ORDER_IDEMPOTENCY_KEY_REQUIRED 예외가 발생한다")
+        void createOrder_idempotencyKeyMissing_throwsException() {
             Long memberId = 1L;
-            String idempotencyKey = "order-create-1";
             OrderCreateRequest request = new OrderCreateRequest(
                     List.of(1L),
                     "12345",
@@ -159,27 +160,21 @@ class MarketCreateOrderUseCaseTest {
                     "101호"
             );
 
-            Order existingOrder = new Order(buyer, "12345", "서울시 강남구", "101호");
-            existingOrder.assignIdempotencyKey(idempotencyKey);
+            assertThatThrownBy(() -> marketCreateOrderUseCase.createOrder(memberId, request, null))
+                    .isInstanceOf(CustomException.class)
+                    .satisfies(ex -> {
+                        CustomException customException = (CustomException) ex;
+                        assertThat(customException.getErrorCode()).isEqualTo(ErrorCode.ORDER_IDEMPOTENCY_KEY_REQUIRED);
+                    });
 
-            given(marketMemberRepository.findByIdForUpdate(memberId)).willReturn(Optional.of(buyer));
-            given(orderRepository.findByBuyerIdAndIdempotencyKey(memberId, idempotencyKey))
-                    .willReturn(Optional.of(existingOrder));
-            given(marketSupport.getWallet(memberId)).willReturn(new WalletInfo(1_000L));
-
-            OrderCreateResponse response = marketCreateOrderUseCase.createOrder(memberId, request, idempotencyKey);
-
-            assertThat(response.orderNumber()).isEqualTo(existingOrder.getOrderNumber());
-            assertThat(response.pgAmount()).isEqualTo(0L);
             verify(orderRepository, never()).existsByBuyerIdAndState(any(), any());
             verify(cartRepository, never()).findByBuyer(any());
         }
 
         @Test
-        @DisplayName("동시 요청으로 유니크 충돌이 나면 기존 주문을 반환한다")
-        void createOrder_uniqueConstraintConflict_returnsExistingOrder() {
+        @DisplayName("동시 요청으로 유니크 충돌이 나면 DataIntegrityViolationException이 facade로 전파된다")
+        void createOrder_uniqueConstraintConflict_throwsDataIntegrityViolationException() {
             Long memberId = 1L;
-            String idempotencyKey = "order-create-1";
             MarketPolicy.PRODUCT_PAYOUT_RATE = 90.0;
             OrderCreateRequest request = new OrderCreateRequest(
                     List.of(1L),
@@ -205,33 +200,16 @@ class MarketCreateOrderUseCaseTest {
                     "ON_SALE"
             );
 
-            Order existingOrder = new Order(buyer, "12345", "서울시 강남구", "101호");
-            existingOrder.assignIdempotencyKey(idempotencyKey);
-            existingOrder.addItem(
-                    2L,
-                    10L,
-                    "기계식 키보드",
-                    "keyboard.jpg",
-                    50_000L,
-                    40_000L,
-                    1
-            );
-
             given(marketMemberRepository.findByIdForUpdate(memberId)).willReturn(Optional.of(buyer));
-            given(orderRepository.findByBuyerIdAndIdempotencyKey(memberId, idempotencyKey))
-                    .willReturn(Optional.empty(), Optional.of(existingOrder));
             given(orderRepository.existsByBuyerIdAndState(memberId, OrderState.PENDING_PAYMENT))
                     .willReturn(false);
             given(cartRepository.findByBuyer(buyer)).willReturn(Optional.of(cart));
             given(marketSupport.getProducts(List.of(10L))).willReturn(List.of(productInfo));
             given(orderRepository.saveAndFlush(any(Order.class)))
                     .willThrow(new DataIntegrityViolationException("unique constraint violation"));
-            given(marketSupport.getWallet(memberId)).willReturn(new WalletInfo(5_000L));
 
-            OrderCreateResponse response = marketCreateOrderUseCase.createOrder(memberId, request, idempotencyKey);
-
-            assertThat(response.orderNumber()).isEqualTo(existingOrder.getOrderNumber());
-            assertThat(response.pgAmount()).isEqualTo(35_000L);
+            assertThatThrownBy(() -> marketCreateOrderUseCase.createOrder(memberId, request, idempotencyKey))
+                    .isInstanceOf(DataIntegrityViolationException.class);
         }
     }
 
@@ -244,6 +222,7 @@ class MarketCreateOrderUseCaseTest {
         void createOrder_memberNotFound_throwsException() {
             // given
             Long memberId = 999L;
+            String idempotencyKey = "order-create-1";
             OrderCreateRequest request = new OrderCreateRequest(
                     List.of(1L),
                     "12345",
@@ -254,7 +233,7 @@ class MarketCreateOrderUseCaseTest {
             given(marketMemberRepository.findByIdForUpdate(memberId)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> marketCreateOrderUseCase.createOrder(memberId, request))
+            assertThatThrownBy(() -> marketCreateOrderUseCase.createOrder(memberId, request, idempotencyKey))
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException customException = (CustomException) ex;
