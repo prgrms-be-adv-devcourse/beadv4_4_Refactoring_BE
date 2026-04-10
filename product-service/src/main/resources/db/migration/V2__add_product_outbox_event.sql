@@ -1,4 +1,4 @@
-CREATE TABLE product_outbox_event
+CREATE TABLE IF NOT EXISTS product_outbox_event
 (
     id         BIGINT       NOT NULL AUTO_INCREMENT,
     topic      VARCHAR(100) NOT NULL,

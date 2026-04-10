@@ -1,4 +1,4 @@
-CREATE TABLE products
+CREATE TABLE IF NOT EXISTS products
 (
     id              BIGINT       NOT NULL AUTO_INCREMENT,
     created_at      DATETIME(6) DEFAULT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE products
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE inbox_event
+CREATE TABLE IF NOT EXISTS inbox_event
 (
     id              BIGINT       NOT NULL AUTO_INCREMENT,
     consumer_group  VARCHAR(100) NOT NULL,
