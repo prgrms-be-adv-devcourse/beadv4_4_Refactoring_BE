@@ -10,6 +10,8 @@ import com.thock.back.market.out.client.PaymentWalletClient;
 import com.thock.back.market.out.client.ProductClient;
 import com.thock.back.market.out.repository.CartRepository;
 import com.thock.back.market.out.repository.MarketMemberRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +35,7 @@ public class MarketSupport {
      */
     private final ProductClient productClient; // 인터페이스로 주입 : ProductApiClient 라는 구체 클래스에 의존❌
     private final PaymentWalletClient paymentWalletClient;
+    private final MeterRegistry meterRegistry;
 
     public Optional<Cart> findCartByBuyer(MarketMember buyer) {
         return cartRepository.findByBuyer(buyer);
@@ -47,7 +51,9 @@ public class MarketSupport {
     // Product 정보 조회 - 단건
     @Transactional(readOnly = true)
     public ProductInfo getProduct(Long productId) {
-        List<ProductInfo> products = productClient.getProducts(List.of(productId));
+        List<ProductInfo> products = recordExternalApiCall("product-client", "getProduct", () ->
+                productClient.getProducts(List.of(productId))
+        );
 
         if (products == null || products.isEmpty()) {
             log.warn("Product 정보가 없음: productId={}", productId);
@@ -60,8 +66,9 @@ public class MarketSupport {
     // Cart에 들어있는 여러 CartItem 조회
     @Transactional(readOnly = true)
     public List<ProductInfo> getProducts(List<Long> productIds) {
-
-        List<ProductInfo> products = productClient.getProducts(productIds);
+        List<ProductInfo> products = recordExternalApiCall("product-client", "getProducts", () ->
+                productClient.getProducts(productIds)
+        );
 
         if (products == null) {
             log.warn("Product 정보 리스트가 null: productIds={}", productIds);
@@ -73,7 +80,9 @@ public class MarketSupport {
 
     @Transactional(readOnly = true)
     public WalletInfo getWallet(Long memberId) {
-        WalletInfo wallet = paymentWalletClient.getWallet(memberId);
+        WalletInfo wallet = recordExternalApiCall("payment-wallet-client", "getWallet", () ->
+                paymentWalletClient.getWallet(memberId)
+        );
 
         if (wallet == null) {
             log.warn("Wallet 정보가 null: memberId={}", memberId);
@@ -81,5 +90,33 @@ public class MarketSupport {
         }
 
         return wallet;
+    }
+
+    private <T> T recordExternalApiCall(String clientName, String operation, SupplierWithException<T> action) {
+        long startedAt = System.nanoTime();
+        String outcome = "success";
+
+        try {
+            return action.get();
+        } catch (RuntimeException e) {
+            outcome = "error";
+            throw e;
+        } finally {
+            Timer.builder("market_external_api_latency")
+                    .description("External API latency from market-service")
+                    .tags(
+                            "client", clientName,
+                            "operation", operation,
+                            "outcome", outcome
+                    )
+                    .publishPercentileHistogram()
+                    .register(meterRegistry)
+                    .record(System.nanoTime() - startedAt, TimeUnit.NANOSECONDS);
+        }
+    }
+
+    @FunctionalInterface
+    private interface SupplierWithException<T> {
+        T get();
     }
 }
