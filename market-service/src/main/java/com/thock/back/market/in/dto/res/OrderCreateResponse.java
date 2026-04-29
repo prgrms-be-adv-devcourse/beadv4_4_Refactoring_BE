@@ -65,9 +65,9 @@ public record OrderCreateResponse (
                 order.getTotalSalePrice(),
                 order.getTotalDiscountAmount(),
                 pgAmount,
-                order.getZipCode(),
-                order.getBaseAddress(),
-                order.getDetailAddress(),
+                order.getShippingAddress().getZipCode(),
+                order.getShippingAddress().getBaseAddress(),
+                order.getShippingAddress().getDetailAddress(),
                 order.getCreatedAt()
         );
     }

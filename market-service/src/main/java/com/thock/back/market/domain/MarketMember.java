@@ -4,13 +4,12 @@ import com.thock.back.shared.market.dto.MarketMemberDto;
 import com.thock.back.shared.member.domain.MemberRole;
 import com.thock.back.shared.member.domain.MemberState;
 import com.thock.back.shared.member.domain.ReplicaMember;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "market_members")
@@ -18,10 +17,8 @@ import java.time.LocalDateTime;
 @Getter
 public class MarketMember extends ReplicaMember {
 
-    @Column(length = 6)
-    private String zipCode;          // 우편번호 (5~6자)
-    private String baseAddress;      // 기본 주소 (도로명/지번)
-    private String detailAddress;    // 상세 주소 (동/호수 등)
+    @Embedded
+    private ShippingAddress shippingAddress;
 
 //    // 계좌 정보 세분화
 //    @Column(length = 10)
@@ -44,12 +41,13 @@ public class MarketMember extends ReplicaMember {
     }
 
     // 배송지 정보 업데이트 메서드
-    public void updateShippingAddress(String zipCode,
-                                      String baseAddress,
-                                      String detailAddress) {
-        this.zipCode = zipCode;
-        this.baseAddress = baseAddress;
-        this.detailAddress = detailAddress;
+    public void updateShippingAddress(ShippingAddress shippingAddress) {
+        Objects.requireNonNull(shippingAddress, "shippingAddress must not be null");
+        this.shippingAddress = new ShippingAddress(
+                shippingAddress.getZipCode(),
+                shippingAddress.getBaseAddress(),
+                shippingAddress.getDetailAddress()
+        );
     }
 
     // 계좌 정보 업데이트 메서드
@@ -62,6 +60,10 @@ public class MarketMember extends ReplicaMember {
 //    }
 
     public MarketMemberDto toDto() {
+        String zipCode = shippingAddress != null ? shippingAddress.getZipCode() : null;
+        String baseAddress = shippingAddress != null ? shippingAddress.getBaseAddress() : null;
+        String detailAddress = shippingAddress != null ? shippingAddress.getDetailAddress() : null;
+
         return new MarketMemberDto(
                 getId(),
                 getCreatedAt(),
@@ -70,9 +72,9 @@ public class MarketMember extends ReplicaMember {
                 getName(),
                 getRole(),
                 getState(),
-                getZipCode(),
-                getBaseAddress(),
-                getDetailAddress()
+                zipCode,
+                baseAddress,
+                detailAddress
 //                getBankCode(),
 //                getAccountNumber(),
 //                getAccountHolder()

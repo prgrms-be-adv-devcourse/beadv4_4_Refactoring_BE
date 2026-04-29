@@ -72,7 +72,10 @@ class MarketCancelOrderPaymentUseCaseTest {
     }
 
     private Order createOrder(Long orderId, int itemCount) throws Exception {
-        Order order = new Order(buyer, "12345", "서울시 강남구", "101호");
+        Order order = new Order(
+                buyer,
+                new ShippingAddress("12345", "서울시 강남구", "101호")
+                );
         setEntityId(order, orderId);
 
         for (int i = 1; i <= itemCount; i++) {

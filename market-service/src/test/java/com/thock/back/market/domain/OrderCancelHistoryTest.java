@@ -33,7 +33,7 @@ class OrderCancelHistoryTest {
                 LocalDateTime.now()
         );
 
-        order = new Order(buyer, "12345", "서울시 강남구", "101호");
+        order = new Order(buyer, new ShippingAddress("12345", "서울시 강남구", "101호"));
         setEntityId(order, 1L);
 
         orderItem = order.addItem(1L, 100L, "테스트상품", "http://image.url", 10000L, 9000L, 1);

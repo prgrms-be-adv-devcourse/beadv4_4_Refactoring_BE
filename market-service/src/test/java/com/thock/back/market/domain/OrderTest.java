@@ -43,7 +43,7 @@ class OrderTest {
                 LocalDateTime.now()
         );
 
-        order = new Order(buyer, "12345", "서울시 강남구", "101호");
+        order = new Order(buyer, new ShippingAddress("12345", "서울시 강남구", "101호"));
         setEntityId(order, 1L);
 
         // Mock EventPublisher 설정
@@ -468,7 +468,7 @@ class OrderTest {
         @Test
         @DisplayName("buyer가 null이면 예외가 발생한다")
         void createOrder_nullBuyer_throwsException() {
-            assertThatThrownBy(() -> new Order(null, "12345", "주소", "상세"))
+            assertThatThrownBy(() -> new Order(null, new ShippingAddress("12345", "주소", "상세")))
                     .isInstanceOf(CustomException.class);
         }
     }

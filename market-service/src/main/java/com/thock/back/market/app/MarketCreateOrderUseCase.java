@@ -2,11 +2,7 @@ package com.thock.back.market.app;
 
 import com.thock.back.global.exception.CustomException;
 import com.thock.back.global.exception.ErrorCode;
-import com.thock.back.market.domain.Cart;
-import com.thock.back.market.domain.CartItem;
-import com.thock.back.market.domain.MarketMember;
-import com.thock.back.market.domain.Order;
-import com.thock.back.market.domain.OrderState;
+import com.thock.back.market.domain.*;
 import com.thock.back.market.in.dto.req.OrderCreateRequest;
 import com.thock.back.market.in.dto.res.OrderCreateResponse;
 import com.thock.back.market.out.api.dto.ProductInfo;
@@ -150,9 +146,11 @@ public class MarketCreateOrderUseCase {
     private Order createOrderAggregate(MarketMember buyer, OrderCreateRequest request, String normalizedIdempotencyKey) {
         Order order = new Order(
                 buyer,
-                request.zipCode(),
-                request.baseAddress(),
-                request.detailAddress()
+                new ShippingAddress(
+                        request.zipCode(),
+                        request.baseAddress(),
+                        request.detailAddress()
+                )
         );
         order.assignIdempotencyKey(normalizedIdempotencyKey);
         return order;
