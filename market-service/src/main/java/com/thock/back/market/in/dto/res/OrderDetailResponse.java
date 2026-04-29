@@ -56,9 +56,9 @@ public record OrderDetailResponse (
                 order.getTotalPrice(),
                 order.getTotalSalePrice(),
                 order.getTotalDiscountAmount(),
-                order.getZipCode(),
-                order.getBaseAddress(),
-                order.getDetailAddress(),
+                order.getShippingAddress().getZipCode(),
+                order.getShippingAddress().getBaseAddress(),
+                order.getShippingAddress().getDetailAddress(),
                 order.getCreatedAt(),
                 order.getPaymentDate(),
                 order.getItems().stream()

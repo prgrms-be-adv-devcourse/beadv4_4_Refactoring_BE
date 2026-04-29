@@ -34,6 +34,7 @@ import static jakarta.persistence.CascadeType.PERSIST;
 import static jakarta.persistence.CascadeType.REMOVE;
 import static jakarta.persistence.FetchType.LAZY;
 
+
 @Entity
 @Table(name = "market_orders",
         uniqueConstraints = {
@@ -41,7 +42,7 @@ import static jakarta.persistence.FetchType.LAZY;
                         name = "uk_orders_buyer_id_idempotency_key",
                         columnNames = {"buyer_id", "idempotency_key"}
                 )
-})
+        })
 @Getter
 @NoArgsConstructor
 @Slf4j
@@ -72,28 +73,31 @@ public class Order extends BaseIdAndTime {
     private Long totalDiscountAmount;
 
     // 배송지 정보
-    @Column(length = 6)
-    private String zipCode;
-    private String baseAddress;
-    private String detailAddress;
+    @Embedded
+    private ShippingAddress shippingAddress;
 
     // 결제 관련 시간
     private LocalDateTime requestPaymentDate;  // 결제 요청 시간
     private LocalDateTime paymentDate;         // 결제 완료 시간
     private LocalDateTime cancelDate;          // 취소 시간
 
-    public Order(MarketMember buyer, String zipCode, String baseAddress, String detailAddress) {
+    public Order(MarketMember buyer, ShippingAddress shippingAddress) {
         if (buyer == null) {
             throw new CustomException(ErrorCode.CART_USER_NOT_FOUND);
+        }
+
+        if (shippingAddress == null) {
+            throw new IllegalArgumentException("shippingAddress is required");
         }
 
         this.buyer = buyer;
         this.orderNumber = generateOrderNumber();
         this.state = OrderState.PENDING_PAYMENT;
-        this.zipCode = zipCode;
-        this.baseAddress = baseAddress;
-        this.detailAddress = detailAddress;
-
+        this.shippingAddress = new ShippingAddress(
+                shippingAddress.getZipCode(),
+                shippingAddress.getBaseAddress(),
+                shippingAddress.getDetailAddress()
+        );
         this.totalPrice = 0L;
         this.totalSalePrice = 0L;
         this.totalDiscountAmount = 0L;

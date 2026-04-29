@@ -385,7 +385,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[1m]))",
+          "expr": "sum(increase(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[$__range])) / $__range_s",
           "refId": "A"
         }
       ],
@@ -444,7 +444,7 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=\"market-service\",uri=~\"/api/.*\"}[1m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(increase(http_server_requests_seconds_bucket{job=\"market-service\",uri=~\"/api/.*\"}[$__range])) by (le))",
           "refId": "A"
         }
       ],
@@ -503,7 +503,7 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{job=\"market-service\",uri=~\"/api/.*\"}[1m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(increase(http_server_requests_seconds_bucket{job=\"market-service\",uri=~\"/api/.*\"}[$__range])) by (le))",
           "refId": "A"
         }
       ],
@@ -562,7 +562,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(market_http_db_queries_sum{job=\"market-service\",uri=~\"/api/.*\"}[1m])) / clamp_min(sum(rate(market_http_db_queries_count{job=\"market-service\",uri=~\"/api/.*\"}[1m])), 0.001)",
+          "expr": "sum(increase(market_http_db_queries_sum{job=\"market-service\",uri=~\"/api/.*\"}[$__range])) / clamp_min(sum(increase(market_http_db_queries_count{job=\"market-service\",uri=~\"/api/.*\"}[$__range])), 1)",
           "refId": "A"
         }
       ],
@@ -658,7 +658,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\",status=~\"5..\"}[1m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[1m])), 0.001)",
+          "expr": "sum(increase(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\",status=~\"5..\"}[$__range])) / clamp_min(sum(increase(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[$__range])), 1)",
           "refId": "A"
         }
       ],
@@ -716,7 +716,7 @@
       },
       "targets": [
         {
-          "expr": "(sum(rate(market_http_db_time_seconds_sum{job=\"market-service\",uri=~\"/api/.*\"}[1m])) / clamp_min(sum(rate(market_http_db_time_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[1m])), 0.001)) * 1000",
+          "expr": "(sum(increase(market_http_db_time_seconds_sum{job=\"market-service\",uri=~\"/api/.*\"}[$__range])) / clamp_min(sum(increase(market_http_db_time_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[$__range])), 1)) * 1000",
           "refId": "A"
         }
       ],
@@ -754,7 +754,7 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(market_external_api_latency_seconds_bucket{job=\"market-service\"}[1m])) by (le, client, operation)) * 1000",
+          "expr": "histogram_quantile(0.95, sum(rate(market_external_api_latency_seconds_bucket{job=\"market-service\"}[$__rate_interval])) by (le, client, operation)) * 1000",
           "legendFormat": "{{client}} {{operation}} p95",
           "refId": "A"
         }
@@ -803,7 +803,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[1m]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[$__rate_interval]))",
           "legendFormat": "TPS",
           "refId": "A"
         }
@@ -852,12 +852,12 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=\"market-service\",uri=~\"/api/.*\"}[1m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=\"market-service\",uri=~\"/api/.*\"}[$__rate_interval])) by (le))",
           "legendFormat": "P95",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{job=\"market-service\",uri=~\"/api/.*\"}[1m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{job=\"market-service\",uri=~\"/api/.*\"}[$__rate_interval])) by (le))",
           "legendFormat": "P99",
           "refId": "B"
         }
@@ -906,7 +906,7 @@
       },
       "targets": [
         {
-          "expr": "topk(10, sum(rate(market_http_db_queries_sum{job=\"market-service\",uri=~\"/api/.*\"}[1m])) by (uri) / clamp_min(sum(rate(market_http_db_queries_count{job=\"market-service\",uri=~\"/api/.*\"}[1m])) by (uri), 0.001))",
+          "expr": "topk(10, sum(rate(market_http_db_queries_sum{job=\"market-service\",uri=~\"/api/.*\"}[$__rate_interval])) by (uri) / clamp_min(sum(rate(market_http_db_queries_count{job=\"market-service\",uri=~\"/api/.*\"}[$__rate_interval])) by (uri), 0.001))",
           "legendFormat": "{{uri}}",
           "refId": "A"
         }
@@ -955,7 +955,7 @@
       },
       "targets": [
         {
-          "expr": "topk(10, sum(rate(market_http_db_select_queries_sum{job=\"market-service\",uri=~\"/api/.*\"}[1m])) by (uri) / clamp_min(sum(rate(market_http_db_select_queries_count{job=\"market-service\",uri=~\"/api/.*\"}[1m])) by (uri), 0.001))",
+          "expr": "topk(10, sum(rate(market_http_db_select_queries_sum{job=\"market-service\",uri=~\"/api/.*\"}[$__rate_interval])) by (uri) / clamp_min(sum(rate(market_http_db_select_queries_count{job=\"market-service\",uri=~\"/api/.*\"}[$__rate_interval])) by (uri), 0.001))",
           "legendFormat": "{{uri}}",
           "refId": "A"
         }
@@ -994,7 +994,7 @@
       },
       "targets": [
         {
-          "expr": "topk(10, (sum(rate(market_http_db_time_seconds_sum{job=\"market-service\",uri=~\"/api/.*\"}[1m])) by (uri) / clamp_min(sum(rate(market_http_db_time_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[1m])) by (uri), 0.001)) * 1000)",
+          "expr": "topk(10, (sum(rate(market_http_db_time_seconds_sum{job=\"market-service\",uri=~\"/api/.*\"}[$__rate_interval])) by (uri) / clamp_min(sum(rate(market_http_db_time_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[$__rate_interval])) by (uri), 0.001)) * 1000)",
           "legendFormat": "{{uri}}",
           "refId": "A"
         }
@@ -1047,12 +1047,12 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\",status=~\"4..\"}[1m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[1m])), 0.001)",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\",status=~\"4..\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[$__rate_interval])), 0.001)",
           "legendFormat": "4xx rate",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\",status=~\"5..\"}[1m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[1m])), 0.001)",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\",status=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=\"market-service\",uri=~\"/api/.*\"}[$__rate_interval])), 0.001)",
           "legendFormat": "5xx rate",
           "refId": "B"
         }
@@ -1542,7 +1542,7 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
+          "unit": "short",
           "decimals": 3,
           "color": {
             "mode": "thresholds"
@@ -1772,7 +1772,7 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
+          "unit": "short",
           "min": 0,
           "custom": {
             "drawStyle": "line",
@@ -1879,6 +1879,6 @@
   "timezone": "Asia/Seoul",
   "title": "Market Service Dashboard",
   "uid": "market-service-dashboard",
-  "version": 8,
+  "version": 9,
   "weekStart": ""
 }
